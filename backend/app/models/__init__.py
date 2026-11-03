@@ -1,4 +1,5 @@
-"""SQLAlchemy ORM models mapped to the 29 tables in docs/DESIGN.md."""
+"""SQLAlchemy ORM models mapped to tables in docs/DESIGN.md."""
+from app.models.business import Address, CandidateProfile, Company, RecruiterProfile
 from app.models.system import (
     Account,
     AccountRole,
@@ -21,5 +22,8 @@ __all__ = [
     "AuthLog",
     "ActivityLog",
     "SystemErrorLog",
+    "Address",
+    "Company",
+    "RecruiterProfile",
+    "CandidateProfile",
 ]
-
