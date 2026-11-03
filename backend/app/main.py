@@ -25,6 +25,14 @@ app.include_router(notifications.router, prefix=settings.API_V1_PREFIX)
 app.include_router(statistics.router, prefix=settings.API_V1_PREFIX)
 
 
+@app.get("/", tags=["Root"])
+def root():
+    """Root page"""
+    return {
+        "message": "status ok",
+    }
+
+
 @app.get("/health", tags=["Health Check"])
 def health_check():
     """Kiểm tra trạng thái hoạt động của Backend trên VM2."""
