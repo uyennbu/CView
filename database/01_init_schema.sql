@@ -1,401 +1,257 @@
-BEGIN;
-
-CREATE EXTENSION IF NOT EXISTS "citext";
+-- 0. Khởi tạo Extensions cần thiết
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- =============================================================================
--- 1. Bảng hệ thống
+-- SECTION 1: Bảng hệ thống
 -- =============================================================================
 
--- 1.1 Accounts Table
-CREATE TABLE IF NOT EXISTS accounts (
-    account_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
+-- Bảng 1: accounts
+CREATE TABLE accounts (
+    account_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    status VARCHAR(30) NOT NULL DEFAULT 'active',
+    phone_number VARCHAR(15) UNIQUE,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    last_login_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    account_type VARCHAR(30) NOT NULL DEFAULT 'candidate',
-    CONSTRAINT chk_accounts_status CHECK (status IN ('active', 'inactive', 'suspended', 'pending')),
-    CONSTRAINT chk_accounts_type CHECK (account_type IN ('admin', 'candidate', 'recruiter'))
+    CONSTRAINT chk_accounts_username CHECK (username ~ '^[a-zA-Z0-9_]{3,50}$'),
+    CONSTRAINT chk_accounts_status CHECK (status IN ('PENDING', 'ACTIVE', 'SUSPENDED', 'DELETED')),
+    CONSTRAINT chk_accounts_phone CHECK (phone_number IS NULL OR phone_number ~ '^(0[3|5|7|8|9][0-9]{8}|\+84[3|5|7|8|9][0-9]{8})$')
 );
+COMMENT ON TABLE accounts IS 'Quản lý thông tin tài khoản xác thực đăng nhập duy nhất cho tất cả các nhóm đối tượng';
 
--- 1.2 Roles Table
-CREATE TABLE IF NOT EXISTS roles (
-    role_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    description VARCHAR(255)
+-- Bảng 2: roles
+CREATE TABLE roles (
+    role_id SERIAL PRIMARY KEY,
+    role_name VARCHAR(30) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_roles_name CHECK (role_name IN ('ADMIN', 'RECRUITER', 'CANDIDATE'))
 );
+COMMENT ON TABLE roles IS 'Lưu trữ danh mục các vai trò trong hệ thống (RBAC)';
 
--- 1.3 Permissions Table
-CREATE TABLE IF NOT EXISTS permissions (
-    permission_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    description VARCHAR(255)
+-- Bảng 3: permissions
+CREATE TABLE permissions (
+    permission_id SERIAL PRIMARY KEY,
+    permission_name VARCHAR(100) NOT NULL,
+    description VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+COMMENT ON TABLE permissions IS 'Định nghĩa danh mục các quyền hạn chi tiết (granular permissions)';
 
--- 1.4 Account Roles (Junction Table)
-CREATE TABLE IF NOT EXISTS account_roles (
-    account_id INT NOT NULL,
-    role_id INT NOT NULL,
+-- Bảng 4: account_roles
+CREATE TABLE account_roles (
+    account_id UUID NOT NULL,
+    role_id INTEGER NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (account_id, role_id),
     CONSTRAINT fk_account_roles_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE,
     CONSTRAINT fk_account_roles_role FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE
 );
+COMMENT ON TABLE account_roles IS 'Bảng trung gian N-N giữa accounts và roles';
 
--- 1.5 Role Permissions (Junction Table)
-CREATE TABLE IF NOT EXISTS role_permissions (
-    role_id INT NOT NULL,
-    permission_id INT NOT NULL,
+-- Bảng 5: role_permissions
+CREATE TABLE role_permissions (
+    role_id INTEGER NOT NULL,
+    permission_id INTEGER NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (role_id, permission_id),
     CONSTRAINT fk_role_permissions_role FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE,
     CONSTRAINT fk_role_permissions_permission FOREIGN KEY (permission_id) REFERENCES permissions(permission_id) ON DELETE CASCADE
 );
+COMMENT ON TABLE role_permissions IS 'Bảng trung gian N-N giữa roles và permissions';
 
--- 1.6 Sessions Table
-CREATE TABLE IF NOT EXISTS sessions (
-    session_id VARCHAR(255) PRIMARY KEY,
-    account_id INT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- Bảng 6: sessions
+CREATE TABLE sessions (
+    session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    account_id UUID NOT NULL,
+    refresh_token_hash VARCHAR(255) NOT NULL UNIQUE,
+    ip_address VARCHAR(45) NOT NULL,
+    user_agent TEXT,
+    is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
     expires_at TIMESTAMPTZ NOT NULL,
-    CONSTRAINT fk_sessions_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE,
-    CONSTRAINT chk_sessions_expiration CHECK (expires_at > created_at)
-);
-
--- 1.7 Auth Logs Table
-CREATE TABLE IF NOT EXISTS auth_logs (
-    auth_log_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    account_id INT NOT NULL,
-    ip_address VARCHAR(45),
-    user_agent VARCHAR(500),
-    login_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(30) NOT NULL,
-    CONSTRAINT fk_auth_logs_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE,
-    CONSTRAINT chk_auth_logs_status CHECK (status IN ('success', 'failed', 'locked'))
-);
-
--- 1.8 Activity Logs Table
-CREATE TABLE IF NOT EXISTS activity_logs (
-    activity_log_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    session_id VARCHAR(255) NOT NULL,
-    account_id INT NOT NULL,
-    action VARCHAR(255) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_activity_logs_session FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE,
-    CONSTRAINT fk_activity_logs_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE
+    CONSTRAINT fk_sessions_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE,
+    CONSTRAINT chk_sessions_expiry CHECK (expires_at > created_at)
 );
+COMMENT ON TABLE sessions IS 'Quản lý phiên đăng nhập hợp lệ và Refresh Token';
 
--- 1.9 System Error Logs Table
-CREATE TABLE IF NOT EXISTS system_error_logs (
-    error_log_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    account_id INT,
-    error_code VARCHAR(100),
-    error_message TEXT NOT NULL,
+-- Bảng 7: auth_logs
+CREATE TABLE auth_logs (
+    log_id BIGSERIAL PRIMARY KEY,
+    account_id UUID,
+    event_type VARCHAR(30) NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    user_agent TEXT,
+    failure_reason VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_auth_logs_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE SET NULL,
+    CONSTRAINT chk_auth_logs_event_type CHECK (event_type IN ('LOGIN_SUCCESS', 'LOGIN_FAILED', 'LOGOUT', 'PASSWORD_CHANGE', 'PASSWORD_RESET_REQUEST', 'TOKEN_REFRESH'))
+);
+COMMENT ON TABLE auth_logs IS 'Ghi nhận lịch sử các sự kiện liên quan tới xác thực bảo mật tài khoản';
+
+-- Bảng 8: activity_logs
+CREATE TABLE activity_logs (
+    activity_id BIGSERIAL PRIMARY KEY,
+    sessions_id UUID NOT NULL,
+    action_type VARCHAR(50) NOT NULL,
+    target_entity VARCHAR(30) NOT NULL,
+    target_id VARCHAR(64),
+    details JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_activity_logs_session FOREIGN KEY (sessions_id) REFERENCES sessions(session_id) ON DELETE CASCADE,
+    CONSTRAINT chk_activity_logs_action CHECK (action_type IN ('UPLOAD_RESUME', 'ANALYZE_CV', 'VIEW_JOB', 'SEARCH_JOB', 'SAVE_JOB', 'APPLY_JOB', 'CREATE_JOB_POST', 'APPROVE_JOB_POST', 'REJECT_JOB_POST')),
+    CONSTRAINT chk_activity_logs_entity CHECK (target_entity IN ('RESUME', 'JOB_POST', 'CV_ANALYSIS', 'ACCOUNT', 'APPLICATION'))
+);
+COMMENT ON TABLE activity_logs IS 'Ghi vết hành vi thao tác nghiệp vụ của người dùng trên toàn hệ thống';
+
+-- Bảng 9: system_error_logs
+CREATE TABLE system_error_logs (
+    error_id BIGSERIAL PRIMARY KEY,
+    service_name VARCHAR(50) NOT NULL,
+    severity VARCHAR(15) NOT NULL,
+    error_code VARCHAR(50) NOT NULL,
+    message TEXT NOT NULL,
     stack_trace TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_system_error_logs_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE SET NULL
+    CONSTRAINT chk_system_error_severity CHECK (severity IN ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'))
 );
-
--- 1.10 System Notifications Table
-CREATE TABLE IF NOT EXISTS system_notifications (
-    notification_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    account_id INT NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    notification_type VARCHAR(50) NOT NULL DEFAULT 'SYSTEM',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_read BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT fk_system_notifications_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE
-);
-
--- 1.11 Other Notifications Table
-CREATE TABLE IF NOT EXISTS other_notifications (
-    notification_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    account_id INT NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    notification_type VARCHAR(50) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_read BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT fk_other_notifications_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE
-);
-
+COMMENT ON TABLE system_error_logs IS 'Ghi nhận các lỗi hệ thống, exception, timeout';
 
 -- =============================================================================
--- 2. Bảng nghiệp vụ công ty và các yêu cầu của jd
+-- SECTION 2: Bảng nghiệp vụ
 -- =============================================================================
 
--- 2.1 Detailed Address Table
-CREATE TABLE IF NOT EXISTS detailed_addresses (
-    address_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    province VARCHAR(100) NOT NULL,
+-- Bảng 11: addresses (Tạo trước để Companies và Candidate Profiles tham chiếu)
+CREATE TABLE addresses (
+    address_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    street_address VARCHAR(255) NOT NULL,
+    ward VARCHAR(100),
     city VARCHAR(100) NOT NULL,
-    street VARCHAR(255),
-    house_number VARCHAR(225)
+    country VARCHAR(50) NOT NULL DEFAULT 'Việt Nam',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+COMMENT ON TABLE addresses IS 'Quản lý thông tin địa chỉ hành chính chuẩn hóa';
 
--- 2.2 Candidate Profiles Table
-CREATE TABLE IF NOT EXISTS candidate_profiles (
-    profile_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    account_id INT NOT NULL UNIQUE,
-    full_name VARCHAR(150) NOT NULL,
-    birth_date DATE NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    phone VARCHAR(20) NOT NULL,
-    gender VARCHAR(20),
-    address_id INT UNIQUE,
-    CONSTRAINT fk_candidate_profiles_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE,
-    CONSTRAINT fk_candidate_profiles_address FOREIGN KEY (address_id) REFERENCES detailed_addresses(address_id) ON DELETE SET NULL,
-    CONSTRAINT chk_candidate_profiles_email CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-    CONSTRAINT chk_candidate_profiles_phone CHECK (phone ~ '^(0|\+84)[3|5|7|8|9][0-9]{8}$'),
-    CONSTRAINT chk_candidate_profiles_age CHECK (birth_date <= CURRENT_DATE - INTERVAL '16 years')
+-- Bảng 10: companies
+CREATE TABLE companies (
+    company_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL UNIQUE,
+    address_id UUID NOT NULL UNIQUE,
+    tax_code VARCHAR(20) NOT NULL UNIQUE,
+    website VARCHAR(255),
+    logo_url VARCHAR(500),
+    industry VARCHAR(100) NOT NULL,
+    verification_status VARCHAR(20) NOT NULL DEFAULT 'UNVERIFIED',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_companies_address FOREIGN KEY (address_id) REFERENCES addresses(address_id) ON DELETE RESTRICT,
+    CONSTRAINT chk_companies_tax_code CHECK (tax_code ~ '^[0-9]{10}(-[0-9]{3})?$'),
+    CONSTRAINT chk_companies_website CHECK (website IS NULL OR website ~ '^https?://.*$'),
+    CONSTRAINT chk_companies_status CHECK (verification_status IN ('UNVERIFIED', 'PENDING', 'VERIFIED', 'REJECTED'))
 );
+COMMENT ON TABLE companies IS 'Quản lý thông tin pháp nhân doanh nghiệp';
 
--- 2.3 Companies Table
-CREATE TABLE IF NOT EXISTS companies (
-    company_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    tax_code VARCHAR(20) UNIQUE,
-    link VARCHAR(500),
-    description TEXT,
-    address_id INT UNIQUE,
-    CONSTRAINT fk_companies_address FOREIGN KEY (address_id) REFERENCES detailed_addresses(address_id) ON DELETE RESTRICT,
-    CONSTRAINT chk_companies_tax_code CHECK (tax_code IS NULL OR tax_code ~ '^[0-9]{10}(-[0-9]{3})?$')
+-- Bảng 12: recruiter_profiles
+CREATE TABLE recruiter_profiles (
+    recruiter_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    account_id UUID NOT NULL UNIQUE,
+    company_id UUID NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    job_title VARCHAR(100) NOT NULL,
+    work_email VARCHAR(255) NOT NULL UNIQUE,
+    phone_number VARCHAR(15),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_recruiter_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE,
+    CONSTRAINT fk_recruiter_company FOREIGN KEY (company_id) REFERENCES companies(company_id) ON DELETE RESTRICT
 );
+COMMENT ON TABLE recruiter_profiles IS 'Quản lý thông tin hồ sơ nhà tuyển dụng';
 
--- 2.4 Domains Table
-CREATE TABLE IF NOT EXISTS domains (
-    domain_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(150) NOT NULL UNIQUE,
-    description TEXT
+-- Bảng 13: candidate_profiles
+CREATE TABLE candidate_profiles (
+    candidate_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    account_id UUID NOT NULL UNIQUE,
+    full_name VARCHAR(100) NOT NULL,
+    date_of_birth DATE,
+    gender VARCHAR(10),
+    address_id UUID,
+    current_job_title VARCHAR(100),
+    years_of_experience NUMERIC(3, 1) NOT NULL DEFAULT 0.0,
+    education_level VARCHAR(30) NOT NULL DEFAULT 'BACHELOR',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_candidate_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE,
+    CONSTRAINT fk_candidate_address FOREIGN KEY (address_id) REFERENCES addresses(address_id) ON DELETE SET NULL,
+    CONSTRAINT chk_candidate_dob CHECK (date_of_birth IS NULL OR date_of_birth <= CURRENT_DATE - INTERVAL '16 years'),
+    CONSTRAINT chk_candidate_gender CHECK (gender IS NULL OR gender IN ('MALE', 'FEMALE', 'OTHER')),
+    CONSTRAINT chk_candidate_yoe CHECK (years_of_experience >= 0 AND years_of_experience <= 50),
+    CONSTRAINT chk_candidate_edu CHECK (education_level IN ('HIGH_SCHOOL', 'ASSOCIATE', 'BACHELOR', 'MASTER', 'DOCTORATE', 'OTHER'))
 );
+COMMENT ON TABLE candidate_profiles IS 'Quản lý thông tin cá nhân và hồ sơ tìm việc của ứng viên';
 
--- 2.5 Company Domains (Junction Table)
-CREATE TABLE IF NOT EXISTS company_domains (
-    company_id INT NOT NULL,
-    domain_id INT NOT NULL,
-    PRIMARY KEY (company_id, domain_id),
-    CONSTRAINT fk_company_domains_company FOREIGN KEY (company_id) REFERENCES companies(company_id) ON DELETE CASCADE,
-    CONSTRAINT fk_company_domains_domain FOREIGN KEY (domain_id) REFERENCES domains(domain_id) ON DELETE RESTRICT
+-- Bảng 14: domains
+CREATE TABLE domains (
+    domain_id SERIAL PRIMARY KEY,
+    domain_name VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+COMMENT ON TABLE domains IS 'Danh mục chuẩn hóa các lĩnh vực ngành nghề';
 
--- 2.6 Positions Catalog Table
-CREATE TABLE IF NOT EXISTS positions (
-    position_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(150) NOT NULL UNIQUE,
-    description TEXT
+-- Bảng 15: skills
+CREATE TABLE skills (
+    skill_id SERIAL PRIMARY KEY,
+    skill_name VARCHAR(100) NOT NULL UNIQUE,
+    category VARCHAR(30) NOT NULL,
+    description VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_skills_category CHECK (category IN ('HARD_SKILL', 'SOFT_SKILL', 'MANAGEMENT_LEADERSHIP', 'LANGUAGE', 'OTHER'))
 );
+COMMENT ON TABLE skills IS 'Quản lý danh mục kỹ năng chuẩn hóa';
 
--- 2.7 Skills Table
-CREATE TABLE IF NOT EXISTS skills (
-    skill_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(150) NOT NULL UNIQUE,
-    description TEXT
+-- Bảng 16: certificates
+CREATE TABLE certificates (
+    certificate_id SERIAL PRIMARY KEY,
+    certificate_name VARCHAR(150) NOT NULL UNIQUE,
+    issuer VARCHAR(100) NOT NULL,
+    score REAL,
+    category VARCHAR(30) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_certificates_category CHECK (category IN (
+        'TECH_DATA', 'MANAGEMENT_AGILE', 'FINANCE_ACCOUNTING', 'BUSINESS_MARKETING', 
+        'LANGUAGE', 'PROFESSIONAL_LICENSE', 'QUALITY_SAFETY', 'DESIGN_CREATIVE', 
+        'ENGINEERING_MANUFACTURING', 'CONSTRUCTION_REAL_ESTATE', 'HEALTHCARE_MEDICAL', 
+        'EDUCATION_TRAINING', 'LOGISTICS_TRANSPORT', 'HOSPITALITY_SERVICES', 'OTHER'
+    ))
 );
+COMMENT ON TABLE certificates IS 'Quản lý danh mục chứng chỉ nghề nghiệp và ngoại ngữ chuẩn hóa';
 
--- 2.8 Education Catalog Table
-CREATE TABLE IF NOT EXISTS educations (
-    education_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(150) NOT NULL UNIQUE
-);
-
--- 2.9 Certificates Catalog Table
-CREATE TABLE IF NOT EXISTS certificates (
-    cert_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(150) NOT NULL UNIQUE,
-    description TEXT
-);
-
--- =============================================================================
--- 3. Bài đăng tuyển dụng và các thành phần liên quan
--- =============================================================================
-
--- 3.1 Resumes Table
-CREATE TABLE IF NOT EXISTS resumes (
-    resume_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    profile_id INT NOT NULL,
+-- Bảng 17: resumes
+CREATE TABLE resumes (
+    resume_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    candidate_id UUID NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
     file_url VARCHAR(500) NOT NULL,
     file_size_bytes BIGINT NOT NULL,
-    uploaded_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(30) NOT NULL DEFAULT 'uploaded',
-    CONSTRAINT fk_resumes_profile FOREIGN KEY (profile_id) REFERENCES candidate_profiles(profile_id) ON DELETE CASCADE,
-    CONSTRAINT chk_resumes_file_size CHECK (file_size_bytes > 0 AND file_size_bytes <= 10485760), -- Max 10MB
-    CONSTRAINT chk_resumes_status CHECK (status IN ('uploaded', 'processing', 'analyzed', 'archived'))
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_resumes_candidate FOREIGN KEY (candidate_id) REFERENCES candidate_profiles(candidate_id) ON DELETE CASCADE,
+    CONSTRAINT chk_resumes_file_size CHECK (file_size_bytes > 0 AND file_size_bytes <= 10485760)
 );
+COMMENT ON TABLE resumes IS 'Quản lý các file CV dạng PDF do ứng viên tải lên';
 
--- 3.2 Resume Experiences
-CREATE TABLE IF NOT EXISTS resume_experiences (
-    experience_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    resume_id INT NOT NULL,
-    position_id INT NOT NULL,
-    company_name VARCHAR(255) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE,
-    description TEXT,
-    CONSTRAINT fk_resume_exp_resume FOREIGN KEY (resume_id) REFERENCES resumes(resume_id) ON DELETE CASCADE,
-    CONSTRAINT fk_resume_exp_position FOREIGN KEY (position_id) REFERENCES positions(position_id) ON DELETE RESTRICT,
-    CONSTRAINT chk_resume_exp_dates CHECK (end_date IS NULL OR end_date >= start_date)
-);
-
--- 3.3 Resume Skills
-CREATE TABLE IF NOT EXISTS resume_skills (
-    resume_id INT NOT NULL,
-    skill_id INT NOT NULL,
-    proficiency VARCHAR(50),
+-- Bảng 18: resume_skills
+CREATE TABLE resume_skills (
+    resume_id UUID NOT NULL,
+    skill_id INTEGER NOT NULL,
+    years_experience NUMERIC(3, 1),
+    proficiency_level VARCHAR(20) NOT NULL DEFAULT 'MEDIUM',
+    confidence_score NUMERIC(4, 3) NOT NULL DEFAULT 1.000,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (resume_id, skill_id),
     CONSTRAINT fk_resume_skills_resume FOREIGN KEY (resume_id) REFERENCES resumes(resume_id) ON DELETE CASCADE,
-    CONSTRAINT fk_resume_skills_skill FOREIGN KEY (skill_id) REFERENCES skills(skill_id) ON DELETE RESTRICT
+    CONSTRAINT fk_resume_skills_skill FOREIGN KEY (skill_id) REFERENCES skills(skill_id) ON DELETE RESTRICT,
+    CONSTRAINT chk_resume_skills_yoe CHECK (years_experience IS NULL OR years_experience >= 0),
+    CONSTRAINT chk_resume_skills_proficiency CHECK (proficiency_level IN ('BEGINNER', 'MEDIUM', 'ADVANCED', 'EXPERT')),
+    CONSTRAINT chk_resume_skills_confidence CHECK (confidence_score BETWEEN 0.000 AND 1.000)
 );
-
--- 3.4 Resume Educations
-CREATE TABLE IF NOT EXISTS resume_educations (
-    resume_education_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    resume_id INT NOT NULL,
-    education_id INT NOT NULL,
-    school VARCHAR(255) NOT NULL,
-    major VARCHAR(150),
-    degree VARCHAR(100),
-    start_year INT NOT NULL,
-    end_year INT,
-    CONSTRAINT fk_resume_edu_resume FOREIGN KEY (resume_id) REFERENCES resumes(resume_id) ON DELETE CASCADE,
-    CONSTRAINT fk_resume_edu_education FOREIGN KEY (education_id) REFERENCES educations(education_id) ON DELETE RESTRICT,
-    CONSTRAINT chk_resume_edu_years CHECK (end_year IS NULL OR end_year >= start_year)
-);
-
--- 3.5 Resume Certificates
-CREATE TABLE IF NOT EXISTS resume_certificates (
-    resume_certificate_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    resume_id INT NOT NULL,
-    cert_id INT NOT NULL,
-    issuer VARCHAR(255),
-    issued_date DATE,
-    expiry_date DATE,
-    CONSTRAINT fk_resume_cert_resume FOREIGN KEY (resume_id) REFERENCES resumes(resume_id) ON DELETE CASCADE,
-    CONSTRAINT fk_resume_cert_certificate FOREIGN KEY (cert_id) REFERENCES certificates(cert_id) ON DELETE RESTRICT,
-    CONSTRAINT chk_resume_cert_dates CHECK (expiry_date IS NULL OR issued_date IS NULL OR expiry_date >= issued_date)
-);
-
--- 3.6 Job Posts Table (Standardized position_id link to positions table)
-CREATE TABLE IF NOT EXISTS job_posts (
-    job_post_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    company_id INT NOT NULL,
-    position_id INT NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    salary_min NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
-    salary_max NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
-    status VARCHAR(30) NOT NULL DEFAULT 'open',
-    posted_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    closing_date DATE NOT NULL,
-    CONSTRAINT fk_job_posts_company FOREIGN KEY (company_id) REFERENCES companies(company_id) ON DELETE CASCADE,
-    CONSTRAINT fk_job_posts_position FOREIGN KEY (position_id) REFERENCES positions(position_id) ON DELETE RESTRICT,
-    CONSTRAINT chk_job_posts_salary CHECK (salary_min >= 0 AND salary_max >= salary_min),
-    CONSTRAINT chk_job_posts_status CHECK (status IN ('draft', 'open', 'closed', 'expired'))
-);
-
--- 3.7 Job Skills
-CREATE TABLE IF NOT EXISTS job_skills (
-    job_post_id INT NOT NULL,
-    skill_id INT NOT NULL,
-    is_required BOOLEAN NOT NULL DEFAULT TRUE,
-    importance_score NUMERIC(5, 2) NOT NULL DEFAULT 1.00,
-    PRIMARY KEY (job_post_id, skill_id),
-    CONSTRAINT fk_job_skills_job FOREIGN KEY (job_post_id) REFERENCES job_posts(job_post_id) ON DELETE CASCADE,
-    CONSTRAINT fk_job_skills_skill FOREIGN KEY (skill_id) REFERENCES skills(skill_id) ON DELETE RESTRICT,
-    CONSTRAINT chk_job_skills_score CHECK (importance_score >= 0.00 AND importance_score <= 100.00)
-);
-
--- 3.8 Job Experiences
-CREATE TABLE IF NOT EXISTS job_experiences (
-    job_experience_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    job_post_id INT NOT NULL,
-    position_id INT NOT NULL,
-    during_time_years INT NOT NULL DEFAULT 0,
-    importance_score NUMERIC(5, 2) NOT NULL DEFAULT 1.00,
-    description TEXT,
-    is_required BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT fk_job_exp_job FOREIGN KEY (job_post_id) REFERENCES job_posts(job_post_id) ON DELETE CASCADE,
-    CONSTRAINT fk_job_exp_position FOREIGN KEY (position_id) REFERENCES positions(position_id) ON DELETE RESTRICT,
-    CONSTRAINT chk_job_exp_score CHECK (importance_score >= 0.00 AND importance_score <= 100.00)
-);
-
--- 3.9 Job Educations
-CREATE TABLE IF NOT EXISTS job_educations (
-    job_education_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    job_post_id INT NOT NULL,
-    education_id INT NOT NULL,
-    major VARCHAR(150),
-    importance_score NUMERIC(5, 2) NOT NULL DEFAULT 1.00,
-    is_required BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT fk_job_edu_job FOREIGN KEY (job_post_id) REFERENCES job_posts(job_post_id) ON DELETE CASCADE,
-    CONSTRAINT fk_job_edu_education FOREIGN KEY (education_id) REFERENCES educations(education_id) ON DELETE RESTRICT,
-    CONSTRAINT chk_job_edu_score CHECK (importance_score >= 0.00 AND importance_score <= 100.00)
-);
-
--- 3.10 Job Certificates
-CREATE TABLE IF NOT EXISTS job_certificates (
-    job_certificate_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    job_post_id INT NOT NULL,
-    cert_id INT NOT NULL,
-    is_required BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT fk_job_cert_job FOREIGN KEY (job_post_id) REFERENCES job_posts(job_post_id) ON DELETE CASCADE,
-    CONSTRAINT fk_job_cert_certificate FOREIGN KEY (cert_id) REFERENCES certificates(cert_id) ON DELETE RESTRICT
-);
-
--- 3.11 Job Notifications
-CREATE TABLE IF NOT EXISTS job_notifications (
-    notification_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    account_id INT NOT NULL,
-    job_post_id INT NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    notification_type VARCHAR(50) NOT NULL DEFAULT 'JOB_MATCH',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_read BOOLEAN NOT NULL DEFAULT FALSE,
-    deadline TIMESTAMPTZ,
-    CONSTRAINT fk_job_notifications_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE,
-    CONSTRAINT fk_job_notifications_job FOREIGN KEY (job_post_id) REFERENCES job_posts(job_post_id) ON DELETE CASCADE
-);
-
-
--- =============================================================================
--- 4. Bảng phân tích cv, tìm kiếm và so khớp kết quả 
--- =============================================================================
-
--- 4.1 CV Analyses Table (Standardized position_id link to positions table)
-CREATE TABLE IF NOT EXISTS cv_analyses (
-    analysis_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    resume_id INT NOT NULL,
-    position_id INT, -- Unified with positions catalog
-    analysis_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(30) NOT NULL DEFAULT 'completed',
-    overall_score NUMERIC(5, 2) NOT NULL DEFAULT 0.00,
-    result_json JSONB NOT NULL DEFAULT '{}'::jsonb,
-    CONSTRAINT fk_cv_analyses_resume FOREIGN KEY (resume_id) REFERENCES resumes(resume_id) ON DELETE CASCADE,
-    CONSTRAINT fk_cv_analyses_position FOREIGN KEY (position_id) REFERENCES positions(position_id) ON DELETE SET NULL,
-    CONSTRAINT chk_cv_analyses_score CHECK (overall_score >= 0.00 AND overall_score <= 100.00),
-    CONSTRAINT chk_cv_analyses_status CHECK (status IN ('pending', 'processing', 'completed', 'failed'))
-);
-
--- 4.2 Matched Results Table
-CREATE TABLE IF NOT EXISTS matched_results (
-    match_result_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    analysis_id BIGINT NOT NULL,
-    job_post_id INT NOT NULL,
-    points NUMERIC(5, 2) NOT NULL DEFAULT 0.00,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_matched_results_analysis FOREIGN KEY (analysis_id) REFERENCES cv_analyses(analysis_id) ON DELETE CASCADE,
-    CONSTRAINT fk_matched_results_job FOREIGN KEY (job_post_id) REFERENCES job_posts(job_post_id) ON DELETE CASCADE,
-    CONSTRAINT uq_matched_results_analysis_job UNIQUE (analysis_id, job_post_id),
-    CONSTRAINT chk_matched_results_points CHECK (points >= 0.00 AND points <= 100.00)
-);
-
--- 4.3 Search History Table
-CREATE TABLE IF NOT EXISTS search_history (
-    search_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    account_id INT NOT NULL,
-    query_text TEXT NOT NULL,
-    filters_json JSONB DEFAULT '{}'::jsonb,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_search_history_account FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE
-);
-
-COMMIT;
+COMMENT ON TABLE resume_skills IS 'Lưu trữ danh sách kỹ năng trích xuất từ CV qua AI';
