@@ -1,1 +1,37 @@
-AGENTS.md
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+.env
+*.env.local
+backend/.env
+frontend/.env
+
+# Uploaded files (keep directory via .gitkeep)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Frontend / Node
+node_modules/
+frontend/dist/
+frontend/build/
+.npm
+
+# IDEs & OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
