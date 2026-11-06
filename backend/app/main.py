@@ -6,7 +6,7 @@ from app.routers import auth, jobs, notifications, resumes, statistics
 
 app = FastAPI(
     title=settings.APP_NAME,
-    description="Hệ thống phân tích độ phù hợp CV và kết nối doanh nghiệp tuyển dụng (CView)",
+    description="CView - Doanh nghiệp nào cần bạn",
     version="1.0.0",
 )
 
