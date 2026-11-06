@@ -1,0 +1,762 @@
+{
+  "info": {
+    "_postman_id": "cview-auth-rbac-session-suite-v1",
+    "name": "CView - Auth, RBAC & Session Test Suite",
+    "description": "Bộ kiểm thử tự động toàn diện luồng Authentication, Granular RBAC và Session Lifecycle cho 3 vai trò (CANDIDATE, RECRUITER, ADMIN) trên hệ thống CView. Thiết kế phục vụ Sprint 1 - QA Master Test Plan.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Luồng Ứng viên (Candidate Flow)",
+      "description": "Kiểm thử đăng ký từ Navbar, đăng nhập, lấy thông tin tài khoản và kiểm tra vai trò CANDIDATE.",
+      "item": [
+        {
+          "name": "1.1 Đăng ký tài khoản Ứng viên mới",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const rand = Math.floor(Math.random() * 900000) + 100000;",
+                  "pm.environment.set(\"candidate_dynamic_user\", \"cand_\" + rand);",
+                  "pm.environment.set(\"candidate_dynamic_email\", \"cand_\" + rand + \"@gmail.com\");"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Tạo tài khoản thành công với vai trò CANDIDATE\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"account_id\");",
+                  "    pm.expect(json).to.have.property(\"candidate_id\");",
+                  "    pm.expect(json.roles).to.include(\"CANDIDATE\");",
+                  "    pm.expect(json.status).to.eql(\"ACTIVE\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{candidate_dynamic_user}}\",\n  \"email\": \"{{candidate_dynamic_email}}\",\n  \"password\": \"Password@123\",\n  \"full_name\": \"Nguyễn Văn Test\",\n  \"phone_number\": \"0987123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/candidate/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "candidate", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.2 Đăng ký Ứng viên trùng Email (Kỳ vọng 409 Conflict)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 409 Conflict\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test(\"Thông báo lỗi rõ ràng về username hoặc email đã tồn tại\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.detail).to.include(\"đã tồn tại\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"candidate01\",\n  \"email\": \"candidate01@gmail.com\",\n  \"password\": \"Password@123\",\n  \"full_name\": \"Nguyễn Trùng Lặp\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/candidate/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "candidate", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.3 Đăng nhập Ứng viên (Cổng Navbar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Trả về Access Token & Refresh Token hợp lệ\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"access_token\");",
+                  "    pm.expect(json).to.have.property(\"refresh_token\");",
+                  "    pm.expect(json.token_type.toLowerCase()).to.eql(\"bearer\");",
+                  "    pm.expect(json.roles).to.include(\"CANDIDATE\");",
+                  "    pm.environment.set(\"candidate_access_token\", json.access_token);",
+                  "    pm.environment.set(\"candidate_refresh_token\", json.refresh_token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"candidate01@gmail.com\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/candidate/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "candidate", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.4 Lấy thông tin tài khoản hiện tại (Get Me)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Hồ sơ người dùng khớp thông tin CANDIDATE\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.roles).to.include(\"CANDIDATE\");",
+                  "    pm.expect(json.status).to.eql(\"ACTIVE\");",
+                  "    pm.expect(json).to.have.property(\"candidate_id\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{candidate_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Luồng Nhà tuyển dụng (Recruiter Flow)",
+      "description": "Kiểm thử đăng ký từ nút Tuyển dụng (kèm tạo Công ty & Địa chỉ), đăng nhập và gọi API đăng bài của NTD.",
+      "item": [
+        {
+          "name": "2.1 Đăng ký Nhà tuyển dụng & Công ty",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const rand = Math.floor(Math.random() * 900000) + 100000;",
+                  "pm.environment.set(\"recruiter_dynamic_user\", \"rec_\" + rand);",
+                  "pm.environment.set(\"recruiter_dynamic_email\", \"rec_\" + rand + \"@cviewtech.vn\");",
+                  "pm.environment.set(\"company_dynamic_name\", \"Doanh nghiệp Số \" + rand);",
+                  "pm.environment.set(\"dynamic_tax_code\", \"03\" + String(rand).padStart(8, '0'));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Khởi tạo liên kết Công ty và Nhà tuyển dụng thành công\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.roles).to.include(\"RECRUITER\");",
+                  "    pm.expect(json).to.have.property(\"recruiter_id\");",
+                  "    pm.expect(json).to.have.property(\"company_id\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{recruiter_dynamic_user}}\",\n  \"email\": \"{{recruiter_dynamic_email}}\",\n  \"password\": \"Password@123\",\n  \"full_name\": \"Nguyễn Tuyển Dụng\",\n  \"job_title\": \"Talent Acquisition Lead\",\n  \"work_email\": \"{{recruiter_dynamic_email}}\",\n  \"phone_number\": \"0912345678\",\n  \"company_name\": \"{{company_dynamic_name}}\",\n  \"tax_code\": \"{{dynamic_tax_code}}\",\n  \"industry\": \"Công nghệ Thông tin\",\n  \"street_address\": \"Tòa nhà CView, Q. Cầu Giấy\",\n  \"city\": \"Hà Nội\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/recruiter/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "recruiter", "register"]
+            }
+          }
+        },
+        {
+          "name": "2.2 Đăng nhập Nhà tuyển dụng (Cổng Tuyển dụng)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Nhận Token mang quyền RECRUITER\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.roles).to.include(\"RECRUITER\");",
+                  "    pm.environment.set(\"recruiter_access_token\", json.access_token);",
+                  "    pm.environment.set(\"recruiter_refresh_token\", json.refresh_token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"recruiter01@techcorp.vn\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/recruiter/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "recruiter", "login"]
+            }
+          }
+        },
+        {
+          "name": "2.3 Nhà tuyển dụng gọi API Đăng bài tuyển dụng (RBAC Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Tin tuyển dụng tạo ở trạng thái PENDING\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql(\"PENDING\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{recruiter_access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jobs",
+              "host": ["{{base_url}}"],
+              "path": ["jobs"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Luồng Quản trị viên (Admin Flow)",
+      "description": "Kiểm thử đăng nhập Admin và gọi API nghiệp vụ kiểm duyệt tin tuyển dụng của Admin.",
+      "item": [
+        {
+          "name": "3.1 Đăng nhập Quản trị viên (Admin Login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Nhận Token có vai trò ADMIN\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.roles).to.include(\"ADMIN\");",
+                  "    pm.environment.set(\"admin_access_token\", json.access_token);",
+                  "    pm.environment.set(\"admin_refresh_token\", json.refresh_token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"admin.root@cview.vn\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/admin/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "admin", "login"]
+            }
+          }
+        },
+        {
+          "name": "3.2 Admin kiểm duyệt phê duyệt tin tuyển dụng (RBAC Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Phê duyệt bài đăng thành APPROVED\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.approval_status).to.eql(\"APPROVED\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approval_status\": \"APPROVED\",\n  \"rejection_reason\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jobs/a0000000-0000-0000-0000-000000000101/moderation",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "a0000000-0000-0000-0000-000000000101", "moderation"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Kiểm thử Phân quyền & Ranh giới Bảo mật (RBAC Negative)",
+      "description": "Kiểm thử các tình huống tấn công vượt quyền (Privilege Escalation), mật khẩu sai, tài khoản bị khóa và thiếu chứng thực.",
+      "item": [
+        {
+          "name": "4.1 Ứng viên cố tình gọi API Kiểm duyệt của Admin (Kỳ vọng 403 Forbidden)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Báo lỗi thiếu quyền ADMIN\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.detail).to.include(\"ADMIN\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{candidate_access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approval_status\": \"APPROVED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jobs/a0000000-0000-0000-0000-000000000101/moderation",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "a0000000-0000-0000-0000-000000000101", "moderation"]
+            }
+          }
+        },
+        {
+          "name": "4.2 Ứng viên cố tình gọi API Đăng bài của Nhà tuyển dụng (Kỳ vọng 403 Forbidden)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Báo lỗi thiếu quyền RECRUITER\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.detail).to.include(\"RECRUITER\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{candidate_access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jobs",
+              "host": ["{{base_url}}"],
+              "path": ["jobs"]
+            }
+          }
+        },
+        {
+          "name": "4.3 Đăng nhập với mật khẩu không chính xác (Kỳ vọng 401 Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test(\"Không tiết lộ lỗi chi tiết (bảo mật login)\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.detail).to.include(\"không chính xác\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"candidate01@gmail.com\",\n  \"password\": \"WrongPass@999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/candidate/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "candidate", "login"]
+            }
+          }
+        },
+        {
+          "name": "4.4 Đăng nhập tài khoản chưa kích hoạt (status PENDING - Kỳ vọng 403 Forbidden)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test(\"Từ chối truy cập tài khoản PENDING\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.detail).to.include(\"PENDING\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username_or_email\": \"candidate05@proton.me\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/candidate/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "candidate", "login"]
+            }
+          }
+        },
+        {
+          "name": "4.5 Gọi API yêu cầu Bearer Token nhưng không truyền Header (Kỳ vọng 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Quản lý Phiên làm việc & Xoay vòng Token (Session Lifecycle)",
+      "description": "Kiểm thử xoay vòng Refresh Token (Token Rotation), chống tấn công dùng lại token cũ (Reuse Detection), và đăng xuất thu hồi phiên.",
+      "item": [
+        {
+          "name": "5.1 Làm mới Access Token (Token Refresh & Rotation)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Cấp mới thành công và xoay vòng Refresh Token\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"access_token\");",
+                  "    pm.expect(json).to.have.property(\"refresh_token\");",
+                  "    pm.environment.set(\"old_candidate_refresh_token\", pm.environment.get(\"candidate_refresh_token\"));",
+                  "    pm.environment.set(\"candidate_access_token\", json.access_token);",
+                  "    pm.environment.set(\"candidate_refresh_token\", json.refresh_token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{candidate_refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "5.2 Tấn công dùng lại Refresh Token cũ sau khi xoay vòng (Kỳ vọng 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test(\"Từ chối token đã qua sử dụng\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.detail).to.include(\"không hợp lệ hoặc đã hết hạn\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{old_candidate_refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "5.3 Đăng xuất và thu hồi phiên làm việc (Session Revoke)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Xác nhận phiên đã được thu hồi\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.message).to.include(\"thu hồi\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{candidate_refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "5.4 Dùng Refresh Token đã bị thu hồi để làm mới phiên (Kỳ vọng 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{candidate_refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+
