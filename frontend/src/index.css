@@ -78,22 +78,18 @@ h6 {
   will-change: opacity, transform;
 }
 
-/* Fade Up */
 .reveal-up {
   transform: translateY(45px);
 }
 
-/* Slide từ trái */
 .reveal-left {
   transform: translateX(-65px);
 }
 
-/* Slide từ phải */
 .reveal-right {
   transform: translateX(65px);
 }
 
-/* Khi phần tử xuất hiện */
 .scroll-reveal.is-visible {
   opacity: 1;
   transform: translate(0, 0);

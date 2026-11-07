@@ -12,7 +12,6 @@ function ScrollReveal({
 
   useEffect(() => {
     const element = elementRef.current
-
     if (!element) return
 
     if (!('IntersectionObserver' in window)) {
@@ -22,13 +21,11 @@ function ScrollReveal({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-          observer.unobserve(element)
-        }
+        setIsVisible(entry.isIntersecting)
       },
       {
         threshold: 0.15,
+        rootMargin: '0px 0px -30px 0px',
       }
     )
 
