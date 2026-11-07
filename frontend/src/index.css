@@ -35,24 +35,6 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-color: #FEFFFA;
-  background-image:
-    radial-gradient(
-      ellipse at 0% 20%,
-      rgba(206, 250, 218, 0.45) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse at 100% 35%,
-      rgba(210, 250, 220, 0.45) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse at 50% 100%,
-      rgba(249, 250, 202, 0.35) 0%,
-      transparent 65%
-    );
-  background-repeat: no-repeat;
-  background-attachment: fixed;
 }
 
 button,
@@ -124,4 +106,24 @@ h6 {
     transform: none;
     transition: none;
   }
+}
+/* Continuous fixed background for CView */
+.cview-page-background {
+  position: relative;
+  min-height: 100vh;
+  background-color: #FEFFFA;
+  isolation: isolate;
+}
+
+.cview-page-background::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background-image: url('./assets/background.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 100% 100vh;
 }
