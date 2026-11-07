@@ -1,8 +1,11 @@
+
 import heroMascot from '../assets/mascot/characters/hero-mascot.png'
 import sparkle from '../assets/mascot/decorations/sparkle.png'
 import searchIcon from '../assets/mascot/decorations/search-icon.png'
 import documentIcon from '../assets/mascot/decorations/document-icon.png'
 import briefcaseIcon from '../assets/mascot/decorations/briefcase-icon.png'
+import ScrollReveal from '../components/ScrollReveal'
+
 const benefits = [
   {
     icon: '⌕',
@@ -30,23 +33,20 @@ function HeroSection() {
       id="home"
       className="relative isolate min-h-[650px] overflow-hidden bg-transparent"
     >
-      {/* Background decorations */}
-      <div className="pointer-events-none absolute -left-24 top-[-100px] -z-10 h-72 w-72 rounded-full bg-green-100/70 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 top-20 -z-10 h-96 w-96 rounded-full bg-green-100/80 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-0 -z-10 h-48 w-full bg-gradient-to-t from-[#E9FBDD] to-transparent" />
-      <div className="pointer-events-none absolute bottom-10 right-0 -z-10 h-32 w-2/3 rounded-full bg-yellow-100/50 blur-3xl" />
-
       <div className="mx-auto grid min-h-[650px] max-w-[1440px] items-center gap-8 px-6 py-12 md:grid-cols-2 lg:px-14">
 
         {/* Left content */}
-        <div className="z-10 max-w-[590px]">
-         <h1 className="text-[clamp(2rem,3vw,3.5rem)] font-extrabold leading-tight">
-        <span className="whitespace-nowrap">
-        KẾT NỐI CÔNG VIỆC MƠ ƯỚC
-        </span>
-        <br />
-        BỨT PHÁ SỰ NGHIỆP
-        </h1>
+        <ScrollReveal
+          direction="left"
+          className="z-10 max-w-[590px]"
+        >
+          <h1 className="text-[clamp(2rem,3vw,3.5rem)] font-extrabold leading-tight">
+            <span className="whitespace-nowrap">
+              KẾT NỐI CÔNG VIỆC MƠ ƯỚC
+            </span>
+            <br />
+            BỨT PHÁ SỰ NGHIỆP
+          </h1>
 
           <p className="mt-5 max-w-[480px] text-sm leading-relaxed text-[#1A241E] md:text-base">
             Tìm kiếm công việc phù hợp dựa trên CV của bạn, chấm
@@ -77,7 +77,7 @@ function HeroSection() {
           {/* Main CTA */}
           <a
             href="/phan-tich-cv"
-           className="mt-9 inline-flex items-center gap-4 rounded-full bg-[#FF4B6E] px-7 py-3.5 !text-white font-bold shadow-sm transition hover:-translate-y-1 hover:bg-[#ed3d60] md:text-lg"
+            className="mt-9 inline-flex items-center gap-4 rounded-full bg-[#FF4B6E] px-7 py-3.5 !text-white font-bold shadow-sm transition hover:-translate-y-1 hover:bg-[#ed3d60] md:text-lg"
           >
             BẮT ĐẦU PHÂN TÍCH CV
             <span className="text-2xl leading-none">⟶</span>
@@ -94,10 +94,14 @@ function HeroSection() {
               </span>
             ))}
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Right mascot */}
-        <div className="relative flex items-center justify-center">
+        <ScrollReveal
+          direction="right"
+          delay={200}
+          className="relative flex items-center justify-center"
+        >
           <div className="absolute h-[360px] w-[360px] rounded-full bg-gradient-to-br from-[#E6FADD] to-[#F9FACA] blur-2xl md:h-[450px] md:w-[450px]" />
 
           <img
@@ -105,29 +109,31 @@ function HeroSection() {
             alt="Mascot tắc kè CView cầm CV"
             className="relative z-10 w-full max-w-[430px] object-contain drop-shadow-sm md:max-w-[500px]"
           />
-            <img
-  src={sparkle}
-  alt=""
-  className="absolute left-[12%] top-[8%] z-20 w-16 object-contain"
-/>
 
-<img
-  src={searchIcon}
-  alt=""
-  className="absolute left-[2%] top-[48%] z-20 w-12 object-contain"
-/>
+          <img
+            src={sparkle}
+            alt=""
+            className="absolute left-[12%] top-[8%] z-20 w-16 object-contain"
+          />
 
-<img
-  src={documentIcon}
-  alt=""
-  className="absolute right-[4%] top-[34%] z-20 w-12 object-contain"
-/>
+          <img
+            src={searchIcon}
+            alt=""
+            className="absolute left-[2%] top-[48%] z-20 w-12 object-contain"
+          />
 
-<img
-  src={briefcaseIcon}
-  alt=""
-  className="absolute bottom-[12%] left-0 z-20 w-14 object-contain"
-/>
+          <img
+            src={documentIcon}
+            alt=""
+            className="absolute right-[4%] top-[34%] z-20 w-12 object-contain"
+          />
+
+          <img
+            src={briefcaseIcon}
+            alt=""
+            className="absolute bottom-[12%] left-0 z-20 w-14 object-contain"
+          />
+
           <span className="absolute right-5 top-12 z-20 text-4xl text-[#F5D34F]">
             ✦
           </span>
@@ -135,7 +141,7 @@ function HeroSection() {
           <span className="absolute bottom-12 left-5 z-20 text-3xl text-[#4CAF50]">
             ✦
           </span>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   )

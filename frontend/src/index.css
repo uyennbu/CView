@@ -34,6 +34,25 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #FEFFFA;
+  background-image:
+    radial-gradient(
+      ellipse at 0% 20%,
+      rgba(206, 250, 218, 0.45) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 100% 35%,
+      rgba(210, 250, 220, 0.45) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 50% 100%,
+      rgba(249, 250, 202, 0.35) 0%,
+      transparent 65%
+    );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 button,
@@ -52,23 +71,7 @@ a {
 /* CView Homepage Background */
 .cview-page-background {
   min-height: 100vh;
-  background:
-    radial-gradient(
-      ellipse at 5% 25%,
-      rgba(206, 250, 218, 0.65) 0%,
-      transparent 35%
-    ),
-    radial-gradient(
-      ellipse at 95% 35%,
-      rgba(210, 250, 220, 0.7) 0%,
-      transparent 35%
-    ),
-    radial-gradient(
-      ellipse at 50% 100%,
-      rgba(249, 250, 202, 0.75) 0%,
-      transparent 45%
-    ),
-    #FEFFFA;
+  background: transparent;
   overflow-x: hidden;
 }
 h1,
@@ -79,4 +82,46 @@ h5,
 h6 {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
+}
+
+/* ==============================
+   CView Scroll Reveal Animation
+================================ */
+
+.scroll-reveal {
+  opacity: 0;
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+/* Fade Up */
+.reveal-up {
+  transform: translateY(45px);
+}
+
+/* Slide từ trái */
+.reveal-left {
+  transform: translateX(-65px);
+}
+
+/* Slide từ phải */
+.reveal-right {
+  transform: translateX(65px);
+}
+
+/* Khi phần tử xuất hiện */
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* Tôn trọng cài đặt giảm chuyển động */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
