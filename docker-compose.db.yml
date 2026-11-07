@@ -1,0 +1,39 @@
+# =============================================================================
+# CVIEW DEPLOYMENT - VM3: DATABASE (PostgreSQL 15)
+# Private IP: 172.16.2.4 | Azure Virtual Network (VNet)
+# =============================================================================
+
+services:
+  postgres:
+    container_name: cview-postgres-vm3
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cview_user
+      POSTGRES_PASSWORD: cview_password
+      POSTGRES_DB: cview_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      # Lắng nghe trên 0.0.0.0:5432 để VM2 (172.16.1.4) kết nối qua mạng nội bộ Azure VNet
+      - "5432:5432"
+    volumes:
+      # Volume lưu trữ dữ liệu bền vững trên máy chủ VM3
+      - cview_postgres_data:/var/lib/postgresql/data
+      # Tự động nạp DDL khởi tạo 29 bảng schema khi container khởi chạy lần đầu
+      - ./database/01_init_schema.sql:/docker-entrypoint-initdb.d/01_init_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cview_user -d cview_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - cview-db-net
+
+networks:
+  cview-db-net:
+    driver: bridge
+
+volumes:
+  cview_postgres_data:
+    name: cview_postgres_data

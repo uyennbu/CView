@@ -1,0 +1,60 @@
+# =============================================================================
+# CVIEW DEPLOYMENT - VM2: BACKEND (FastAPI / Python)
+# Private IP: 172.16.1.4 | Azure Virtual Network (VNet)
+# =============================================================================
+
+services:
+  backend:
+    container_name: cview-backend-vm2
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      # Lắng nghe trên cổng 8000 để VM1 (172.16.0.4 - Nginx Reverse Proxy) gọi tới
+      - "8000:8000"
+    environment:
+      APP_NAME: "CView Backend API"
+      APP_ENV: "production"
+      DEBUG: "False"
+      API_V1_PREFIX: "/api/v1"
+      
+      # Kết nối trực tiếp vào Private IP thực tế của VM3 (Database) trong Azure VNet
+      POSTGRES_USER: cview_user
+      POSTGRES_PASSWORD: cview_password
+      POSTGRES_HOST: 172.16.2.4
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: cview_db
+      DATABASE_URL: "postgresql+psycopg2://cview_user:cview_password@172.16.2.4:5432/cview_db"
+      
+      # Bảo mật JWT
+      SECRET_KEY: "cview-production-super-secret-key-azure-vm2-change-in-prod"
+      ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: 60
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      
+      # CORS: Cho phép VM1 (Frontend: 172.16.0.4) và các domain được chỉ định
+      CORS_ORIGINS: "http://172.16.0.4,http://localhost"
+      
+      # Thư mục lưu trữ CV PDF tải lên
+      UPLOAD_DIR: "uploads/resumes"
+      MAX_UPLOAD_SIZE_BYTES: 10485760
+    volumes:
+      # Volume lưu trữ file upload lâu dài trên VM2
+      - cview_backend_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - cview-backend-net
+
+networks:
+  cview-backend-net:
+    driver: bridge
+
+volumes:
+  cview_backend_uploads:
+    name: cview_backend_uploads
