@@ -1,0 +1,89 @@
+services:
+  # =========================================================================
+  # 1. PostgreSQL Database Service
+  # =========================================================================
+  postgres:
+    container_name: cview-postgres
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cview_user
+      POSTGRES_PASSWORD: cview_password
+      POSTGRES_DB: cview_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - cview_postgres_data:/var/lib/postgresql/data
+      # Tự động nạp DDL khởi tạo 29 bảng CSDL khi container khởi chạy lần đầu
+      - ./database/01_init_schema.sql:/docker-entrypoint-initdb.d/01_init_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cview_user -d cview_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - cview-network
+
+  # =========================================================================
+  # 2. FastAPI Backend Service
+  # =========================================================================
+  backend:
+    container_name: cview-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount thư mục backend từ máy host vào /app trong container để kích hoạt Hot-Reload
+      - ./backend:/app
+      - cview_backend_uploads:/app/uploads
+    environment:
+      APP_NAME: "CView Backend API"
+      APP_ENV: "development"
+      DEBUG: "True"
+      API_V1_PREFIX: "/api/v1"
+      
+      # Cấu hình kết nối CSDL PostgreSQL nội bộ trong Docker network
+      POSTGRES_USER: cview_user
+      POSTGRES_PASSWORD: cview_password
+      POSTGRES_HOST: cview-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: cview_db
+      DATABASE_URL: "postgresql+psycopg2://cview_user:cview_password@cview-postgres:5432/cview_db"
+      
+      # JWT & Security settings
+      SECRET_KEY: "cview-development-super-secret-key-32-chars-min"
+      ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: 60
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      
+      # CORS origins cho phép Frontend cục bộ kết nối
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
+      
+      # Quản lý file PDF tải lên
+      UPLOAD_DIR: "uploads/resumes"
+      MAX_UPLOAD_SIZE_BYTES: 10485760
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cview-network
+
+# ===========================================================================
+# Cấu hình Mạng nội bộ (Bridge Network) & Persistent Volumes
+# ===========================================================================
+networks:
+  cview-network:
+    name: cview-network
+    driver: bridge
+
+volumes:
+  cview_postgres_data:
+    name: cview_postgres_data
+  cview_backend_uploads:
+    name: cview_backend_uploads
+
