@@ -2,7 +2,7 @@ import Navbar from './components/Navbar'
 import HeroSection from './sections/HeroSection'
 import CVAnalysisSection from './sections/CVAnalysisSection'
 import JobConnectionSection from './sections/JobConnectionSection'
-import TestimonialsSection from './sections/TestimonialsSection'
+// import TestimonialsSection from './sections/TestimonialsSection'
 import ContactSection from './sections/ContactSection'
 function App() {
   return (
@@ -13,7 +13,7 @@ function App() {
         <HeroSection />
         <CVAnalysisSection />
         <JobConnectionSection />
-        <TestimonialsSection />
+        {/* <TestimonialsSection /> */}
         <ContactSection />
       </main>
     </div>
