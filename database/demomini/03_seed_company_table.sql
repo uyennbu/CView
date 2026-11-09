@@ -1,9 +1,16 @@
-
 -- =============================================================================
 -- SEED DATA: Bảng nghiệp vụ (Section 2)
 -- addresses, companies, recruiter_profiles, candidate_profiles,
 -- domains, skills, certificates, resumes, resume_skills
 -- 5 dòng mỗi bảng
+-- =============================================================================
+
+SET client_min_messages TO WARNING;
+
+-- Dọn dẹp các bảng nghiệp vụ trước khi nạp để chạy lại an toàn, không trùng key
+TRUNCATE TABLE resume_skills, resumes, candidate_profiles, recruiter_profiles,
+               companies, addresses, domains, skills, certificates CASCADE;
+
 -- =============================================================================
 -- 10. addresses
 --     Tạo trước: 5 địa chỉ công ty (addr-C) + 5 địa chỉ ứng viên (addr-U)
@@ -65,8 +72,6 @@ INSERT INTO companies (company_id, name, address_id, tax_code, website, logo_url
 
 -- =============================================================================
 -- 12. recruiter_profiles (5 nhà tuyển dụng)
---     account_id: UNIQUE — dùng recruiter01-05 (account đã có)
---     company_id: FK tới companies
 -- =============================================================================
 INSERT INTO recruiter_profiles (recruiter_id, account_id, company_id, full_name, job_title, work_email, phone_number) VALUES
     ('e5000000-0000-0000-0000-000000000001',
@@ -96,9 +101,6 @@ INSERT INTO recruiter_profiles (recruiter_id, account_id, company_id, full_name,
 
 -- =============================================================================
 -- 13. candidate_profiles (5 ứng viên)
---     date_of_birth: <= CURRENT_DATE - 16 years  =>  <= 2010-11-06
---     gender: MALE / FEMALE / OTHER
---     education_level: HIGH_SCHOOL/ASSOCIATE/BACHELOR/MASTER/DOCTORATE/OTHER
 -- =============================================================================
 INSERT INTO candidate_profiles (candidate_id, account_id, full_name, date_of_birth, gender, address_id, current_job_title, years_of_experience, education_level) VALUES
     ('f6000000-0000-0000-0000-000000000001',
@@ -142,8 +144,7 @@ INSERT INTO domains (domain_name, description) VALUES
     ('Giao duc & Edtech',               'Nen tang hoc truc tuyen, quan ly dao tao, LMS');
 
 -- =============================================================================
--- 15. skills (5 ky nang chuan hoa)
---     category: HARD_SKILL / SOFT_SKILL / MANAGEMENT_LEADERSHIP / LANGUAGE / OTHER
+-- 15. skills (5 kỹ năng chuẩn hóa)
 -- =============================================================================
 INSERT INTO skills (skill_name, category, description) VALUES
     ('Java Spring Boot',    'HARD_SKILL',           'Framework Java cho backend enterprise'),
@@ -153,78 +154,65 @@ INSERT INTO skills (skill_name, category, description) VALUES
     ('English (B2+)',       'LANGUAGE',             'Tieng Anh chuyen nghiep, doc viet tai lieu ky thuat');
 
 -- =============================================================================
--- 16. certificates (5 chung chi nghe nghiep)
---     category: TECH_DATA / MANAGEMENT_AGILE / LANGUAGE / PROFESSIONAL_LICENSE / ...
+-- 16. certificates (5 chứng chỉ nghề nghiệp)
 -- =============================================================================
 INSERT INTO certificates (certificate_name, issuer, score, category) VALUES
-    ('AWS Certified Solutions Architect - Associate', 'Amazon Web Services',         NULL,  'TECH_DATA'),
-    ('Google Professional Cloud Developer',           'Google Cloud',                NULL,  'TECH_DATA'),
-    ('Project Management Professional (PMP)',         'Project Management Institute', NULL,  'MANAGEMENT_AGILE'),
-    ('IELTS Academic',                                'British Council / IDP',        7.0,   'LANGUAGE'),
-    ('Certified Kubernetes Administrator (CKA)',      'Cloud Native Computing Found.',NULL,  'TECH_DATA');
+    ('AWS Certified Solutions Architect - Associate', 'Amazon Web Services',          NULL,  'TECH_DATA'),
+    ('Google Professional Cloud Developer',           'Google Cloud',                 NULL,  'TECH_DATA'),
+    ('Project Management Professional (PMP)',         'Project Management Institute',  NULL,  'MANAGEMENT_AGILE'),
+    ('IELTS Academic',                                'British Council / IDP',         7.0,   'LANGUAGE'),
+    ('Certified Kubernetes Administrator (CKA)',      'Cloud Native Computing Found.', NULL,  'TECH_DATA');
 
 -- =============================================================================
--- 17. resumes (5 CV cua ung vien)
---     candidate_id: FK toi candidate_profiles
---     file_size_bytes: > 0 va <= 10 485 760 (10 MB)
+-- 17. resumes (5 CV của ứng viên)
 -- =============================================================================
 INSERT INTO resumes (resume_id, candidate_id, title, file_name, file_url, file_size_bytes) VALUES
-    ('g7000000-0000-0000-0000-000000000001',
+    ('07000000-0000-0000-0000-000000000001',
      'f6000000-0000-0000-0000-000000000001',
      'CV Backend Developer 2026',
      'NguyenVanAn_CV_Backend_2026.pdf',
      'https://storage.cview.vn/resumes/f6-01/NguyenVanAn_CV_Backend_2026.pdf',
-     524288),   -- ~512 KB
+     524288),
 
-    ('g7000000-0000-0000-0000-000000000002',
+    ('07000000-0000-0000-0000-000000000002',
      'f6000000-0000-0000-0000-000000000002',
      'CV Frontend Developer 2026',
      'TranThiBichNgoc_CV_Frontend_2026.pdf',
      'https://storage.cview.vn/resumes/f6-02/TranThiBichNgoc_CV_Frontend_2026.pdf',
-     409600),   -- ~400 KB
+     409600),
 
-    ('g7000000-0000-0000-0000-000000000003',
+    ('07000000-0000-0000-0000-000000000003',
      'f6000000-0000-0000-0000-000000000003',
      'CV DevOps Senior 2026',
      'LeHoangNam_CV_DevOps_2026.pdf',
      'https://storage.cview.vn/resumes/f6-03/LeHoangNam_CV_DevOps_2026.pdf',
-     786432),   -- ~768 KB
+     786432),
 
-    ('g7000000-0000-0000-0000-000000000004',
+    ('07000000-0000-0000-0000-000000000004',
      'f6000000-0000-0000-0000-000000000004',
      'CV Fresher Developer 2026',
      'PhamNgocLinh_CV_Fresher_2026.pdf',
      'https://storage.cview.vn/resumes/f6-04/PhamNgocLinh_CV_Fresher_2026.pdf',
-     307200),   -- ~300 KB
+     307200),
 
-    ('g7000000-0000-0000-0000-000000000005',
+    ('07000000-0000-0000-0000-000000000005',
      'f6000000-0000-0000-0000-000000000005',
      'CV Data Engineer Senior 2026',
      'VoDucThinh_CV_DataEng_2026.pdf',
      'https://storage.cview.vn/resumes/f6-05/VoDucThinh_CV_DataEng_2026.pdf',
-     1048576);  -- ~1 MB
+     1048576);
 
 -- =============================================================================
--- 18. resume_skills (5 ky nang trich xuat tu CV qua AI)
---     resume_id + skill_id: PK composite
---     proficiency_level: BEGINNER / MEDIUM / ADVANCED / EXPERT
---     confidence_score: 0.000 – 1.000
---     Dung JOIN dong de lay skill_id theo ten, tranh hardcode serial
+-- 18. resume_skills (5 kỹ năng trích xuất từ CV qua AI)
 -- =============================================================================
 INSERT INTO resume_skills (resume_id, skill_id, years_experience, proficiency_level, confidence_score)
 SELECT r.resume_id, s.skill_id, m.years_experience, m.proficiency_level, m.confidence_score
 FROM (VALUES
-    ('g7000000-0000-0000-0000-000000000001'::UUID, 'Java Spring Boot',    3.0, 'ADVANCED', 0.950),
-    ('g7000000-0000-0000-0000-000000000002'::UUID, 'Python',             1.5, 'MEDIUM',   0.880),
-    ('g7000000-0000-0000-0000-000000000003'::UUID, 'Docker & Kubernetes', 5.0, 'EXPERT',   0.970),
-    ('g7000000-0000-0000-0000-000000000004'::UUID, 'Giao tiep hieu qua', 0.0, 'MEDIUM',   0.750),
-    ('g7000000-0000-0000-0000-000000000005'::UUID, 'Python',             8.5, 'EXPERT',   0.990)
+    ('07000000-0000-0000-0000-000000000001'::UUID, 'Java Spring Boot',    3.0, 'ADVANCED', 0.950),
+    ('07000000-0000-0000-0000-000000000002'::UUID, 'Python',             1.5, 'MEDIUM',   0.880),
+    ('07000000-0000-0000-0000-000000000003'::UUID, 'Docker & Kubernetes', 5.0, 'EXPERT',   0.970),
+    ('07000000-0000-0000-0000-000000000004'::UUID, 'Giao tiep hieu qua', 0.0, 'MEDIUM',   0.750),
+    ('07000000-0000-0000-0000-000000000005'::UUID, 'Python',             8.5, 'EXPERT',   0.990)
 ) AS m(resume_id, skill_name, years_experience, proficiency_level, confidence_score)
 JOIN resumes r ON r.resume_id = m.resume_id
 JOIN skills  s ON s.skill_name = m.skill_name;
-
-
-
-
-
-

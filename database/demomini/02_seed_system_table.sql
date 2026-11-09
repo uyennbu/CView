@@ -1,31 +1,35 @@
 -- =============================================================================
 -- SEED DATA: Bảng hệ thống (Section 1)
--- 5 dòng mỗi bảng
+-- 5 dòng mỗi bảng (kèm thêm các bản ghi liên kết cho các bảng sau)
 -- =============================================================================
 
 -- Tắt notice để seed sạch hơn
 SET client_min_messages TO WARNING;
 
+-- Tự động dọn dẹp các bảng hệ thống trước khi nạp để chạy lại an toàn, không bị trùng key
+TRUNCATE TABLE system_error_logs, activity_logs, auth_logs, sessions, 
+               role_permissions, account_roles, permissions, roles, accounts CASCADE;
+
 -- =============================================================================
--- 1. accounts (3 ADMIN + 1 RECRUITER + 1 CANDIDATE để dùng lại ở FK bên dưới)
+-- 1. accounts (3 ADMIN + 5 RECRUITER + 5 CANDIDATE để dùng lại ở FK bên dưới)
 -- password_hash: bcrypt của 'Password@123'
 -- =============================================================================
 INSERT INTO accounts (account_id, username, email, password_hash, phone_number, status, last_login_at) VALUES
-    ('a1000000-0000-0000-0000-000000000001', 'admin_root',    'admin.root@cview.vn',      '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0901234561', 'ACTIVE',    NOW() - INTERVAL '1 hour'),
-    ('a1000000-0000-0000-0000-000000000002', 'admin_ops',     'admin.ops@cview.vn',       '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0901234562', 'ACTIVE',    NOW() - INTERVAL '2 hours'),
-    ('a1000000-0000-0000-0000-000000000003', 'admin_support', 'admin.support@cview.vn',   '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0901234563', 'ACTIVE',    NOW() - INTERVAL '3 hours'),
-    ('a1000000-0000-0000-0000-000000000004', 'recruiter01',   'recruiter01@techcorp.vn',  '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0912345671', 'ACTIVE',    NOW() - INTERVAL '30 minutes'),
-    ('a1000000-0000-0000-0000-000000000005', 'candidate01',   'candidate01@gmail.com',    '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0978901231', 'ACTIVE',    NOW() - INTERVAL '15 minutes');
+    ('a1000000-0000-0000-0000-000000000001', 'admin_root',    'admin.root@cview.vn',      '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0901234561', 'ACTIVE',    NOW() - INTERVAL '1 hour'),
+    ('a1000000-0000-0000-0000-000000000002', 'admin_ops',     'admin.ops@cview.vn',       '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0901234562', 'ACTIVE',    NOW() - INTERVAL '2 hours'),
+    ('a1000000-0000-0000-0000-000000000003', 'admin_support', 'admin.support@cview.vn',   '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0901234563', 'ACTIVE',    NOW() - INTERVAL '3 hours'),
+    ('a1000000-0000-0000-0000-000000000004', 'recruiter01',   'recruiter01@techcorp.vn',  '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0912345671', 'ACTIVE',    NOW() - INTERVAL '30 minutes'),
+    ('a1000000-0000-0000-0000-000000000005', 'candidate01',   'candidate01@gmail.com',    '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0978901231', 'ACTIVE',    NOW() - INTERVAL '15 minutes'),
     -- Thêm recruiters
-    ('a1000000-0000-0000-0000-000000000006', 'recruiter02', 'recruiter02@fptsoft.vn',    '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0912345672', 'ACTIVE', NOW() - INTERVAL '1 day'),
-    ('a1000000-0000-0000-0000-000000000007', 'recruiter03', 'recruiter03@vingroup.vn',   '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0912345673', 'ACTIVE', NOW() - INTERVAL '2 days'),
-    ('a1000000-0000-0000-0000-000000000008', 'recruiter04', 'recruiter04@vnpay.vn',      '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0912345674', 'ACTIVE', NOW() - INTERVAL '3 days'),
-    ('a1000000-0000-0000-0000-000000000009', 'recruiter05', 'recruiter05@tiki.vn',       '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0912345675', 'ACTIVE', NOW() - INTERVAL '4 days'),
+    ('a1000000-0000-0000-0000-000000000006', 'recruiter02', 'recruiter02@fptsoft.vn',    '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0912345672', 'ACTIVE', NOW() - INTERVAL '1 day'),
+    ('a1000000-0000-0000-0000-000000000007', 'recruiter03', 'recruiter03@vingroup.vn',   '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0912345673', 'ACTIVE', NOW() - INTERVAL '2 days'),
+    ('a1000000-0000-0000-0000-000000000008', 'recruiter04', 'recruiter04@vnpay.vn',      '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0912345674', 'ACTIVE', NOW() - INTERVAL '3 days'),
+    ('a1000000-0000-0000-0000-000000000009', 'recruiter05', 'recruiter05@tiki.vn',       '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0912345675', 'ACTIVE', NOW() - INTERVAL '4 days'),
     -- Thêm candidates
-    ('a1000000-0000-0000-0000-000000000010', 'candidate02', 'candidate02@gmail.com',     '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0978901232', 'ACTIVE', NOW() - INTERVAL '1 hour'),
-    ('a1000000-0000-0000-0000-000000000011', 'candidate03', 'candidate03@yahoo.com',     '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0978901233', 'ACTIVE', NOW() - INTERVAL '2 hours'),
-    ('a1000000-0000-0000-0000-000000000012', 'candidate04', 'candidate04@outlook.com',   '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0978901234', 'ACTIVE', NOW() - INTERVAL '3 hours'),
-    ('a1000000-0000-0000-0000-000000000013', 'candidate05', 'candidate05@proton.me',     '$2a$12$KIXkFqkGJ1qW.e8RZQaXCOfOO1p.vSVMZ.Rk6J2Ei8Ls7GEyUxGSe', '0978901235', 'PENDING', NULL);
+    ('a1000000-0000-0000-0000-000000000010', 'candidate02', 'candidate02@gmail.com',     '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0978901232', 'ACTIVE', NOW() - INTERVAL '1 hour'),
+    ('a1000000-0000-0000-0000-000000000011', 'candidate03', 'candidate03@yahoo.com',     '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0978901233', 'ACTIVE', NOW() - INTERVAL '2 hours'),
+    ('a1000000-0000-0000-0000-000000000012', 'candidate04', 'candidate04@outlook.com',   '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0978901234', 'ACTIVE', NOW() - INTERVAL '3 hours'),
+    ('a1000000-0000-0000-0000-000000000013', 'candidate05', 'candidate05@proton.me',     '$2a$12$7K1TmkACc5qBku6Rkkqf.OgxDvAph3F.M8lU9wPZBU2r2QXScoc0C', '0978901235', 'PENDING', NULL);
 
 -- =============================================================================
 -- 2. roles (3 role chuẩn theo constraint chk_roles_name)
@@ -46,12 +50,7 @@ INSERT INTO permissions (permission_name, description) VALUES
     ('APPLY_JOBS',         'Nộp đơn ứng tuyển và theo dõi trạng thái đơn');
 
 -- =============================================================================
--- 4. account_roles (gán role cho 5 accounts)
---    admin_root     => ADMIN
---    admin_ops      => ADMIN
---    admin_support  => ADMIN
---    recruiter01    => RECRUITER
---    candidate01    => CANDIDATE
+-- 4. account_roles (gán role cho các accounts)
 -- =============================================================================
 INSERT INTO account_roles (account_id, role_id)
 SELECT a.account_id, r.role_id
@@ -60,7 +59,7 @@ FROM (VALUES
     ('a1000000-0000-0000-0000-000000000002'::UUID, 'ADMIN'),
     ('a1000000-0000-0000-0000-000000000003'::UUID, 'ADMIN'),
     ('a1000000-0000-0000-0000-000000000004'::UUID, 'RECRUITER'),
-    ('a1000000-0000-0000-0000-000000000005'::UUID, 'CANDIDATE')
+    ('a1000000-0000-0000-0000-000000000005'::UUID, 'CANDIDATE'),
     ('a1000000-0000-0000-0000-000000000006'::UUID, 'RECRUITER'),
     ('a1000000-0000-0000-0000-000000000007'::UUID, 'RECRUITER'),
     ('a1000000-0000-0000-0000-000000000008'::UUID, 'RECRUITER'),
@@ -72,11 +71,9 @@ FROM (VALUES
 ) AS mapping(account_id, role_name)
 JOIN accounts a ON a.account_id = mapping.account_id
 JOIN roles    r ON r.role_name  = mapping.role_name;
+
 -- =============================================================================
 -- 5. role_permissions (gán permission cho role, 5 cặp)
---    ADMIN     => MANAGE_ACCOUNTS, APPROVE_JOB_POSTS, VIEW_SYSTEM_LOGS
---    RECRUITER => MANAGE_OWN_JOBS
---    CANDIDATE => APPLY_JOBS
 -- =============================================================================
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.role_id, p.permission_id
@@ -110,7 +107,7 @@ INSERT INTO sessions (session_id, account_id, refresh_token_hash, ip_address, us
      'a1000000-0000-0000-0000-000000000003',
      '$2a$12$SESSION_HASH_ADMIN_SUP_003xxxxxxxxxxxxxxxxxxxxxxxxxxx',
      '10.0.0.5',      'Mozilla/5.0 (X11; Linux x86_64) Firefox/126.0',
-     TRUE,  NOW() + INTERVAL '1 day'),     -- phiên đã revoke (vẫn chưa hết hạn)
+     TRUE,  NOW() + INTERVAL '1 day'),
 
     ('b2000000-0000-0000-0000-000000000004',
      'a1000000-0000-0000-0000-000000000004',
@@ -136,7 +133,6 @@ INSERT INTO auth_logs (account_id, event_type, ip_address, user_agent, failure_r
 
 -- =============================================================================
 -- 8. activity_logs (5 bản ghi hành vi nghiệp vụ)
--- Dùng session_id đã có ở bảng sessions
 -- =============================================================================
 INSERT INTO activity_logs (sessions_id, action_type, target_entity, target_id, details) VALUES
     ('b2000000-0000-0000-0000-000000000004',

@@ -10,15 +10,17 @@
 --   addresses          : c3000000-0000-0000-0000-00000000000x  (c3-001..005 = cty, c3-006..010 = ứng viên)
 --   accounts (admin)   : a1000000-0000-0000-0000-00000000000x  (001..003 = ADMIN)
 --   candidate_profiles : f6000000-0000-0000-0000-00000000000x
---   resumes            : g7000000-0000-0000-0000-00000000000x
+--   resumes            : 07000000-0000-0000-0000-00000000000x
 --   skills/domains/certs: serial (JOIN theo tên để tránh hardcode)
 --
 -- UUID mới trong file này:
---   job_posts          : h8000000-0000-0000-0000-00000000000x
---   cv_analyses        : i9000000-0000-0000-0000-00000000000x
+--   job_posts          : 08000000-0000-0000-0000-00000000000x
+--   cv_analyses        : 09000000-0000-0000-0000-00000000000x
 -- =============================================================================
 
 SET client_min_messages TO WARNING;
+
+TRUNCATE TABLE search_history, job_applications, saved_jobs, matched_results, cv_analyses, job_domains, job_certificates, job_skills, job_posts CASCADE;
 
 -- =============================================================================
 -- 19. job_posts (5 tin tuyển dụng)
@@ -40,7 +42,7 @@ INSERT INTO job_posts (
 ) VALUES
 
 -- JP-01: TechCorp — Senior Backend Developer (APPROVED)
-(   'h8000000-0000-0000-0000-000000000001',
+(   '08000000-0000-0000-0000-000000000001',
     'e5000000-0000-0000-0000-000000000001',   -- recruiter: Nguyen Thi Lan Anh / TechCorp
     'd4000000-0000-0000-0000-000000000001',   -- TechCorp Vietnam JSC
     'Backend Developer', 'Senior Backend Developer (Java Spring Boot)',
@@ -58,7 +60,7 @@ INSERT INTO job_posts (
 ),
 
 -- JP-02: FPT Software — Python Data Engineer (APPROVED)
-(   'h8000000-0000-0000-0000-000000000002',
+(   '08000000-0000-0000-0000-000000000002',
     'e5000000-0000-0000-0000-000000000002',   -- recruiter: Tran Minh Duc / FPT
     'd4000000-0000-0000-0000-000000000002',   -- FPT Software Ha Noi
     'Data Engineer', 'Python Data Engineer (Mid-Senior)',
@@ -76,7 +78,7 @@ INSERT INTO job_posts (
 ),
 
 -- JP-03: Vingroup — DevOps Engineer (APPROVED)
-(   'h8000000-0000-0000-0000-000000000003',
+(   '08000000-0000-0000-0000-000000000003',
     'e5000000-0000-0000-0000-000000000003',   -- recruiter: Pham Bao Chau / Vingroup
     'd4000000-0000-0000-0000-000000000003',   -- Vingroup Digital Solutions
     'DevOps Engineer', 'Senior DevOps / Cloud Engineer (AWS & K8s)',
@@ -94,7 +96,7 @@ INSERT INTO job_posts (
 ),
 
 -- JP-04: VNPAY — Fresher Mobile Developer (PENDING, chua phe duyet)
-(   'h8000000-0000-0000-0000-000000000004',
+(   '08000000-0000-0000-0000-000000000004',
     'e5000000-0000-0000-0000-000000000004',   -- recruiter: Le Quoc Hung / VNPAY
     'd4000000-0000-0000-0000-000000000004',   -- VNPAY Technology Corp
     'Mobile Developer', 'Fresher React Native Developer (Thuc tap co luong)',
@@ -111,7 +113,7 @@ INSERT INTO job_posts (
 ),
 
 -- JP-05: Tiki — Data Scientist (APPROVED, luong thuong luong)
-(   'h8000000-0000-0000-0000-000000000005',
+(   '08000000-0000-0000-0000-000000000005',
     'e5000000-0000-0000-0000-000000000005',   -- recruiter: Hoang Thi Mai Linh / Tiki
     'd4000000-0000-0000-0000-000000000005',   -- Tiki Corporation
     'Data Scientist', 'Senior Data Scientist — Recommendation System',
@@ -136,11 +138,11 @@ INSERT INTO job_posts (
 INSERT INTO job_skills (job_post_id, skill_id, requirement_type, min_years_experience)
 SELECT j.job_post_id, s.skill_id, m.requirement_type, m.min_years_exp
 FROM (VALUES
-    ('h8000000-0000-0000-0000-000000000001'::UUID, 'Java Spring Boot',     'MANDATORY', 3.0),
-    ('h8000000-0000-0000-0000-000000000002'::UUID, 'Python',              'MANDATORY', 2.0),
-    ('h8000000-0000-0000-0000-000000000003'::UUID, 'Docker & Kubernetes', 'MANDATORY', 4.0),
-    ('h8000000-0000-0000-0000-000000000003'::UUID, 'English (B2+)',       'PREFERRED', 0.0),
-    ('h8000000-0000-0000-0000-000000000005'::UUID, 'Python',              'MANDATORY', 5.0)
+    ('08000000-0000-0000-0000-000000000001'::UUID, 'Java Spring Boot',     'MANDATORY', 3.0),
+    ('08000000-0000-0000-0000-000000000002'::UUID, 'Python',              'MANDATORY', 2.0),
+    ('08000000-0000-0000-0000-000000000003'::UUID, 'Docker & Kubernetes', 'MANDATORY', 4.0),
+    ('08000000-0000-0000-0000-000000000003'::UUID, 'English (B2+)',       'PREFERRED', 0.0),
+    ('08000000-0000-0000-0000-000000000005'::UUID, 'Python',              'MANDATORY', 5.0)
 ) AS m(job_post_id, skill_name, requirement_type, min_years_exp)
 JOIN job_posts j ON j.job_post_id = m.job_post_id
 JOIN skills    s ON s.skill_name  = m.skill_name;
@@ -152,11 +154,11 @@ JOIN skills    s ON s.skill_name  = m.skill_name;
 INSERT INTO job_certificates (job_post_id, certificate_id, is_mandatory)
 SELECT j.job_post_id, c.certificate_id, m.is_mandatory
 FROM (VALUES
-    ('h8000000-0000-0000-0000-000000000001'::UUID, 'AWS Certified Solutions Architect - Associate', FALSE),
-    ('h8000000-0000-0000-0000-000000000002'::UUID, 'AWS Certified Solutions Architect - Associate', FALSE),
-    ('h8000000-0000-0000-0000-000000000003'::UUID, 'Certified Kubernetes Administrator (CKA)',      TRUE),
-    ('h8000000-0000-0000-0000-000000000004'::UUID, 'IELTS Academic',                                FALSE),
-    ('h8000000-0000-0000-0000-000000000005'::UUID, 'Google Professional Cloud Developer',           FALSE)
+    ('08000000-0000-0000-0000-000000000001'::UUID, 'AWS Certified Solutions Architect - Associate', FALSE),
+    ('08000000-0000-0000-0000-000000000002'::UUID, 'AWS Certified Solutions Architect - Associate', FALSE),
+    ('08000000-0000-0000-0000-000000000003'::UUID, 'Certified Kubernetes Administrator (CKA)',      TRUE),
+    ('08000000-0000-0000-0000-000000000004'::UUID, 'IELTS Academic',                                FALSE),
+    ('08000000-0000-0000-0000-000000000005'::UUID, 'Google Professional Cloud Developer',           FALSE)
 ) AS m(job_post_id, certificate_name, is_mandatory)
 JOIN job_posts    j ON j.job_post_id      = m.job_post_id
 JOIN certificates c ON c.certificate_name = m.certificate_name;
@@ -168,11 +170,11 @@ JOIN certificates c ON c.certificate_name = m.certificate_name;
 INSERT INTO job_domains (job_post_id, domain_id)
 SELECT j.job_post_id, d.domain_id
 FROM (VALUES
-    ('h8000000-0000-0000-0000-000000000001'::UUID, 'Phan mem & Cong nghe thong tin'),
-    ('h8000000-0000-0000-0000-000000000002'::UUID, 'Phan mem & Cong nghe thong tin'),
-    ('h8000000-0000-0000-0000-000000000003'::UUID, 'Phan mem & Cong nghe thong tin'),
-    ('h8000000-0000-0000-0000-000000000004'::UUID, 'Fintech & Ngan hang so'),
-    ('h8000000-0000-0000-0000-000000000005'::UUID, 'Thuong mai dien tu & Logistics')
+    ('08000000-0000-0000-0000-000000000001'::UUID, 'Phan mem & Cong nghe thong tin'),
+    ('08000000-0000-0000-0000-000000000002'::UUID, 'Phan mem & Cong nghe thong tin'),
+    ('08000000-0000-0000-0000-000000000003'::UUID, 'Phan mem & Cong nghe thong tin'),
+    ('08000000-0000-0000-0000-000000000004'::UUID, 'Fintech & Ngan hang so'),
+    ('08000000-0000-0000-0000-000000000005'::UUID, 'Thuong mai dien tu & Logistics')
 ) AS m(job_post_id, domain_name)
 JOIN job_posts j ON j.job_post_id  = m.job_post_id
 JOIN domains   d ON d.domain_name  = m.domain_name;
@@ -199,40 +201,40 @@ SELECT
     m.status, m.total_jobs_scanned, m.matched_jobs_count, m.execution_time_ms
 FROM (VALUES
     -- analysis 1: Nguyen Van An (Backend 3 năm) → tìm MIDDLE backend ở Hà Nội, COMPLETED
-    ('i9000000-0000-0000-0000-000000000001'::UUID,
-     'g7000000-0000-0000-0000-000000000001'::UUID,
+    ('09000000-0000-0000-0000-000000000001'::UUID,
+     '07000000-0000-0000-0000-000000000001'::UUID,
      'Backend Developer', 'Ha Noi', 'Phan mem & Cong nghe thong tin',
      'FULL_TIME', 'HYBRID', 20000000::BIGINT,
      3.0::NUMERIC, 'MIDDLE',
      'COMPLETED', 120, 5, 4350),
 
     -- analysis 2: Tran Thi Bich Ngoc (Frontend 1.5 năm) → tìm JUNIOR, COMPLETED
-    ('i9000000-0000-0000-0000-000000000002'::UUID,
-     'g7000000-0000-0000-0000-000000000002'::UUID,
+    ('09000000-0000-0000-0000-000000000002'::UUID,
+     '07000000-0000-0000-0000-000000000002'::UUID,
      'Frontend Developer', 'Ha Noi', 'Phan mem & Cong nghe thong tin',
      'FULL_TIME', 'HYBRID', 12000000::BIGINT,
      1.5::NUMERIC, 'JUNIOR',
      'COMPLETED', 120, 3, 3870),
 
     -- analysis 3: Le Hoang Nam (DevOps 5 năm) → tìm SENIOR, COMPLETED
-    ('i9000000-0000-0000-0000-000000000003'::UUID,
-     'g7000000-0000-0000-0000-000000000003'::UUID,
+    ('09000000-0000-0000-0000-000000000003'::UUID,
+     '07000000-0000-0000-0000-000000000003'::UUID,
      'DevOps Engineer', 'Ho Chi Minh', 'Phan mem & Cong nghe thong tin',
      'FULL_TIME', 'ON_SITE', 30000000::BIGINT,
      5.0::NUMERIC, 'SENIOR',
      'COMPLETED', 120, 4, 5120),
 
     -- analysis 4: Pham Ngoc Linh (Fresher) → đang xử lý, PROCESSING
-    ('i9000000-0000-0000-0000-000000000004'::UUID,
-     'g7000000-0000-0000-0000-000000000004'::UUID,
+    ('09000000-0000-0000-0000-000000000004'::UUID,
+     '07000000-0000-0000-0000-000000000004'::UUID,
      'Mobile Developer', 'Ha Noi', 'Fintech & Ngan hang so',
      'INTERNSHIP', 'ON_SITE', 5000000::BIGINT,
      0.0::NUMERIC, 'FRESHER',
      'PROCESSING', 0, 0, NULL),
 
     -- analysis 5: Vo Duc Thinh (Data 8.5 năm) → tìm LEAD, COMPLETED
-    ('i9000000-0000-0000-0000-000000000005'::UUID,
-     'g7000000-0000-0000-0000-000000000005'::UUID,
+    ('09000000-0000-0000-0000-000000000005'::UUID,
+     '07000000-0000-0000-0000-000000000005'::UUID,
      'Data Scientist', NULL, 'Thuong mai dien tu & Logistics',
      'FULL_TIME', 'REMOTE', 40000000::BIGINT,
      8.5::NUMERIC, 'LEAD',
@@ -256,36 +258,36 @@ INSERT INTO matched_results (
 ) VALUES
 
 -- Nguyen Van An vs Senior Backend (JP-01) → khớp tốt
-('i9000000-0000-0000-0000-000000000001',
- 'h8000000-0000-0000-0000-000000000001',
+('09000000-0000-0000-0000-000000000001',
+ '08000000-0000-0000-0000-000000000001',
  82.50, 85.00, 80.00, 90.00,
  '["Kafka", "Redis"]'::JSONB,
  'Ung vien co nen tang Java Spring Boot vung chac, phu hop 85% yeu cau. Can bo sung Kafka va Redis de tang muc do phu hop.'),
 
 -- Tran Thi Bich Ngoc vs Python Data Engineer (JP-02) → kha hop
-('i9000000-0000-0000-0000-000000000002',
- 'h8000000-0000-0000-0000-000000000002',
+('09000000-0000-0000-0000-000000000002',
+ '08000000-0000-0000-0000-000000000002',
  68.00, 70.00, 60.00, 80.00,
  '["Apache Airflow", "SQL nang cao"]'::JSONB,
  'Ung vien biet Python nhung thieu kinh nghiem voi Airflow va xu ly du lieu lon. Can tang cuong ky nang ETL.'),
 
 -- Le Hoang Nam vs DevOps Engineer (JP-03) → khop rat tot
-('i9000000-0000-0000-0000-000000000003',
- 'h8000000-0000-0000-0000-000000000003',
+('09000000-0000-0000-0000-000000000003',
+ '08000000-0000-0000-0000-000000000003',
  91.00, 95.00, 95.00, 85.00,
  '[]'::JSONB,
  'Ung vien xuat sac, dap ung day du 95% yeu cau ky thuat, co chung chi CKA. De xuat phong van ngay.'),
 
 -- Pham Ngoc Linh vs Fresher Mobile (JP-04) → phu hop vua
-('i9000000-0000-0000-0000-000000000004',
- 'h8000000-0000-0000-0000-000000000004',
+('09000000-0000-0000-0000-000000000004',
+ '08000000-0000-0000-0000-000000000004',
  55.00, 50.00, 60.00, 70.00,
  '["React Native", "Git"]'::JSONB,
  'Ung vien fresher co tiem nang, can hoc them React Native. Phu hop vi tri thuc tap co dao tao.'),
 
 -- Vo Duc Thinh vs Data Scientist (JP-05) → khop cao
-('i9000000-0000-0000-0000-000000000005',
- 'h8000000-0000-0000-0000-000000000005',
+('09000000-0000-0000-0000-000000000005',
+ '08000000-0000-0000-0000-000000000005',
  88.00, 90.00, 95.00, 80.00,
  '["Spark Streaming"]'::JSONB,
  'Ung vien co 8+ nam kinh nghiem, rat phu hop vi tri LEAD. Chi thieu kinh nghiem Spark Streaming real-time.');
@@ -296,23 +298,23 @@ INSERT INTO matched_results (
 -- =============================================================================
 INSERT INTO saved_jobs (candidate_id, job_post_id, notes) VALUES
     -- Nguyen Van An luu JP-01 (Backend - phu hop)
-    ('f6000000-0000-0000-0000-000000000001', 'h8000000-0000-0000-0000-000000000001',
+    ('f6000000-0000-0000-0000-000000000001', '08000000-0000-0000-0000-000000000001',
      'Luong tot, hybrid, dung stack cua minh'),
 
     -- Nguyen Van An cung luu JP-05 (DS remote - de xem them)
-    ('f6000000-0000-0000-0000-000000000001', 'h8000000-0000-0000-0000-000000000005',
+    ('f6000000-0000-0000-0000-000000000001', '08000000-0000-0000-0000-000000000005',
      'Remote toan phan, thuong luong, xem xet sau'),
 
     -- Tran Thi Bich Ngoc luu JP-02
-    ('f6000000-0000-0000-0000-000000000002', 'h8000000-0000-0000-0000-000000000002',
+    ('f6000000-0000-0000-0000-000000000002', '08000000-0000-0000-0000-000000000002',
      'FPT uy tin, luong ok cho fresher 1.5 nam'),
 
     -- Le Hoang Nam luu JP-03
-    ('f6000000-0000-0000-0000-000000000003', 'h8000000-0000-0000-0000-000000000003',
+    ('f6000000-0000-0000-0000-000000000003', '08000000-0000-0000-0000-000000000003',
      'Vingroup, luong cao, phu hop ky nang K8s'),
 
     -- Vo Duc Thinh luu JP-05
-    ('f6000000-0000-0000-0000-000000000005', 'h8000000-0000-0000-0000-000000000005',
+    ('f6000000-0000-0000-0000-000000000005', '08000000-0000-0000-0000-000000000005',
      'Tiki, remote, thuong luong, phu hop nhat hien tai');
 
 -- =============================================================================
@@ -324,41 +326,41 @@ INSERT INTO saved_jobs (candidate_id, job_post_id, notes) VALUES
 INSERT INTO job_applications (application_id, job_post_id, candidate_id, resume_id, status, recruiter_notes) VALUES
     -- Nguyen Van An ung tuyen JP-01 (Backend TechCorp) → SHORTLISTED
     (gen_random_uuid(),
-     'h8000000-0000-0000-0000-000000000001',
+     '08000000-0000-0000-0000-000000000001',
      'f6000000-0000-0000-0000-000000000001',
-     'g7000000-0000-0000-0000-000000000001',
+     '07000000-0000-0000-0000-000000000001',
      'SHORTLISTED',
      'CV an tuong, ky nang Spring Boot tot. Moi phong van vong ky thuat.'),
 
     -- Tran Thi Bich Ngoc ung tuyen JP-02 (Python FPT) → VIEWED
     (gen_random_uuid(),
-     'h8000000-0000-0000-0000-000000000002',
+     '08000000-0000-0000-0000-000000000002',
      'f6000000-0000-0000-0000-000000000002',
-     'g7000000-0000-0000-0000-000000000002',
+     '07000000-0000-0000-0000-000000000002',
      'VIEWED',
      'Da xem CV, can xem xet them kinh nghiem ETL.'),
 
     -- Le Hoang Nam ung tuyen JP-03 (DevOps Vingroup) → INTERVIEWING
     (gen_random_uuid(),
-     'h8000000-0000-0000-0000-000000000003',
+     '08000000-0000-0000-0000-000000000003',
      'f6000000-0000-0000-0000-000000000003',
-     'g7000000-0000-0000-0000-000000000003',
+     '07000000-0000-0000-0000-000000000003',
      'INTERVIEWING',
      'Co chung chi CKA, kinh nghiem 5 nam. Dang phong van vong 2.'),
 
     -- Pham Ngoc Linh ung tuyen JP-04 (Fresher VNPAY) → SUBMITTED
     (gen_random_uuid(),
-     'h8000000-0000-0000-0000-000000000004',
+     '08000000-0000-0000-0000-000000000004',
      'f6000000-0000-0000-0000-000000000004',
-     'g7000000-0000-0000-0000-000000000004',
+     '07000000-0000-0000-0000-000000000004',
      'SUBMITTED',
      NULL),
 
     -- Vo Duc Thinh ung tuyen JP-05 (DS Tiki) → OFFERED
     (gen_random_uuid(),
-     'h8000000-0000-0000-0000-000000000005',
+     '08000000-0000-0000-0000-000000000005',
      'f6000000-0000-0000-0000-000000000005',
-     'g7000000-0000-0000-0000-000000000005',
+     '07000000-0000-0000-0000-000000000005',
      'OFFERED',
      'Ung vien xuat sac, da gui offer thuong luong 55 trieu. Cho phan hoi.');
 
