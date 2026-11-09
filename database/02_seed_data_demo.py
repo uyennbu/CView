@@ -333,4 +333,343 @@ def generate_seed_data():
         })
     data["system_error_logs"] = system_error_logs
 
+1. # 10. Addresses (50 records)
+    addresses = []
+    for i in range(50):
+        addresses.append({
+            "address_id": gen_uuid(),
+            "street_address": STREETS[i % len(STREETS)],
+            "ward": f"Phường {random.randint(1, 15)}",
+            "city": CITIES[i % len(CITIES)],
+            "country": "Việt Nam",
+            "created_at": "2026-01-15T00:00:00Z"
+        })
+    data["addresses"] = addresses
+
+    # 11. Companies (20 records)
+    companies = []
+    for i in range(20):
+        companies.append({
+            "company_id": gen_uuid(),
+            "name": COMPANY_NAMES[i],
+            "address_id": addresses[i]["address_id"],
+            "tax_code": f"010{random.randint(1000000, 9999999)}",
+            "website": f"https://{COMPANY_NAMES[i].lower().replace(' ', '').replace('.', '')}.com.vn",
+            "logo_url": f"https://s3.cloud.vn/cview/logos/company_{i+1:02d}.png",
+            "industry": random.choice(["Công nghệ thông tin", "Tài chính - Ngân hàng", "Thương mại điện tử", "Viễn thông"]),
+            "verification_status": "VERIFIED" if i < 18 else "PENDING",
+            "created_at": "2026-01-20T09:00:00Z"
+        })
+    data["companies"] = companies
+
+    # 12. Recruiter Profiles (60 records)
+    recruiter_profiles = []
+    recruiter_accs = accounts[51:100] # 49 recruiter accounts
+    for i in range(60):
+        acc = recruiter_accs[i % len(recruiter_accs)]
+        comp = companies[i % 20] # 20 companies, ~3 recruiters each
+        name = gen_name()
+        recruiter_profiles.append({
+            "recruiter_id": gen_uuid(),
+            "account_id": acc["account_id"],
+            "company_id": comp["company_id"],
+            "full_name": name,
+            "job_title": random.choice(["HR Manager", "Technical Recruiter", "Talent Acquisition Lead", "Head of HR"]),
+            "work_email": gen_email(name, i+1),
+            "phone_number": f"0934567{i:03d}",
+            "created_at": "2026-02-01T10:00:00Z"
+        })
+    data["recruiter_profiles"] = recruiter_profiles
+
+    # 13. Candidate Profiles (50 records)
+    candidate_profiles = []
+    candidate_accs = accounts[1:51] # 50 candidate accounts
+    edu_levels = ["HIGH_SCHOOL", "ASSOCIATE", "BACHELOR", "BACHELOR", "BACHELOR", "MASTER", "DOCTORATE"]
+    genders = ["MALE", "FEMALE", "OTHER"]
+    for i in range(50):
+        name = gen_name()
+        candidate_profiles.append({
+            "candidate_id": gen_uuid(),
+            "account_id": candidate_accs[i]["account_id"],
+            "full_name": name,
+            "date_of_birth": f"{random.randint(1990, 2004)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}",
+            "gender": random.choice(genders),
+            "address_id": addresses[i % len(addresses)]["address_id"],
+            "current_job_title": random.choice(["Backend Developer", "Data Scientist", "Frontend Engineer", "DevOps Engineer", "Fullstack Developer", "Sinh viên năm 4"]),
+            "years_of_experience": round(random.uniform(0.5, 10.0), 1),
+            "education_level": random.choice(edu_levels),
+            "created_at": "2026-02-15T09:00:00Z"
+        })
+    data["candidate_profiles"] = candidate_profiles
+
+    # 14. Domains (20 records)
+    domains = []
+    for i, (d_name, d_desc) in enumerate(DOMAINS_LIST, 1):
+        domains.append({
+            "domain_id": i,
+            "domain_name": d_name,
+            "description": d_desc,
+            "created_at": "2026-01-01T00:00:00Z"
+        })
+    data["domains"] = domains
+
+    # 15. Skills (100 records)
+    skills = []
+    for i, (s_name, s_cat) in enumerate(SKILLS_LIST, 1):
+        skills.append({
+            "skill_id": i,
+            "skill_name": s_name,
+            "category": s_cat,
+            "description": f"Kỹ năng chuẩn hóa {s_name}",
+            "created_at": "2026-01-01T00:00:00Z"
+        })
+    data["skills"] = skills
+
+    # 16. Certificates (30 records)
+    certificates = []
+    for i, (c_name, c_issuer, c_cat) in enumerate(CERTIFICATES_LIST, 1):
+        certificates.append({
+            "certificate_id": i,
+            "certificate_name": c_name,
+            "issuer": c_issuer,
+            "score": round(random.uniform(7.0, 9.0), 1) if "IELTS" in c_name else None,
+            "category": c_cat,
+            "created_at": "2026-01-01T00:00:00Z"
+        })
+    data["certificates"] = certificates
+
+    # 17. Resumes (50 records - 1 per candidate)
+    resumes = []
+    for i in range(50):
+        resumes.append({
+            "resume_id": gen_uuid(),
+            "candidate_id": candidate_profiles[i]["candidate_id"],
+            "title": f"CV {candidate_profiles[i]['current_job_title']} 2026",
+            "file_name": f"cv_candidate_{i+1:02d}.pdf",
+            "file_url": f"https://s3.cloud.vn/cview/resumes/cv_candidate_{i+1:02d}.pdf",
+            "file_size_bytes": random.randint(250000, 2500000),
+            "created_at": "2026-03-01T10:00:00Z"
+        })
+    data["resumes"] = resumes
+
+    # 18. Resume Skills (200 records: 4 per resume)
+    resume_skills = []
+    levels = ["BEGINNER", "MEDIUM", "ADVANCED", "EXPERT"]
+    for r in resumes:
+        selected_skills = random.sample(skills, 4)
+        for s in selected_skills:
+            resume_skills.append({
+                "resume_id": r["resume_id"],
+                "skill_id": s["skill_id"],
+                "years_experience": round(random.uniform(0.5, 6.0), 1),
+                "proficiency_level": random.choice(levels),
+                "confidence_score": round(random.uniform(0.85, 0.99), 3),
+                "created_at": "2026-03-01T10:30:00Z"
+            })
+    data["resume_skills"] = resume_skills
+
+    # 19. Job Posts (50 records)
+    job_posts = []
+    job_types = ["FULL_TIME", "FULL_TIME", "FULL_TIME", "PART_TIME", "INTERNSHIP", "CONTRACT", "FREELANCE"]
+    workplace_types = ["ON_SITE", "HYBRID", "REMOTE"]
+    for i in range(50):
+        rec = recruiter_profiles[i % len(recruiter_profiles)]
+        job_posts.append({
+            "job_post_id": gen_uuid(),
+            "recruiter_id": rec["recruiter_id"],
+            "company_id": rec["company_id"],
+            "position": random.choice(["Backend Developer", "Frontend Developer", "AI Engineer", "Data Engineer", "DevOps Engineer", "Fullstack Engineer"]),
+            "title": f"Tuyển dụng {random.choice(['Senior', 'Middle', 'Junior'])} {random.choice(['Python Developer', 'React Engineer', 'AI/ML Specialist', 'DevOps Specialist'])}",
+            "job_description": "Mô tả chi tiết công việc, chịu trách nhiệm phát triển và bảo trì các dịch vụ backend/frontend cao cấp...",
+            "requirements": "Yêu cầu có tối thiểu 2 năm kinh nghiệm làm việc với ngôn ngữ và framework tương ứng...",
+            "benefits": "Mức lương cạnh tranh, thưởng theo dự án, bảo hiểm sức khỏe cao cấp, môi trường năng động...",
+            "job_type": random.choice(job_types),
+            "workplace_type": random.choice(workplace_types),
+            "address_id": addresses[i % len(addresses)]["address_id"],
+            "salary_min": random.choice([15000000, 20000000, 25000000, 30000000]),
+            "salary_max": random.choice([35000000, 45000000, 50000000, 60000000]),
+            "is_salary_negotiable": False,
+            "experience_years_min": round(random.choice([1.0, 2.0, 3.0, 5.0]), 1),
+            "required_education": random.choice(["NONE", "BACHELOR", "BACHELOR", "MASTER"]),
+            "approval_status": "APPROVED" if i < 45 else "PENDING",
+            "rejection_reason": None,
+            "approved_by": accounts[0]["account_id"] if i < 45 else None,
+            "approved_at": "2026-03-10T09:00:00Z" if i < 45 else None,
+            "deadline": "2026-12-31T23:59:59Z",
+            "created_at": "2026-03-10T08:00:00Z"
+        })
+    data["job_posts"] = job_posts
+
+    # 20. Job Skills (200 records: 4 per job post)
+    job_skills = []
+    for jp in job_posts:
+        selected_skills = random.sample(skills, 4)
+        for s in selected_skills:
+            job_skills.append({
+                "job_post_id": jp["job_post_id"],
+                "skill_id": s["skill_id"],
+                "requirement_type": random.choice(["MANDATORY", "MANDATORY", "PREFERRED"]),
+                "min_years_experience": round(random.choice([1.0, 2.0, 3.0]), 1),
+                "created_at": "2026-03-10T08:00:00Z"
+            })
+    data["job_skills"] = job_skills
+
+    # 21. Job Certificates (50 records: 1 per job post)
+    job_certificates = []
+    for jp in job_posts:
+        cert = random.choice(certificates)
+        job_certificates.append({
+            "job_post_id": jp["job_post_id"],
+            "certificate_id": cert["certificate_id"],
+            "is_mandatory": random.choice([True, False]),
+            "created_at": "2026-03-10T08:00:00Z"
+        })
+    data["job_certificates"] = job_certificates
+
+    # 22. Job Domains (70 records: ~1.4 per job post)
+    job_domains = []
+    for jp in job_posts:
+        d_sample = random.sample(domains, random.choice([1, 2]))
+        for d in d_sample:
+            job_domains.append({
+                "job_post_id": jp["job_post_id"],
+                "domain_id": d["domain_id"],
+                "created_at": "2026-03-10T08:00:00Z"
+            })
+    data["job_domains"] = job_domains
+
+    # 23. CV Analyses (50 records: 1 per resume)
+    cv_analyses = []
+    for r in resumes:
+        cv_analyses.append({
+            "analysis_id": gen_uuid(),
+            "resume_id": r["resume_id"],
+            "target_position_id": None,
+            "target_city": random.choice(CITIES),
+            "target_domain_id": random.choice(domains)["domain_id"],
+            "target_job_type": "FULL_TIME",
+            "target_workplace_type": "HYBRID",
+            "target_min_salary": 20000000,
+            "target_experience_years": 2.0,
+            "target_job_level": "MIDDLE",
+            "status": "COMPLETED",
+            "total_jobs_scanned": 50,
+            "matched_jobs_count": 20,
+            "execution_time_ms": random.randint(1200, 3500),
+            "created_at": "2026-04-01T10:00:00Z"
+        })
+    data["cv_analyses"] = cv_analyses
+
+    # 24. Matched Results (1,000 records: 50 analyses * 20 jobs matched)
+    matched_results = []
+    match_counter = 1
+    for ca in cv_analyses:
+        sampled_jobs = random.sample(job_posts, 20)
+        for jp in sampled_jobs:
+            overall = round(random.uniform(50.0, 95.0), 2)
+            matched_results.append({
+                "match_id": match_counter,
+                "analysis_id": ca["analysis_id"],
+                "job_post_id": jp["job_post_id"],
+                "overall_score": overall,
+                "skill_score": round(overall + random.uniform(-5.0, 5.0), 2),
+                "experience_score": round(overall + random.uniform(-5.0, 5.0), 2),
+                "education_score": round(overall + random.uniform(-5.0, 5.0), 2),
+                "missing_skills": json.dumps([{"skill_id": 10, "skill_name": "Docker"}]),
+                "ai_feedback": "Ứng viên có nền tảng tốt về Python/FastAPI, cần bổ sung thêm kinh nghiệm thực chiến với Kubernetes.",
+                "created_at": "2026-04-01T10:05:00Z"
+            })
+            match_counter += 1
+    data["matched_results"] = matched_results
+
+    # 25. Saved Jobs (100 records: 2 per candidate)
+    saved_jobs = []
+    for cand in candidate_profiles:
+        saved_sample = random.sample(job_posts, 2)
+        for jp in saved_sample:
+            saved_jobs.append({
+                "candidate_id": cand["candidate_id"],
+                "job_post_id": jp["job_post_id"],
+                "notes": "Công việc tiềm năng, lương cao.",
+                "created_at": "2026-04-10T11:00:00Z"
+            })
+    data["saved_jobs"] = saved_jobs
+
+    # 26. Job Applications (50 records: 1 per candidate)
+    job_applications = []
+    statuses = ["SUBMITTED", "VIEWED", "SHORTLISTED", "INTERVIEWING", "OFFERED", "REJECTED"]
+    for i in range(50):
+        job_applications.append({
+            "application_id": gen_uuid(),
+            "job_post_id": job_posts[i]["job_post_id"],
+            "candidate_id": candidate_profiles[i]["candidate_id"],
+            "resume_id": resumes[i]["resume_id"],
+            "status": random.choice(statuses),
+            "recruiter_notes": "Ứng viên tiềm năng cho vòng phỏng vấn kỹ thuật.",
+            "applied_at": "2026-04-12T14:00:00Z"
+        })
+    data["job_applications"] = job_applications
+
+    # 27. Search History (200 records)
+    search_history = []
+    keywords = ["FastAPI", "Python AI", "React Frontend", "DevOps Cloud", "Data Analyst", "Backend Junior"]
+    for i in range(1, 201):
+        cand = random.choice(candidate_profiles)
+        search_history.append({
+            "search_id": i,
+            "candidate_id": cand["candidate_id"],
+            "keyword": random.choice(keywords),
+            "domain_id": random.choice(domains)["domain_id"],
+            "city": random.choice(CITIES),
+            "min_salary": 15000000,
+            "results_count": random.randint(5, 45),
+            "created_at": "2026-04-15T09:00:00Z"
+        })
+    data["search_history"] = search_history
+
+    # 28. Job Notifications (200 records)
+    job_notifications = []
+    for i in range(1, 201):
+        cand = random.choice(candidate_profiles)
+        jp = random.choice(job_posts)
+        job_notifications.append({
+            "notification_id": i,
+            "candidate_id": cand["candidate_id"],
+            "job_post_id": jp["job_post_id"],
+            "title": f"Gợi ý việc làm: {jp['title']}",
+            "content": f"Hệ thống phát hiện bài tuyển dụng {jp['title']} có độ tương đồng >80% với hồ sơ của bạn.",
+            "is_read": random.choice([True, False]),
+            "read_at": "2026-04-20T10:00:00Z",
+            "created_at": "2026-04-20T08:00:00Z"
+        })
+    data["job_notifications"] = job_notifications
+
+    # 29. Other Notifications (100 records)
+    other_notifications = []
+    n_types = ["JOB_APPROVAL_STATUS", "APPLICATION_UPDATE", "CV_PARSE_COMPLETED", "ACCOUNT_SECURITY"]
+    for i in range(1, 101):
+        acc = random.choice(accounts)
+        other_notifications.append({
+            "notification_id": i,
+            "account_id": acc["account_id"],
+            "notification_type": random.choice(n_types),
+            "title": "Thông báo từ hệ thống CView",
+            "message": "Chi tiết thông báo hệ thống liên quan đến tài khoản và hoạt động tuyển dụng.",
+            "is_read": random.choice([True, False]),
+            "read_at": "2026-04-22T10:00:00Z",
+            "created_at": "2026-04-22T08:00:00Z"
+        })
+    data["other_notifications"] = other_notifications
+
+    return data
+
+if __name__ == "__main__":
+    seed_data = generate_seed_data()
+    print("==================================================")
+    print("Seed Data Generation Summary (Demo Scale Target):")
+    print("==================================================")
+    for table_name, records in seed_data.items():
+        print(f"Table '{table_name}': {len(records)} records")
+    print("==================================================")
+
     
