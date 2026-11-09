@@ -1,0 +1,125 @@
+@import "tailwindcss";
+@font-face {
+  font-family: 'Manrope';
+  src: url('./assets/fonts/Manrope-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@theme {
+  --color-cview-primary: #1E5631;
+  --color-cview-green: #4CAF50;
+  --color-cview-accent: #FF4B6E;
+  --color-cview-dark: #1A241E;
+  --color-cview-background: #FEFFFA;
+  --color-cview-mint: #E6FADD;
+  --color-cview-yellow: #F9FACA;
+}
+
+:root {
+  font-family: 'Manrope', sans-serif;
+  color: #1A241E;
+  background: #FEFFFA;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #FEFFFA;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+/* CView Homepage Background */
+.cview-page-background {
+  min-height: 100vh;
+  background: transparent;
+  overflow-x: hidden;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+}
+
+/* ==============================
+   CView Scroll Reveal Animation
+================================ */
+
+.scroll-reveal {
+  opacity: 0;
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-up {
+  transform: translateY(45px);
+}
+
+.reveal-left {
+  transform: translateX(-65px);
+}
+
+.reveal-right {
+  transform: translateX(65px);
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* Tôn trọng cài đặt giảm chuyển động */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+/* Continuous fixed background for CView */
+.cview-page-background {
+  position: relative;
+  min-height: 100vh;
+  background-color: #FEFFFA;
+  isolation: isolate;
+}
+
+.cview-page-background::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background-image: url('./assets/background.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 100% 100vh;
+}
