@@ -1,22 +1,24 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
 import Navbar from './components/Navbar'
-import HeroSection from './sections/HeroSection'
-import CVAnalysisSection from './sections/CVAnalysisSection'
-import JobConnectionSection from './sections/JobConnectionSection'
-// import TestimonialsSection from './sections/TestimonialsSection'
-import ContactSection from './sections/ContactSection'
+import HomePage from './pages/HomePage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+
 function App() {
   return (
-    <div className="cview-page-background text-cview-dark">
-      <Navbar />
-
-      <main>
-        <HeroSection />
-        <CVAnalysisSection />
-        <JobConnectionSection />
-        {/* <TestimonialsSection /> */}
-        <ContactSection />
-      </main>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <div className="cview-page-background text-cview-dark min-h-screen">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Routes>
+        </div>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
 
