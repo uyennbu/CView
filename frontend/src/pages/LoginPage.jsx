@@ -27,6 +27,7 @@ export default function LoginPage() {
       })
 
       await login(data)
+      alert('Đăng nhập thành công!')
       navigate('/')
     } catch (err) {
       setError(err.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin.')

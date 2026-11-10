@@ -43,10 +43,8 @@ export default function RegisterPage() {
         }),
       })
 
-      setSuccess('Đăng ký tài khoản thành công! Đang chuyển đến trang đăng nhập...')
-      setTimeout(() => {
-        navigate('/login')
-      }, 1500)
+      alert('Đăng ký thành công!')
+      navigate('/login')
     } catch (err) {
       setError(err.message || 'Đăng ký không thành công. Vui lòng kiểm tra lại thông tin.')
     } finally {
