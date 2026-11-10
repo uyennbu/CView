@@ -4,8 +4,8 @@ import logoCView from '../assets/logo-cview.png'
 
 const navItems = [
   { label: 'Trang chủ', path: '/' },
-  { label: 'Phân tích CV', path: '/#analysis' },
-  { label: 'Tìm việc', path: '/#jobs' },
+  { label: 'Phân tích CV', path: '/cv-analysis' },
+  { label: 'Tìm việc', path: '/jobs' },
 ]
 
 export default function Navbar() {
@@ -52,7 +52,10 @@ export default function Navbar() {
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
               {/* Avatar + Tên hiển thị từ CSDL */}
-              <div className="flex items-center gap-2 rounded-full bg-[#E6FADD] px-4 py-2 border border-[#4CAF50]/30 shadow-sm">
+              <Link
+                to={user?.roles?.includes('RECRUITER') ? '/recruiter/dashboard' : '/candidate/account'}
+                className="flex items-center gap-2 rounded-full bg-[#E6FADD] px-4 py-2 border border-[#4CAF50]/30 shadow-sm transition hover:bg-[#d8f5cb]"
+              >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1E5631] text-sm font-bold text-white uppercase">
                   {(user?.full_name || user?.username || 'U')[0]}
                 </div>
@@ -64,7 +67,7 @@ export default function Navbar() {
                     {user?.roles?.join(', ') || 'Ứng viên'}
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Nút Đăng xuất */}
               <button

@@ -27,7 +27,8 @@ export default function RecruiterLoginPage() {
       })
 
       await login(data)
-      navigate('/')
+      alert('Đăng nhập Nhà tuyển dụng thành công!')
+      navigate('/recruiter/dashboard')
     } catch (err) {
       setError(err.message || 'Đăng nhập Nhà tuyển dụng không thành công. Vui lòng kiểm tra lại thông tin.')
     } finally {

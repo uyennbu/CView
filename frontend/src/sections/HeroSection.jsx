@@ -1,4 +1,5 @@
 
+import { Link } from 'react-router-dom'
 import heroMascot from '../assets/mascot/characters/hero-mascot.png'
 import sparkle from '../assets/mascot/decorations/sparkle.png'
 import searchIcon from '../assets/mascot/decorations/search-icon.png'
@@ -75,13 +76,13 @@ function HeroSection() {
           </div>
 
           {/* Main CTA */}
-          <a
-            href="/phan-tich-cv"
+          <Link
+            to="/cv-analysis"
             className="mt-9 inline-flex items-center gap-4 rounded-full bg-[#FF4B6E] px-7 py-3.5 !text-white font-bold shadow-sm transition hover:-translate-y-1 hover:bg-[#ed3d60] md:text-lg"
           >
             BẮT ĐẦU PHÂN TÍCH CV
             <span className="text-2xl leading-none">⟶</span>
-          </a>
+          </Link>
 
           {/* Feature tags */}
           <div className="mt-4 flex flex-wrap gap-3">
