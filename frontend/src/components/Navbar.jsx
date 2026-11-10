@@ -91,12 +91,12 @@ export default function Navbar() {
                 Đăng ký
               </Link>
 
-              <a
-                href="/recruiter/login"
+              <Link
+                to="/recruiter/login"
                 className="rounded-lg bg-[#1A241E] px-6 py-3 text-[16px] font-semibold !text-white transition-colors hover:bg-[#1E5631]"
               >
                 Tuyển dụng
-              </a>
+              </Link>
             </>
           )}
         </div>
