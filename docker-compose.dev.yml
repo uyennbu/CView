@@ -73,6 +73,22 @@ services:
     networks:
       - cview-network
 
+  # =========================================================================
+  # 3. React Frontend Service
+  # =========================================================================
+  frontend:
+    container_name: cview-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - cview-network
+
 # ===========================================================================
 # Cấu hình Mạng nội bộ (Bridge Network) & Persistent Volumes
 # ===========================================================================
