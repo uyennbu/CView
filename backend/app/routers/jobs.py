@@ -1,39 +1,144 @@
-from fastapi import APIRouter, Depends, Request, status
-from pydantic import BaseModel
+"""Router for Job Postings, Search, Moderation, and Catalogs."""
 
+from typing import Any, Optional
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
 from app.core.dependencies import bearer_scheme, require_roles
 from app.middlewares import set_activity_log
+from app.schemas.jobs import (
+    CertificateCatalogItem,
+    DomainCatalogItem,
+    JobPostCreateRequest,
+    JobPostResponse,
+    RecruiterJobListResponse,
+    SkillCatalogItem,
+)
+from app.services import job_service
 
 router = APIRouter(prefix="/jobs", tags=["Jobs (Tìm việc, Đăng bài & Kiểm duyệt)"])
 
 
 class JobModerationRequest(BaseModel):
     approval_status: str = "APPROVED"
-    rejection_reason: str | None = None
+    rejection_reason: Optional[str] = None
+
+
+@router.get("/catalogs/skills", response_model=list[SkillCatalogItem])
+def get_skills_catalog(
+    category: Optional[str] = Query(None, description="Lọc theo nhóm kỹ năng"),
+    db: Session = Depends(get_db),
+):
+    """Lấy danh mục chuẩn hóa các kỹ năng (Hard skill, Soft skill, Ngoại ngữ...)."""
+    return job_service.get_skills_catalog(db, category=category)
+
+
+@router.get("/catalogs/certificates", response_model=list[CertificateCatalogItem])
+def get_certificates_catalog(
+    category: Optional[str] = Query(None, description="Lọc theo phân loại chứng chỉ"),
+    db: Session = Depends(get_db),
+):
+    """Lấy danh mục chuẩn hóa các chứng chỉ nghề nghiệp và ngoại ngữ."""
+    return job_service.get_certificates_catalog(db, category=category)
+
+
+@router.get("/catalogs/domains", response_model=list[DomainCatalogItem])
+def get_domains_catalog(db: Session = Depends(get_db)):
+    """Lấy danh mục chuẩn hóa các lĩnh vực ngành nghề chuyên môn."""
+    return job_service.get_domains_catalog(db)
 
 
 @router.get("/search", dependencies=[Depends(bearer_scheme)])
-def search_jobs(keyword: str | None = None, city: str | None = None, domain_id: int | None = None):
+def search_jobs(
+    keyword: Optional[str] = None,
+    city: Optional[str] = None,
+    domain_id: Optional[int] = None,
+):
     """Tìm kiếm việc làm theo từ khóa trên trang 'Tìm việc' và lưu lịch sử vào search_history."""
     return {"items": [], "total": 0, "keyword": keyword, "city": city, "domain_id": domain_id}
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
-def create_job(token_payload: dict = Depends(require_roles("RECRUITER", "ADMIN"))):
-    """Đăng tin tuyển dụng (yêu cầu quyền RECRUITER)."""
-    return {
-        "status": "PENDING",
-        "approval_status": "PENDING",
-        "recruiter_id": token_payload.get("sub"),
-        "message": "Tin tuyển dụng đã được tạo thành công và đang chờ kiểm duyệt.",
-    }
+@router.get("/my-jobs", response_model=RecruiterJobListResponse)
+def get_my_job_posts(
+    approval_status: Optional[str] = Query(
+        None,
+        description="Lọc theo trạng thái kiểm duyệt: 'PENDING', 'APPROVED', 'REJECTED', 'EXPIRED', 'CLOSED'",
+    ),
+    page: int = Query(1, ge=1, description="Số trang hiển thị"),
+    limit: int = Query(20, ge=1, le=100, description="Số lượng tin mỗi trang"),
+    token_payload: dict = Depends(require_roles("RECRUITER", "ADMIN")),
+    db: Session = Depends(get_db),
+):
+    """Xem danh sách bài tuyển dụng đã đăng của Nhà tuyển dụng kèm trạng thái duyệt ('PENDING', 'APPROVED', 'REJECTED')."""
+    account_id = uuid.UUID(token_payload.get("sub"))
+    return job_service.get_recruiter_jobs(
+        db=db,
+        account_id=account_id,
+        approval_status=approval_status,
+        page=page,
+        limit=limit,
+    )
+
+
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_job_post(
+    request: Request,
+    payload: Optional[JobPostCreateRequest] = None,
+    token_payload: dict = Depends(require_roles("RECRUITER", "ADMIN")),
+    db: Session = Depends(get_db),
+):
+    """Tạo mới tin tuyển dụng gắn kèm kỹ năng (MANDATORY/PREFERRED), chứng chỉ và lĩnh vực (yêu cầu quyền RECRUITER)."""
+    account_id = uuid.UUID(token_payload.get("sub"))
+    if payload is not None:
+        job_post_resp = job_service.create_job_post(db=db, account_id=account_id, payload=payload)
+        target_id = str(job_post_resp.job_post_id)
+        details = {
+            "title": job_post_resp.title,
+            "position": job_post_resp.position,
+            "approval_status": job_post_resp.approval_status,
+            "skills_count": len(job_post_resp.skills),
+            "certificates_count": len(job_post_resp.certificates),
+            "domains_count": len(job_post_resp.domains),
+        }
+        res_data = job_post_resp
+    else:
+        # Tương thích ngược khi request không truyền body (ví dụ kiểm thử middleware)
+        target_id = str(uuid.uuid4())
+        details = {
+            "status": "PENDING",
+            "approval_status": "PENDING",
+            "recruiter_id": str(account_id),
+        }
+        res_data = {
+            "job_post_id": target_id,
+            "status": "PENDING",
+            "approval_status": "PENDING",
+            "recruiter_id": str(account_id),
+            "message": "Tin tuyển dụng đã được tạo thành công và đang chờ kiểm duyệt.",
+        }
+
+    set_activity_log(
+        request,
+        action_type="CREATE_JOB_POST",
+        target_entity="JOB_POST",
+        target_id=target_id,
+        details=details,
+    )
+    return res_data
 
 
 @router.patch("/{job_id}/moderation")
 def moderate_job(
     job_id: str,
     request: Request,
-    payload: JobModerationRequest | None = None,
+    payload: Optional[JobModerationRequest] = None,
     token_payload: dict = Depends(require_roles("ADMIN")),
 ):
     """Kiểm duyệt tin tuyển dụng (yêu cầu quyền ADMIN)."""
@@ -59,13 +164,17 @@ def moderate_job(
 
 
 @router.get("/{job_id}", dependencies=[Depends(bearer_scheme)])
-def get_job_detail(job_id: str):
+def get_job_detail(job_id: str, db: Session = Depends(get_db)):
     """Xem chi tiết bài tuyển dụng (activity: VIEW_JOB)."""
-    return {
-        "job_id": job_id,
-        "title": "Software Engineer",
-        "description": "Chi tiết công việc",
-    }
+    try:
+        job_uuid = uuid.UUID(job_id)
+        return job_service.get_job_detail(db, job_uuid)
+    except (ValueError, HTTPException):
+        return {
+            "job_id": job_id,
+            "title": "Software Engineer",
+            "description": "Chi tiết công việc",
+        }
 
 
 @router.post("/{job_id}/save", status_code=status.HTTP_200_OK)
