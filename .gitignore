@@ -36,3 +36,4 @@ frontend/build/
 .DS_Store
 Thumbs.db
 note.md
+database/02_seed_data.sql

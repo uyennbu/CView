@@ -333,7 +333,7 @@ def generate_seed_data():
         })
     data["system_error_logs"] = system_error_logs
 
-1. # 10. Addresses (50 records)
+    # 10. Addresses (50 records)
     addresses = []
     for i in range(50):
         addresses.append({
@@ -544,7 +544,7 @@ def generate_seed_data():
         cv_analyses.append({
             "analysis_id": gen_uuid(),
             "resume_id": r["resume_id"],
-            "target_position_id": None,
+            "target_position_title": None,
             "target_city": random.choice(CITIES),
             "target_domain_id": random.choice(domains)["domain_id"],
             "target_job_type": "FULL_TIME",
@@ -663,13 +663,41 @@ def generate_seed_data():
 
     return data
 
-if __name__ == "__main__":
+def export_to_sql_file(filename="database/02_seed_data.sql"):
     seed_data = generate_seed_data()
-    print("==================================================")
-    print("Seed Data Generation Summary (Demo Scale Target):")
-    print("==================================================")
-    for table_name, records in seed_data.items():
-        print(f"Table '{table_name}': {len(records)} records")
-    print("==================================================")
+    table_order = [
+        "accounts", "roles", "permissions", "account_roles", "role_permissions",
+        "addresses", "companies", "recruiter_profiles", "candidate_profiles",
+        "domains", "skills", "certificates", "resumes", "resume_skills",
+        "job_posts", "job_skills", "job_certificates", "job_domains",
+        "cv_analyses", "matched_results", "saved_jobs", "job_applications",
+        "search_history", "job_notifications", "other_notifications",
+        "sessions", "auth_logs", "activity_logs", "system_error_logs"
+    ]
 
-    
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write("-- CView Database Seed Data Dump\n\n")
+        for table in table_order:
+            records = seed_data.get(table, [])
+            if not records:
+                continue
+            for r in records:
+                cols = ", ".join(r.keys())
+                vals = []
+                for v in r.values():
+                    if v is None:
+                        vals.append("NULL")
+                    elif isinstance(v, bool):          # bool trước int (bool là subclass của int)
+                        vals.append("TRUE" if v else "FALSE")
+                    elif isinstance(v, (int, float)):
+                        vals.append(str(v))
+                    else:
+                        escaped = str(v).replace("'", "''")
+                        vals.append(f"'{escaped}'")
+                vals_str = ", ".join(vals)
+                f.write(f"INSERT INTO {table} ({cols}) VALUES ({vals_str});\n")
+            f.write("\n")
+    print(f"Đã xuất dữ liệu ra file thành công: {filename}")
+
+if __name__ == "__main__":
+    export_to_sql_file()
