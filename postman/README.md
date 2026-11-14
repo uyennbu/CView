@@ -1,6 +1,9 @@
 # HƯỚNG DẪN SỬ DỤNG BỘ POSTMAN COLLECTION CVIEW
 
-Bộ Postman Collection này kiểm thử các luồng **Auth, RBAC, Session Lifecycle** và nghiệp vụ **Sprint 2** của dự án **CView - Doanh nghiệp nào cần bạn?**.
+Tài liệu này hướng dẫn thiết lập và thực thi bộ kiểm thử tự động Postman (API Testing) cho dự án **CView**, bao gồm các luồng nghiệp vụ qua 2 giai đoạn phát triển:
+
+- **Sprint 1 (Hạ tầng Auth & Session):** Kiểm thử luồng Xác thực (Auth), Quản lý phiên (Session Lifecycle) và Phân quyền cho cả 3 vai trò (`CANDIDATE`, `RECRUITER`, `ADMIN`).
+- **Sprint 2 (Nghệp vụ cốt lõi):** Kiểm thử luồng Đăng nhập 2 cổng (Ứng viên / Nhà tuyển dụng), Đăng bài tuyển dụng, Kiểm duyệt bài đăng và Tìm kiếm việc làm theo từ khóa/bộ lọc.
 
 ---
 
