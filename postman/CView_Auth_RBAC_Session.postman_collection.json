@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "cview-auth-rbac-session-suite-v1",
-    "name": "CView - Auth, RBAC & Session Test Suite",
-    "description": "Bộ kiểm thử tự động toàn diện luồng Authentication, Granular RBAC và Session Lifecycle cho 3 vai trò (CANDIDATE, RECRUITER, ADMIN) trên hệ thống CView. Thiết kế phục vụ Sprint 1 - QA Master Test Plan.",
+    "name": "CView - Auth, RBAC, Session & Sprint 2 Jobs",
+    "description": "Bộ kiểm thử tự động cho Authentication, Granular RBAC, Session Lifecycle và các luồng đăng bài, kiểm duyệt, tìm kiếm việc làm Sprint 2 trên hệ thống CView.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -289,15 +289,32 @@
           "name": "2.3 Nhà tuyển dụng gọi API Đăng bài tuyển dụng (RBAC Success)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.unset(\"created_job_post_id\");",
+                  "pm.environment.set(\"job_dynamic_title\", \"Postman - Backend Developer \" + Date.now());",
+                  "pm.environment.set(\"job_deadline\", new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "exec": [
                   "pm.test(\"Status code là 201 Created\", function () {",
                   "    pm.response.to.have.status(201);",
                   "});",
-                  "pm.test(\"Tin tuyển dụng tạo ở trạng thái PENDING\", function () {",
+                  "pm.test(\"Tin tuyển dụng được tạo ở trạng thái chờ kiểm duyệt\", function () {",
                   "    var json = pm.response.json();",
                   "    pm.expect(json.status).to.eql(\"PENDING\");",
+                  "    pm.expect(json.approval_status).to.eql(\"PENDING\");",
+                  "});",
+                  "pm.test(\"Trả về mã bài đăng để theo dõi và kiểm duyệt\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.job_post_id).to.be.a(\"string\").and.not.empty;",
+                  "    pm.environment.set(\"created_job_post_id\", json.job_post_id);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -316,6 +333,65 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{job_dynamic_title}}\",\n  \"position\": \"Backend Developer\",\n  \"job_description\": \"Phát triển và vận hành các dịch vụ backend cho nền tảng CView.\",\n  \"requirements\": \"Có kinh nghiệm phát triển API bằng Python và làm việc với PostgreSQL.\",\n  \"benefits\": \"Môi trường làm việc linh hoạt, có cơ hội phát triển chuyên môn.\",\n  \"job_type\": \"FULL_TIME\",\n  \"workplace_type\": \"HYBRID\",\n  \"city\": \"Hà Nội\",\n  \"salary_min\": 15000000,\n  \"salary_max\": 30000000,\n  \"is_salary_negotiable\": false,\n  \"experience_years_min\": 2,\n  \"required_education\": \"BACHELOR\",\n  \"deadline\": \"{{job_deadline}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jobs",
+              "host": ["{{base_url}}"],
+              "path": ["jobs"]
+            }
+          }
+        },
+        {
+          "name": "2.4 Tạo bài đăng riêng để kiểm thử luồng từ chối",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.unset(\"rejected_job_post_id\");",
+                  "pm.environment.set(\"rejected_job_title\", \"Postman - Rejection test \" + Date.now());",
+                  "pm.environment.set(\"rejected_job_deadline\", new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Lưu mã bài đăng PENDING dành cho kiểm thử từ chối\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.approval_status).to.eql(\"PENDING\");",
+                  "    pm.expect(json.job_post_id).to.be.a(\"string\").and.not.empty;",
+                  "    pm.environment.set(\"rejected_job_post_id\", json.job_post_id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{recruiter_access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{rejected_job_title}}\",\n  \"position\": \"Backend Developer\",\n  \"job_description\": \"Phát triển và vận hành các dịch vụ backend cho nền tảng CView.\",\n  \"requirements\": \"Có kinh nghiệm phát triển API bằng Python và làm việc với PostgreSQL.\",\n  \"benefits\": \"Môi trường làm việc linh hoạt, có cơ hội phát triển chuyên môn.\",\n  \"job_type\": \"FULL_TIME\",\n  \"workplace_type\": \"HYBRID\",\n  \"city\": \"Hà Nội\",\n  \"salary_min\": 15000000,\n  \"salary_max\": 30000000,\n  \"is_salary_negotiable\": false,\n  \"experience_years_min\": 2,\n  \"required_education\": \"BACHELOR\",\n  \"deadline\": \"{{rejected_job_deadline}}\"\n}"
+            },
             "url": {
               "raw": "{{base_url}}/jobs",
               "host": ["{{base_url}}"],
@@ -382,6 +458,9 @@
                   "pm.test(\"Phê duyệt bài đăng thành APPROVED\", function () {",
                   "    var json = pm.response.json();",
                   "    pm.expect(json.approval_status).to.eql(\"APPROVED\");",
+                  "    pm.expect(json.status).to.eql(\"APPROVED\");",
+                  "    pm.expect(json.job_id).to.eql(pm.environment.get(\"created_job_post_id\"));",
+                  "    pm.expect(json.moderated_by).to.be.a(\"string\").and.not.empty;",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -405,20 +484,232 @@
               "raw": "{\n  \"approval_status\": \"APPROVED\",\n  \"rejection_reason\": null\n}"
             },
             "url": {
-              "raw": "{{base_url}}/jobs/a0000000-0000-0000-0000-000000000101/moderation",
+              "raw": "{{base_url}}/jobs/{{created_job_post_id}}/moderation",
               "host": ["{{base_url}}"],
-              "path": ["jobs", "a0000000-0000-0000-0000-000000000101", "moderation"]
+              "path": ["jobs", "{{created_job_post_id}}", "moderation"]
+            }
+          }
+        },
+        {
+          "name": "3.3 Admin từ chối bài đăng và trả về lý do",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Bài đăng chuyển sang REJECTED kèm đúng lý do\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.approval_status).to.eql(\"REJECTED\");",
+                  "    pm.expect(json.status).to.eql(\"REJECTED\");",
+                  "    pm.expect(json.rejection_reason).to.eql(\"Bài đăng thiếu thông tin về quyền lợi và yêu cầu công việc.\");",
+                  "    pm.expect(json.moderated_by).to.be.a(\"string\").and.not.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approval_status\": \"REJECTED\",\n  \"rejection_reason\": \"Bài đăng thiếu thông tin về quyền lợi và yêu cầu công việc.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jobs/{{rejected_job_post_id}}/moderation",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "{{rejected_job_post_id}}", "moderation"]
             }
           }
         }
       ]
     },
     {
-      "name": "4. Kiểm thử Phân quyền & Ranh giới Bảo mật (RBAC Negative)",
+      "name": "4. Tìm kiếm việc làm theo từ khóa & bộ lọc (Candidate - Sprint 2)",
+      "description": "Kiểm thử tìm việc bằng từ khóa, địa điểm, lĩnh vực, hình thức làm việc, mức lương và phân trang; truy vấn được thực hiện với Access Token của ứng viên.",
+      "item": [
+        {
+          "name": "4.1 Tìm kiếm theo từ khóa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Trả về danh sách việc làm và từ khóa đã tìm\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.items).to.be.an(\"array\");",
+                  "    pm.expect(json.total).to.be.a(\"number\");",
+                  "    pm.expect(json.total).to.be.at.least(json.items.length);",
+                  "    pm.expect(json.keyword).to.eql(\"Backend\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{candidate_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jobs/search?keyword=Backend",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "search"],
+              "query": [
+                {
+                  "key": "keyword",
+                  "value": "Backend"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.2 Lọc theo địa điểm và lĩnh vực",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Kết quả tìm kiếm phản ánh địa điểm và lĩnh vực\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.items).to.be.an(\"array\");",
+                  "    pm.expect(json.total).to.be.a(\"number\");",
+                  "    pm.expect(json.city).to.eql(\"Hà Nội\");",
+                  "    pm.expect(json.domain_id).to.eql(1);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{candidate_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jobs/search?city=H%C3%A0%20N%E1%BB%99i&domain_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "search"],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "Hà Nội"
+                },
+                {
+                  "key": "domain_id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.3 Lọc kết hợp loại việc, hình thức làm việc, lương và phân trang",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code là 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Kết quả tìm kiếm tuân theo cấu trúc phân trang\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.items).to.be.an(\"array\");",
+                  "    pm.expect(json.total).to.be.a(\"number\");",
+                  "    pm.expect(json.total).to.be.at.least(json.items.length);",
+                  "    pm.expect(json.items.length).to.be.at.most(10);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{candidate_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jobs/search?keyword=Python&city=H%C3%A0%20N%E1%BB%99i&domain_id=1&job_type=FULL_TIME&workplace_type=REMOTE&salary_min=15000000&page=1&page_size=10",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "search"],
+              "query": [
+                {
+                  "key": "keyword",
+                  "value": "Python"
+                },
+                {
+                  "key": "city",
+                  "value": "Hà Nội"
+                },
+                {
+                  "key": "domain_id",
+                  "value": "1"
+                },
+                {
+                  "key": "job_type",
+                  "value": "FULL_TIME"
+                },
+                {
+                  "key": "workplace_type",
+                  "value": "REMOTE"
+                },
+                {
+                  "key": "salary_min",
+                  "value": "15000000"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Kiểm thử Phân quyền & Ranh giới Bảo mật (RBAC Negative)",
       "description": "Kiểm thử các tình huống tấn công vượt quyền (Privilege Escalation), mật khẩu sai, tài khoản bị khóa và thiếu chứng thực.",
       "item": [
         {
-          "name": "4.1 Ứng viên cố tình gọi API Kiểm duyệt của Admin (Kỳ vọng 403 Forbidden)",
+          "name": "5.1 Ứng viên cố tình gọi API Kiểm duyệt của Admin (Kỳ vọng 403 Forbidden)",
           "event": [
             {
               "listen": "test",
@@ -460,7 +751,7 @@
           }
         },
         {
-          "name": "4.2 Ứng viên cố tình gọi API Đăng bài của Nhà tuyển dụng (Kỳ vọng 403 Forbidden)",
+          "name": "5.2 Ứng viên cố tình gọi API Đăng bài của Nhà tuyển dụng (Kỳ vọng 403 Forbidden)",
           "event": [
             {
               "listen": "test",
@@ -498,7 +789,7 @@
           }
         },
         {
-          "name": "4.3 Đăng nhập với mật khẩu không chính xác (Kỳ vọng 401 Unauthorized)",
+          "name": "5.3 Đăng nhập với mật khẩu không chính xác (Kỳ vọng 401 Unauthorized)",
           "event": [
             {
               "listen": "test",
@@ -536,7 +827,7 @@
           }
         },
         {
-          "name": "4.4 Đăng nhập tài khoản chưa kích hoạt (status PENDING - Kỳ vọng 403 Forbidden)",
+          "name": "5.4 Đăng nhập tài khoản chưa kích hoạt (status PENDING - Kỳ vọng 403 Forbidden)",
           "event": [
             {
               "listen": "test",
@@ -574,7 +865,7 @@
           }
         },
         {
-          "name": "4.5 Gọi API yêu cầu Bearer Token nhưng không truyền Header (Kỳ vọng 401)",
+          "name": "5.5 Gọi API yêu cầu Bearer Token nhưng không truyền Header (Kỳ vọng 401)",
           "event": [
             {
               "listen": "test",
@@ -600,11 +891,11 @@
       ]
     },
     {
-      "name": "5. Quản lý Phiên làm việc & Xoay vòng Token (Session Lifecycle)",
+      "name": "6. Quản lý Phiên làm việc & Xoay vòng Token (Session Lifecycle)",
       "description": "Kiểm thử xoay vòng Refresh Token (Token Rotation), chống tấn công dùng lại token cũ (Reuse Detection), và đăng xuất thu hồi phiên.",
       "item": [
         {
-          "name": "5.1 Làm mới Access Token (Token Refresh & Rotation)",
+          "name": "6.1 Làm mới Access Token (Token Refresh & Rotation)",
           "event": [
             {
               "listen": "test",
@@ -646,7 +937,7 @@
           }
         },
         {
-          "name": "5.2 Tấn công dùng lại Refresh Token cũ sau khi xoay vòng (Kỳ vọng 401)",
+          "name": "6.2 Tấn công dùng lại Refresh Token cũ sau khi xoay vòng (Kỳ vọng 401)",
           "event": [
             {
               "listen": "test",
@@ -684,7 +975,7 @@
           }
         },
         {
-          "name": "5.3 Đăng xuất và thu hồi phiên làm việc (Session Revoke)",
+          "name": "6.3 Đăng xuất và thu hồi phiên làm việc (Session Revoke)",
           "event": [
             {
               "listen": "test",
@@ -722,7 +1013,7 @@
           }
         },
         {
-          "name": "5.4 Dùng Refresh Token đã bị thu hồi để làm mới phiên (Kỳ vọng 401)",
+          "name": "6.4 Dùng Refresh Token đã bị thu hồi để làm mới phiên (Kỳ vọng 401)",
           "event": [
             {
               "listen": "test",
