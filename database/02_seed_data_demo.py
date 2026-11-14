@@ -3,10 +3,10 @@ Database Seed Data Generator for CView System
 Generated based on DESIGN.md specifications for Demo scale.
 
 Scale Target Summary:
-  - accounts: 100
+  - accounts: 111
   - roles: 3
   - permissions: 20
-  - account_roles: 100
+  - account_roles: 111
   - role_permissions: 36
   - sessions: 200
   - auth_logs: 500
@@ -104,7 +104,8 @@ SKILLS_LIST = [
     ("Tiếng Anh giao tiếp", "LANGUAGE"), ("Tiếng Anh chuyên ngành IT", "LANGUAGE"), ("Tiếng Nhật (N3+)", "LANGUAGE"),
     ("Tiếng Hàn (TOPIK 4+)", "LANGUAGE"), ("Tiếng Trung giao tiếp", "LANGUAGE"), ("Technical Writing", "OTHER"),
     ("Design Patterns", "HARD_SKILL"), ("SEO Technical", "OTHER"), ("Figma / UI/UX Prototyping", "HARD_SKILL"),
-    ("Jira / Confluence", "MANAGEMENT_LEADERSHIP"), ("Prompt Engineering", "HARD_SKILL"), ("LLM Fine-tuning", "HARD_SKILL")
+    ("Jira / Confluence", "MANAGEMENT_LEADERSHIP"), ("Prompt Engineering", "HARD_SKILL"), ("LLM Fine-tuning", "HARD_SKILL"),
+    ("Bash", "HARD_SKILL")
 ]
 
 CERTIFICATES_LIST = [
@@ -176,7 +177,7 @@ def gen_email(name, index):
 def generate_seed_data():
     data = {}
 
-    # 1. Accounts (100 total: 1 Admin, 50 Candidates, 49 Recruiters)
+    # 1. Accounts (111 total: 1 Admin, 50 Candidates, 60 Recruiters)
     accounts = []
     accounts.append({
         "account_id": gen_uuid(),
@@ -201,7 +202,7 @@ def generate_seed_data():
             "created_at": "2026-02-15T08:30:00Z"
         })
 
-    for i in range(1, 50):
+    for i in range(1, 61):
         accounts.append({
             "account_id": gen_uuid(),
             "username": f"recruiter_{i:03d}",
@@ -239,12 +240,12 @@ def generate_seed_data():
         })
     data["permissions"] = permissions
 
-    # 4. Account Roles (100 mappings)
+    # 4. Account Roles (111 mappings)
     account_roles = []
     account_roles.append({"account_id": accounts[0]["account_id"], "role_id": 1, "created_at": "2026-01-01T00:00:00Z"})
     for i in range(1, 51):
         account_roles.append({"account_id": accounts[i]["account_id"], "role_id": 3, "created_at": "2026-02-15T08:30:00Z"})
-    for i in range(51, 100):
+    for i in range(51, 111):
         account_roles.append({"account_id": accounts[i]["account_id"], "role_id": 2, "created_at": "2026-02-01T09:00:00Z"})
     data["account_roles"] = account_roles
 
@@ -364,7 +365,7 @@ def generate_seed_data():
 
     # 12. Recruiter Profiles (60 records)
     recruiter_profiles = []
-    recruiter_accs = accounts[51:100] # 49 recruiter accounts
+    recruiter_accs = accounts[51:111]
     for i in range(60):
         acc = recruiter_accs[i % len(recruiter_accs)]
         comp = companies[i % 20] # 20 companies, ~3 recruiters each
@@ -528,8 +529,9 @@ def generate_seed_data():
 
     # 22. Job Domains (70 records: ~1.4 per job post)
     job_domains = []
-    for jp in job_posts:
-        d_sample = random.sample(domains, random.choice([1, 2]))
+    two_domain_job_ids = set(random.sample(range(len(job_posts)), 20))
+    for i, jp in enumerate(job_posts):
+        d_sample = random.sample(domains, 2 if i in two_domain_job_ids else 1)
         for d in d_sample:
             job_domains.append({
                 "job_post_id": jp["job_post_id"],
@@ -632,14 +634,15 @@ def generate_seed_data():
     for i in range(1, 201):
         cand = random.choice(candidate_profiles)
         jp = random.choice(job_posts)
+        is_read = random.choice([True, False])
         job_notifications.append({
             "notification_id": i,
             "candidate_id": cand["candidate_id"],
             "job_post_id": jp["job_post_id"],
             "title": f"Gợi ý việc làm: {jp['title']}",
             "content": f"Hệ thống phát hiện bài tuyển dụng {jp['title']} có độ tương đồng >80% với hồ sơ của bạn.",
-            "is_read": random.choice([True, False]),
-            "read_at": "2026-04-20T10:00:00Z",
+            "is_read": is_read,
+            "read_at": "2026-04-20T10:00:00Z" if is_read else None,
             "created_at": "2026-04-20T08:00:00Z"
         })
     data["job_notifications"] = job_notifications
@@ -649,14 +652,15 @@ def generate_seed_data():
     n_types = ["JOB_APPROVAL_STATUS", "APPLICATION_UPDATE", "CV_PARSE_COMPLETED", "ACCOUNT_SECURITY"]
     for i in range(1, 101):
         acc = random.choice(accounts)
+        is_read = random.choice([True, False])
         other_notifications.append({
             "notification_id": i,
             "account_id": acc["account_id"],
             "notification_type": random.choice(n_types),
             "title": "Thông báo từ hệ thống CView",
             "message": "Chi tiết thông báo hệ thống liên quan đến tài khoản và hoạt động tuyển dụng.",
-            "is_read": random.choice([True, False]),
-            "read_at": "2026-04-22T10:00:00Z",
+            "is_read": is_read,
+            "read_at": "2026-04-22T10:00:00Z" if is_read else None,
             "created_at": "2026-04-22T08:00:00Z"
         })
     data["other_notifications"] = other_notifications
