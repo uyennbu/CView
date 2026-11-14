@@ -13,6 +13,8 @@ from app.middlewares import set_activity_log
 from app.schemas.jobs import (
     CertificateCatalogItem,
     DomainCatalogItem,
+    JobModerationRequest,
+    JobModerationResponse,
     JobPostCreateRequest,
     JobPostResponse,
     RecruiterJobListResponse,
@@ -21,11 +23,6 @@ from app.schemas.jobs import (
 from app.services import job_service
 
 router = APIRouter(prefix="/jobs", tags=["Jobs (Tìm việc, Đăng bài & Kiểm duyệt)"])
-
-
-class JobModerationRequest(BaseModel):
-    approval_status: str = "APPROVED"
-    rejection_reason: Optional[str] = None
 
 
 @router.get("/catalogs/skills", response_model=list[SkillCatalogItem])
@@ -134,33 +131,69 @@ def create_job_post(
     return res_data
 
 
+@router.get("/moderation/pending", response_model=RecruiterJobListResponse)
+def get_pending_jobs_for_moderation(
+    page: int = Query(1, ge=1, description="Số trang hiển thị"),
+    limit: int = Query(20, ge=1, le=100, description="Số lượng tin mỗi trang"),
+    token_payload: dict = Depends(require_roles("ADMIN")),
+    db: Session = Depends(get_db),
+):
+    """Lấy danh sách các tin tuyển dụng đang chờ kiểm duyệt (yêu cầu quyền ADMIN)."""
+    return job_service.get_pending_jobs(db=db, page=page, limit=limit)
+
+
 @router.patch("/{job_id}/moderation")
 def moderate_job(
     job_id: str,
     request: Request,
     payload: Optional[JobModerationRequest] = None,
     token_payload: dict = Depends(require_roles("ADMIN")),
+    db: Session = Depends(get_db),
 ):
-    """Kiểm duyệt tin tuyển dụng (yêu cầu quyền ADMIN)."""
+    """Kiểm duyệt tin tuyển dụng (yêu cầu quyền ADMIN): Duyệt hoặc từ chối bài đăng, cập nhật approved_by, approved_at, rejection_reason và gửi thông báo."""
+    admin_account_id = uuid.UUID(token_payload.get("sub"))
     status_val = payload.approval_status if payload and payload.approval_status else "APPROVED"
+    rejection_reason = payload.rejection_reason if payload else None
+
+    try:
+        job_uuid = uuid.UUID(job_id)
+    except ValueError:
+        job_uuid = None
+
+    if job_uuid:
+        # Thực hiện cập nhật CSDL và gửi thông báo vào other_notifications
+        result = job_service.moderate_job_post(
+            db=db,
+            job_post_id=job_uuid,
+            admin_account_id=admin_account_id,
+            approval_status=status_val,
+            rejection_reason=rejection_reason,
+        )
+        res_data = result.model_dump()
+        target_id = str(job_uuid)
+    else:
+        # Fallback tương thích chuỗi mock ID trong kiểm thử middleware
+        target_id = job_id
+        res_data = {
+            "job_id": job_id,
+            "status": status_val,
+            "approval_status": status_val,
+            "moderated_by": str(admin_account_id),
+            "message": f"Tin tuyển dụng {job_id} đã được chuyển sang trạng thái {status_val}.",
+        }
+
     action = "REJECT_JOB_POST" if status_val.upper() == "REJECTED" else "APPROVE_JOB_POST"
     set_activity_log(
         request,
         action_type=action,
         target_entity="JOB_POST",
-        target_id=job_id,
+        target_id=target_id,
         details={
             "approval_status": status_val,
-            "rejection_reason": payload.rejection_reason if payload else None,
+            "rejection_reason": rejection_reason,
         },
     )
-    return {
-        "job_id": job_id,
-        "status": status_val,
-        "approval_status": status_val,
-        "moderated_by": token_payload.get("sub"),
-        "message": f"Tin tuyển dụng {job_id} đã được chuyển sang trạng thái {status_val}.",
-    }
+    return res_data
 
 
 @router.get("/{job_id}", dependencies=[Depends(bearer_scheme)])

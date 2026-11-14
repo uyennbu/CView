@@ -20,10 +20,13 @@ from app.schemas.jobs import (
     JobCertificateInput,
     JobCertificateResponse,
     JobDomainResponse,
+    JobModerationRequest,
+    JobModerationResponse,
     JobPostCreateRequest,
     JobPostResponse,
     JobSkillInput,
     JobSkillResponse,
+    OtherNotificationResponse,
     RecruiterJobListResponse,
     SkillCatalogItem,
 )
@@ -60,4 +63,7 @@ __all__ = [
     "SkillCatalogItem",
     "CertificateCatalogItem",
     "DomainCatalogItem",
+    "JobModerationRequest",
+    "JobModerationResponse",
+    "OtherNotificationResponse",
 ]

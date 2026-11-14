@@ -153,6 +153,8 @@ class JobPostResponse(BaseModel):
     required_education: str
     approval_status: str
     rejection_reason: Optional[str] = None
+    approved_by: Optional[uuid.UUID] = None
+    approved_at: Optional[datetime] = None
     deadline: datetime
     created_at: datetime
     skills: list[JobSkillResponse] = Field(default_factory=list)
@@ -201,4 +203,48 @@ class DomainCatalogItem(BaseModel):
     description: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
+class JobModerationRequest(BaseModel):
+    """Schema yêu cầu phê duyệt hoặc từ chối tin tuyển dụng từ Admin."""
+
+    approval_status: str = Field(
+        ...,
+        pattern=r"^(APPROVED|REJECTED)$",
+        description="Trạng thái phê duyệt: 'APPROVED' hoặc 'REJECTED'",
+    )
+    rejection_reason: Optional[str] = Field(
+        None,
+        max_length=1000,
+        description="Lý do từ chối bài đăng (bắt buộc khi approval_status = 'REJECTED')",
+    )
+
+
+class JobModerationResponse(BaseModel):
+    """Schema kết quả kiểm duyệt tin tuyển dụng."""
+
+    job_id: uuid.UUID
+    title: str
+    approval_status: str
+    approved_by: Optional[uuid.UUID] = None
+    approved_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+    notification_id: Optional[int] = None
+    message: str
+
+
+class OtherNotificationResponse(BaseModel):
+    """Schema thông báo hệ thống (bảng other_notifications)."""
+
+    notification_id: int
+    account_id: uuid.UUID
+    notification_type: str
+    title: str
+    message: str
+    is_read: bool
+    read_at: Optional[datetime] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
 

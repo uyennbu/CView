@@ -28,12 +28,14 @@ from app.schemas.jobs import (
     DomainCatalogItem,
     JobCertificateResponse,
     JobDomainResponse,
+    JobModerationResponse,
     JobPostCreateRequest,
     JobPostResponse,
     JobSkillResponse,
     RecruiterJobListResponse,
     SkillCatalogItem,
 )
+from app.services import notification_service
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +109,8 @@ def _format_job_post_response(post: JobPost, db: Session) -> JobPostResponse:
         required_education=post.required_education,
         approval_status=post.approval_status,
         rejection_reason=post.rejection_reason,
+        approved_by=post.approved_by,
+        approved_at=post.approved_at,
         deadline=post.deadline,
         created_at=post.created_at,
         skills=skills_data,
@@ -344,4 +348,118 @@ def get_domains_catalog(db: Session) -> list[DomainCatalogItem]:
     """Lấy danh mục các lĩnh vực chuẩn hóa hệ thống."""
     domains = db.scalars(select(Domain).order_by(Domain.domain_name.asc())).all()
     return [DomainCatalogItem.model_validate(d) for d in domains]
+
+
+def moderate_job_post(
+    db: Session,
+    job_post_id: uuid.UUID,
+    admin_account_id: uuid.UUID,
+    approval_status: str,
+    rejection_reason: Optional[str] = None,
+) -> JobModerationResponse:
+    """Admin duyệt hoặc từ chối bài đăng tuyển dụng và tự động gửi thông báo tới nhà tuyển dụng."""
+    job_post = db.get(JobPost, job_post_id)
+    if not job_post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy tin tuyển dụng với ID đã cung cấp.",
+        )
+
+    status_upper = approval_status.upper().strip()
+    if status_upper not in ("APPROVED", "REJECTED"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Trạng thái kiểm duyệt chỉ chấp nhận 'APPROVED' hoặc 'REJECTED'.",
+        )
+
+    if status_upper == "REJECTED":
+        if not rejection_reason or not rejection_reason.strip():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Vui lòng cung cấp lý do từ chối bài đăng tuyển dụng.",
+            )
+        rejection_reason_clean = rejection_reason.strip()
+    else:
+        rejection_reason_clean = None
+
+    now_utc = datetime.now(timezone.utc)
+    job_post.approval_status = status_upper
+    job_post.approved_by = admin_account_id
+    job_post.approved_at = now_utc
+    job_post.rejection_reason = rejection_reason_clean
+
+    # Gửi thông báo đến tài khoản nhà tuyển dụng
+    notification_id: Optional[int] = None
+    recruiter = db.get(RecruiterProfile, job_post.recruiter_id)
+    if recruiter:
+        if status_upper == "APPROVED":
+            notif_title = "Tin tuyển dụng của bạn đã được phê duyệt"
+            notif_msg = (
+                f'Tin tuyển dụng "{job_post.title}" đã được Admin phê duyệt thành công '
+                f"và hiện đang được hiển thị công khai trên hệ thống CView."
+            )
+        else:
+            notif_title = "Tin tuyển dụng của bạn bị từ chối phê duyệt"
+            notif_msg = (
+                f'Tin tuyển dụng "{job_post.title}" đã bị Admin từ chối phê duyệt. '
+                f"Lý do: {rejection_reason_clean}. Vui lòng kiểm tra và cập nhật lại bài đăng."
+            )
+
+        notif = notification_service.create_other_notification(
+            db=db,
+            account_id=recruiter.account_id,
+            notification_type="JOB_APPROVAL_STATUS",
+            title=notif_title,
+            message=notif_msg,
+        )
+        notification_id = notif.notification_id
+
+    db.commit()
+    db.refresh(job_post)
+
+    msg = (
+        f"Tin tuyển dụng '{job_post.title}' đã được phê duyệt thành công."
+        if status_upper == "APPROVED"
+        else f"Tin tuyển dụng '{job_post.title}' đã bị từ chối phê duyệt."
+    )
+
+    logger.info(
+        "Admin %s đã kiểm duyệt tin %s: status=%s",
+        admin_account_id,
+        job_post_id,
+        status_upper,
+    )
+
+    return JobModerationResponse(
+        job_id=job_post.job_post_id,
+        title=job_post.title,
+        approval_status=job_post.approval_status,
+        approved_by=job_post.approved_by,
+        approved_at=job_post.approved_at,
+        rejection_reason=job_post.rejection_reason,
+        notification_id=notification_id,
+        message=msg,
+    )
+
+
+def get_pending_jobs(
+    db: Session,
+    page: int = 1,
+    limit: int = 20,
+) -> RecruiterJobListResponse:
+    """Lấy danh sách các tin tuyển dụng đang chờ kiểm duyệt (approval_status = 'PENDING')."""
+    query = select(JobPost).where(JobPost.approval_status == "PENDING")
+    count_query = select(func.count(JobPost.job_post_id)).where(
+        JobPost.approval_status == "PENDING"
+    )
+
+    total = db.scalar(count_query) or 0
+    offset = (page - 1) * limit
+    posts = db.scalars(
+        query.order_by(JobPost.created_at.desc()).offset(offset).limit(limit)
+    ).all()
+
+    items = [_format_job_post_response(post, db) for post in posts]
+    return RecruiterJobListResponse(items=items, total=total, page=page, limit=limit)
+
 

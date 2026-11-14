@@ -172,3 +172,29 @@ class SystemErrorLog(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
+
+class OtherNotification(Base):
+    """Bảng 29: other_notifications."""
+
+    __tablename__ = "other_notifications"
+
+    notification_id: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True
+    )
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("accounts.account_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    notification_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    read_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
