@@ -76,12 +76,14 @@ const contactItems = [
   },
 ]
 
+
 function ContactSection() {
   return (
-   <section
-  id="lien-he"
-  className="relative isolate min-h-[680px] overflow-hidden bg-transparent px-6 pt-12 pb-12 md:min-h-[720px] md:px-10 md:pb-16 lg:min-h-[760px] lg:px-[6%] lg:pt-16 lg:pb-20"S
->
+    <section
+      id="lien-he"
+      className="relative isolate min-h-[680px] overflow-hidden bg-transparent px-6 pt-12 pb-12 md:min-h-[720px] md:px-10 md:pb-16 lg:min-h-[760px] lg:px-[6%] lg:pt-16 lg:pb-20"
+    >
+
       {/* Decorative background */}
       <div
         aria-hidden="true"

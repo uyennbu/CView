@@ -119,7 +119,24 @@ const initialFilters = {
 }
 
 const JOBS_PER_PAGE = 2
+// Chuẩn hóa mức lương về dạng số để phục vụ lọc
+const getNumericSalary = (salary) => {
+  if (typeof salary === 'number') {
+    return Number.isFinite(salary) ? salary : null
+  }
 
+  if (typeof salary === 'string') {
+    const normalizedSalary = salary.replace(/[,. ]/g, '')
+
+    if (!/^\d+$/.test(normalizedSalary)) {
+      return null
+    }
+
+    return Number(normalizedSalary)
+  }
+
+  return null
+}
 export default function JobsPage() {
   const [filters, setFilters] = useState(initialFilters)
   const [currentPage, setCurrentPage] = useState(1)
@@ -161,18 +178,28 @@ export default function JobsPage() {
         !filters.workMode ||
         job.workMode === filters.workMode
 
-      const matchesSalary =
-        !filters.salary ||
-        (filters.salary === 'under10' &&
-          job.salary < 10000000) ||
-        (filters.salary === '10to15' &&
-          job.salary >= 10000000 &&
-          job.salary <= 15000000) ||
-        (filters.salary === '15to20' &&
-          job.salary > 15000000 &&
-          job.salary <= 20000000) ||
-        (filters.salary === 'over20' &&
-          job.salary > 20000000)
+      
+const numericSalary = getNumericSalary(job.salary)
+
+const matchesSalary =
+  !filters.salary ||
+  (numericSalary !== null &&
+    (
+      (filters.salary === 'under10' &&
+        numericSalary < 10000000) ||
+
+      (filters.salary === '10to15' &&
+        numericSalary >= 10000000 &&
+        numericSalary <= 15000000) ||
+
+      (filters.salary === '15to20' &&
+        numericSalary > 15000000 &&
+        numericSalary <= 20000000) ||
+
+      (filters.salary === 'over20' &&
+        numericSalary > 20000000)
+    ))
+
 
       return (
         matchesKeyword &&
@@ -186,9 +213,10 @@ export default function JobsPage() {
   }, [filters])
 
   // Phân trang
-  const totalPages = Math.ceil(
-    filteredJobs.length / JOBS_PER_PAGE
-  )
+ const totalPages = Math.max(
+  1,
+  Math.ceil(filteredJobs.length / JOBS_PER_PAGE)
+)
 
   const paginatedJobs = filteredJobs.slice(
     (currentPage - 1) * JOBS_PER_PAGE,
