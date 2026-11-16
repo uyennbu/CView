@@ -133,7 +133,7 @@ class JobPostCreateRequest(BaseModel):
 class JobPostResponse(BaseModel):
     """Schema phản hồi chi tiết tin tuyển dụng."""
 
-    job_post_id: uuid.UUID
+    job_id: uuid.UUID
     recruiter_id: uuid.UUID
     company_id: uuid.UUID
     company_name: Optional[str] = None

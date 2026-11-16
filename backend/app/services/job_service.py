@@ -89,7 +89,7 @@ def _format_job_post_response(post: JobPost, db: Session) -> JobPostResponse:
     ]
 
     return JobPostResponse(
-        job_post_id=post.job_post_id,
+        job_id=post.job_post_id,
         recruiter_id=post.recruiter_id,
         company_id=post.company_id,
         company_name=company_name,
@@ -313,9 +313,9 @@ def get_recruiter_jobs(
     return RecruiterJobListResponse(items=items, total=total, page=page, limit=limit)
 
 
-def get_job_detail(db: Session, job_post_id: uuid.UUID) -> JobPostResponse:
+def get_job_detail(db: Session, job_id: uuid.UUID) -> JobPostResponse:
     """Xem chi tiết bài đăng tuyển dụng theo ID."""
-    job_post = db.get(JobPost, job_post_id)
+    job_post = db.get(JobPost, job_id)
     if not job_post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -352,13 +352,13 @@ def get_domains_catalog(db: Session) -> list[DomainCatalogItem]:
 
 def moderate_job_post(
     db: Session,
-    job_post_id: uuid.UUID,
+    job_id: uuid.UUID,
     admin_account_id: uuid.UUID,
     approval_status: str,
     rejection_reason: Optional[str] = None,
 ) -> JobModerationResponse:
     """Admin duyệt hoặc từ chối bài đăng tuyển dụng và tự động gửi thông báo tới nhà tuyển dụng."""
-    job_post = db.get(JobPost, job_post_id)
+    job_post = db.get(JobPost, job_id)
     if not job_post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -426,7 +426,7 @@ def moderate_job_post(
     logger.info(
         "Admin %s đã kiểm duyệt tin %s: status=%s",
         admin_account_id,
-        job_post_id,
+        job_id,
         status_upper,
     )
 

@@ -95,7 +95,7 @@ def create_job_post(
     account_id = uuid.UUID(token_payload.get("sub"))
     if payload is not None:
         job_post_resp = job_service.create_job_post(db=db, account_id=account_id, payload=payload)
-        target_id = str(job_post_resp.job_post_id)
+        target_id = str(job_post_resp.job_id)
         details = {
             "title": job_post_resp.title,
             "position": job_post_resp.position,
@@ -114,7 +114,7 @@ def create_job_post(
             "recruiter_id": str(account_id),
         }
         res_data = {
-            "job_post_id": target_id,
+            "job_id": target_id,
             "status": "PENDING",
             "approval_status": "PENDING",
             "recruiter_id": str(account_id),
@@ -164,7 +164,7 @@ def moderate_job(
         # Thực hiện cập nhật CSDL và gửi thông báo vào other_notifications
         result = job_service.moderate_job_post(
             db=db,
-            job_post_id=job_uuid,
+            job_id=job_uuid,
             admin_account_id=admin_account_id,
             approval_status=status_val,
             rejection_reason=rejection_reason,
