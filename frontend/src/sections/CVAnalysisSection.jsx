@@ -43,7 +43,7 @@ function CVAnalysisSection() {
       className="relative isolate min-h-screen overflow-hidden bg-transparent px-6 py-16 md:px-10 lg:px-[5%] lg:py-20"
     >
       {/* Tiêu đề và mô tả */}
-      <div className="relative z-10 max-w-[650px]">
+      <div className="relative z-10 max-w-[650px] lg:translate-x-30">
         <ScrollReveal direction="up">
           <div className="flex items-center gap-4">
             <h2 className="font-manrope text-4xl font-extrabold uppercase tracking-tight text-[#063B2C] md:text-[46px]">
@@ -114,9 +114,9 @@ function CVAnalysisSection() {
             key={step.number}
             direction="up"
             delay={index * 150}
-            className="w-full max-w-[330px]"
+            className="group w-full max-w-[330px]"
           >
-            <div className="relative flex h-[270px] w-full items-center justify-center">
+            <div className="relative flex h-[270px] w-full items-center justify-center transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.03] hover:drop-shadow-[0_12px_18px_rgba(30,86,49,0.16)]">
               {/* Khung nền */}
               <img
                 src={stepFrame}

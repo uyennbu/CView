@@ -76,12 +76,14 @@ const contactItems = [
   },
 ]
 
+
 function ContactSection() {
   return (
     <section
       id="lien-he"
-      className="relative isolate min-h-[560px] overflow-hidden bg-transparent px-6 py-12 md:min-h-[620px] md:px-10 lg:min-h-[650px] lg:px-[6%] lg:py-16"
+      className="relative isolate min-h-[680px] overflow-hidden bg-transparent px-6 pt-12 pb-12 md:min-h-[720px] md:px-10 md:pb-16 lg:min-h-[760px] lg:px-[6%] lg:pt-16 lg:pb-20"
     >
+
       {/* Decorative background */}
       <div
         aria-hidden="true"
@@ -104,10 +106,10 @@ function ContactSection() {
       />
 
       {/* Main content */}
-      <div className="relative mx-auto grid min-h-[480px] max-w-[1400px] items-center gap-4 lg:grid-cols-[1.08fr_0.92fr]">
+      <div className="relative mx-auto grid min-h-[480px] max-w-[1400px] translate-y-20 items-center gap-4 lg:grid-cols-[1.08fr_0.92fr]">
 
-        {/* Left: contact information */}
-        <div className="relative z-20 flex flex-col justify-center">
+       {/* Left: contact information */}
+<div className="relative z-20 flex translate-y-6 flex-col justify-center">
 
           {/* Heading */}
           <ScrollReveal direction="up">

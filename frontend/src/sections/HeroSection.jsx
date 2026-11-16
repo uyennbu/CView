@@ -34,14 +34,14 @@ function HeroSection() {
       id="home"
       className="relative isolate min-h-[650px] overflow-hidden bg-transparent"
     >
-      <div className="mx-auto grid min-h-[650px] max-w-[1440px] items-center gap-8 px-6 py-12 md:grid-cols-2 lg:px-14">
+<div className="mx-auto grid min-h-[650px] max-w-[1440px] translate-x-12 -translate-y-12 items-center gap-8 px-6 py-12 md:grid-cols-2 lg:px-14">
 
         {/* Left content */}
         <ScrollReveal
           direction="left"
           className="z-10 max-w-[590px]"
         >
-          <h1 className="text-[clamp(2rem,3vw,3.5rem)] font-extrabold leading-tight">
+          <h1 className="text-[clamp(2.5rem,3.6vw,4rem)] font-extrabold leading-[1.15] tracking-tight">
             <span className="whitespace-nowrap">
               KẾT NỐI CÔNG VIỆC MƠ ƯỚC
             </span>
@@ -49,7 +49,7 @@ function HeroSection() {
             BỨT PHÁ SỰ NGHIỆP
           </h1>
 
-          <p className="mt-5 max-w-[480px] text-sm leading-relaxed text-[#1A241E] md:text-base">
+          <p className="mt-5 max-w-[540px] text-base leading-relaxed text-[#1A241E] md:text-lg">
             Tìm kiếm công việc phù hợp dựa trên CV của bạn, chấm
             điểm độ phù hợp trên kỹ năng, kinh nghiệm
           </p>
@@ -99,10 +99,10 @@ function HeroSection() {
 
         {/* Right mascot */}
         <ScrollReveal
-          direction="right"
-          delay={200}
-          className="relative flex items-center justify-center"
-        >
+  direction="right"
+  delay={200}
+  className="relative flex -translate-y-3 items-center justify-center"
+>
           <div className="absolute h-[360px] w-[360px] rounded-full bg-gradient-to-br from-[#E6FADD] to-[#F9FACA] blur-2xl md:h-[450px] md:w-[450px]" />
 
           <img
