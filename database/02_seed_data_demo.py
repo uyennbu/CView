@@ -38,7 +38,7 @@ import os
 import uuid
 import random
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 # Cố định random seed để đảm bảo tính tái tạo dữ liệu
 RANDOM_SEED = 42
@@ -47,6 +47,31 @@ random.seed(RANDOM_SEED)
 def gen_uuid():
     """Tạo UUIDv4 deterministic dựa trên random seed cố định"""
     return str(uuid.UUID(int=random.getrandbits(128), version=4))
+
+# ---------------------------------------------------------
+# DATETIME HELPERS (Đảm bảo tính logic thời gian)
+# ---------------------------------------------------------
+def parse_iso(iso_str: str) -> datetime:
+    return datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+
+def fmt_iso(dt: datetime) -> str:
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def rand_dt(start_iso: str, end_iso: str) -> str:
+    """Sinh ngẫu nhiên một timestamp ISO-8601 trong khoảng [start_iso, end_iso]"""
+    start_dt = parse_iso(start_iso)
+    end_dt = parse_iso(end_iso)
+    if end_dt <= start_dt:
+        return fmt_iso(start_dt)
+    delta_seconds = int((end_dt - start_dt).total_seconds())
+    random_second = random.randint(0, delta_seconds)
+    return fmt_iso(start_dt + timedelta(seconds=random_second))
+
+def add_rand_offset(base_iso: str, min_seconds: int = 60, max_seconds: int = 86400) -> str:
+    """Cộng thêm một khoảng thời gian ngẫu nhiên vào mốc thời gian gốc"""
+    base_dt = parse_iso(base_iso)
+    offset = random.randint(min_seconds, max_seconds)
+    return fmt_iso(base_dt + timedelta(seconds=offset))
 
 # ---------------------------------------------------------
 # MASTER DATA LISTS
@@ -179,6 +204,7 @@ def generate_seed_data():
 
     # 1. Accounts (111 total: 1 Admin, 50 Candidates, 60 Recruiters)
     accounts = []
+    admin_created = rand_dt("2026-01-01T00:00:00Z", "2026-01-02T12:00:00Z")
     accounts.append({
         "account_id": gen_uuid(),
         "username": "admin_system",
@@ -186,11 +212,12 @@ def generate_seed_data():
         "password_hash": "$2b$12$eImiTXuWVxfM37uY4JANjO5E.8A8R3qO2bLq3G8hJ9v1K0mO2sCGe",
         "phone_number": "0901234567",
         "status": "ACTIVE",
-        "last_login_at": "2026-11-08T10:00:00Z",
-        "created_at": "2026-01-01T00:00:00Z"
+        "last_login_at": rand_dt("2026-11-05T08:00:00Z", "2026-11-08T22:00:00Z"),
+        "created_at": admin_created
     })
     
     for i in range(1, 51):
+        cand_created = rand_dt("2026-01-15T00:00:00Z", "2026-02-28T23:59:59Z")
         accounts.append({
             "account_id": gen_uuid(),
             "username": f"candidate_{i:03d}",
@@ -198,11 +225,12 @@ def generate_seed_data():
             "password_hash": "$2b$12$eImiTXuWVxfM37uY4JANjO5E.8A8R3qO2bLq3G8hJ9v1K0mO2sCGe",
             "phone_number": f"0912345{i:03d}",
             "status": "ACTIVE" if i <= 45 else ("PENDING" if i <= 48 else "SUSPENDED"),
-            "last_login_at": f"2026-11-0{random.randint(1,7)}T{random.randint(8,20):02d}:00:00Z",
-            "created_at": "2026-02-15T08:30:00Z"
+            "last_login_at": rand_dt("2026-10-25T00:00:00Z", "2026-11-08T23:59:59Z"),
+            "created_at": cand_created
         })
 
     for i in range(1, 61):
+        rec_created = rand_dt("2026-01-10T00:00:00Z", "2026-02-20T23:59:59Z")
         accounts.append({
             "account_id": gen_uuid(),
             "username": f"recruiter_{i:03d}",
@@ -210,16 +238,16 @@ def generate_seed_data():
             "password_hash": "$2b$12$eImiTXuWVxfM37uY4JANjO5E.8A8R3qO2bLq3G8hJ9v1K0mO2sCGe",
             "phone_number": f"0987654{i:03d}",
             "status": "ACTIVE",
-            "last_login_at": f"2026-11-0{random.randint(1,7)}T{random.randint(8,20):02d}:00:00Z",
-            "created_at": "2026-02-01T09:00:00Z"
+            "last_login_at": rand_dt("2026-10-25T00:00:00Z", "2026-11-08T23:59:59Z"),
+            "created_at": rec_created
         })
     data["accounts"] = accounts
 
-    # 2. Roles
+    # 2. Roles (Random nhẹ trong ngày khởi tạo hệ thống 01/01/2026)
     roles = [
-        {"role_id": 1, "role_name": "ADMIN", "description": "Quản trị viên tối cao của hệ thống", "created_at": "2026-01-01T00:00:00Z"},
-        {"role_id": 2, "role_name": "RECRUITER", "description": "Nhà tuyển dụng doanh nghiệp", "created_at": "2026-01-01T00:00:00Z"},
-        {"role_id": 3, "role_name": "CANDIDATE", "description": "Ứng viên tìm kiếm việc làm", "created_at": "2026-01-01T00:00:00Z"}
+        {"role_id": 1, "role_name": "ADMIN", "description": "Quản trị viên tối cao của hệ thống", "created_at": rand_dt("2026-01-01T00:00:00Z", "2026-01-01T02:00:00Z")},
+        {"role_id": 2, "role_name": "RECRUITER", "description": "Nhà tuyển dụng doanh nghiệp", "created_at": rand_dt("2026-01-01T00:00:00Z", "2026-01-01T02:00:00Z")},
+        {"role_id": 3, "role_name": "CANDIDATE", "description": "Ứng viên tìm kiếm việc làm", "created_at": rand_dt("2026-01-01T00:00:00Z", "2026-01-01T02:00:00Z")}
     ]
     data["roles"] = roles
 
@@ -236,33 +264,59 @@ def generate_seed_data():
             "permission_id": idx,
             "permission_name": p_name,
             "description": f"Quyền hạn {p_name} trong hệ thống",
-            "created_at": "2026-01-01T00:00:00Z"
+            "created_at": rand_dt("2026-01-01T00:05:00Z", "2026-01-01T04:00:00Z")
         })
     data["permissions"] = permissions
 
-    # 4. Account Roles (111 mappings)
+    # 4. Account Roles (111 mappings - Gán ngay sau khi account được tạo 1s - 10s)
     account_roles = []
-    account_roles.append({"account_id": accounts[0]["account_id"], "role_id": 1, "created_at": "2026-01-01T00:00:00Z"})
+    account_roles.append({
+        "account_id": accounts[0]["account_id"],
+        "role_id": 1,
+        "created_at": add_rand_offset(accounts[0]["created_at"], 1, 10)
+    })
     for i in range(1, 51):
-        account_roles.append({"account_id": accounts[i]["account_id"], "role_id": 3, "created_at": "2026-02-15T08:30:00Z"})
+        account_roles.append({
+            "account_id": accounts[i]["account_id"],
+            "role_id": 3,
+            "created_at": add_rand_offset(accounts[i]["created_at"], 1, 10)
+        })
     for i in range(51, 111):
-        account_roles.append({"account_id": accounts[i]["account_id"], "role_id": 2, "created_at": "2026-02-01T09:00:00Z"})
+        account_roles.append({
+            "account_id": accounts[i]["account_id"],
+            "role_id": 2,
+            "created_at": add_rand_offset(accounts[i]["created_at"], 1, 10)
+        })
     data["account_roles"] = account_roles
 
     # 5. Role Permissions (36 mappings)
     role_permissions = []
     for p_id in range(1, 21):
-        role_permissions.append({"role_id": 1, "permission_id": p_id, "created_at": "2026-01-01T00:00:00Z"})
+        role_permissions.append({
+            "role_id": 1,
+            "permission_id": p_id,
+            "created_at": rand_dt("2026-01-01T04:05:00Z", "2026-01-01T06:00:00Z")
+        })
     for p_id in [3, 6, 7, 8, 9, 10, 17, 18, 19]:
-        role_permissions.append({"role_id": 2, "permission_id": p_id, "created_at": "2026-01-01T00:00:00Z"})
+        role_permissions.append({
+            "role_id": 2,
+            "permission_id": p_id,
+            "created_at": rand_dt("2026-01-01T04:05:00Z", "2026-01-01T06:00:00Z")
+        })
     for p_id in [11, 12, 13, 14, 15, 16, 17]:
-        role_permissions.append({"role_id": 3, "permission_id": p_id, "created_at": "2026-01-01T00:00:00Z"})
+        role_permissions.append({
+            "role_id": 3,
+            "permission_id": p_id,
+            "created_at": rand_dt("2026-01-01T04:05:00Z", "2026-01-01T06:00:00Z")
+        })
     data["role_permissions"] = role_permissions
 
-    # 6. Sessions (200 records)
+    # 6. Sessions (200 records - expires_at ngẫu nhiên từ 7 đến 30 ngày sau created_at)
     sessions = []
     for i in range(200):
         acc = random.choice(accounts)
+        sess_created = rand_dt("2026-10-15T00:00:00Z", "2026-11-08T23:59:59Z")
+        sess_expires = add_rand_offset(sess_created, 7 * 86400, 30 * 86400)
         sessions.append({
             "session_id": gen_uuid(),
             "account_id": acc["account_id"],
@@ -270,8 +324,8 @@ def generate_seed_data():
             "ip_address": f"113.160.{random.randint(1,254)}.{random.randint(1,254)}",
             "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
             "is_revoked": random.choice([False, False, False, True]),
-            "expires_at": "2026-11-15T10:00:00Z",
-            "created_at": f"2026-11-0{random.randint(1,8)}T{random.randint(0,23):02d}:{random.randint(0,59):02d}:00Z"
+            "expires_at": sess_expires,
+            "created_at": sess_created
         })
     data["sessions"] = sessions
 
@@ -288,11 +342,11 @@ def generate_seed_data():
             "ip_address": f"113.160.{random.randint(1,254)}.{random.randint(1,254)}",
             "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
             "failure_reason": "INVALID_CREDENTIALS" if e_type == "LOGIN_FAILED" else None,
-            "created_at": f"2026-10-{random.randint(1,31):02d}T{random.randint(0,23):02d}:{random.randint(0,59):02d}:00Z"
+            "created_at": rand_dt("2026-10-01T00:00:00Z", "2026-11-08T23:59:59Z")
         })
     data["auth_logs"] = auth_logs
 
-    # 8. Activity Logs (2,000 records)
+    # 8. Activity Logs (2,000 records - Nằm trong khoảng thời gian hoạt động của session)
     activity_logs = []
     action_targets = [
         ("UPLOAD_RESUME", "RESUME"),
@@ -307,18 +361,19 @@ def generate_seed_data():
     for i in range(1, 2001):
         sess = random.choice(sessions)
         act, target = random.choice(action_targets)
+        act_created = add_rand_offset(sess["created_at"], 5, 7200)
         activity_logs.append({
             "activity_id": i,
             "sessions_id": sess["session_id"],
             "action_type": act,
             "target_entity": target,
             "target_id": gen_uuid(),
-            "details": json.dumps({"info": f"Activity log detail for {act}", "timestamp": "2026-11-05"}),
-            "created_at": f"2026-10-{random.randint(1,30):02d}T{random.randint(0,23):02d}:{random.randint(0,59):02d}:00Z"
+            "details": json.dumps({"info": f"Activity log detail for {act}", "timestamp": act_created[:10]}),
+            "created_at": act_created
         })
     data["activity_logs"] = activity_logs
 
-    # 9. System Error Logs (50 records)
+    # 9. System Error Logs (50 records - Random trong tháng 10 - đầu tháng 11)
     system_error_logs = []
     services = ["api-gateway", "ai-matching-engine", "pdf-parser", "auth-service"]
     severities = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
@@ -330,7 +385,7 @@ def generate_seed_data():
             "error_code": f"ERR_{random.choice(['DB_DEADLOCK', 'PDF_PARSE_TIMEOUT', 'AUTH_TOKEN_EXPIRED', 'AI_SERVICE_UNAVAILABLE'])}",
             "message": f"Sample error log message number {i}",
             "stack_trace": "Traceback (most recent call last):\n  File \"app.py\", line 42, in process\n    raise TimeoutError()",
-            "created_at": "2026-11-01T12:00:00Z"
+            "created_at": rand_dt("2026-10-01T00:00:00Z", "2026-11-08T23:59:59Z")
         })
     data["system_error_logs"] = system_error_logs
 
@@ -343,13 +398,14 @@ def generate_seed_data():
             "ward": f"Phường {random.randint(1, 15)}",
             "city": CITIES[i % len(CITIES)],
             "country": "Việt Nam",
-            "created_at": "2026-01-15T00:00:00Z"
+            "created_at": rand_dt("2026-01-05T00:00:00Z", "2026-01-25T23:59:59Z")
         })
     data["addresses"] = addresses
 
     # 11. Companies (20 records)
     companies = []
     for i in range(20):
+        comp_created = add_rand_offset(addresses[i]["created_at"], 60, 86400 * 3)
         companies.append({
             "company_id": gen_uuid(),
             "name": COMPANY_NAMES[i],
@@ -359,16 +415,17 @@ def generate_seed_data():
             "logo_url": f"https://s3.cloud.vn/cview/logos/company_{i+1:02d}.png",
             "industry": random.choice(["Công nghệ thông tin", "Tài chính - Ngân hàng", "Thương mại điện tử", "Viễn thông"]),
             "verification_status": "VERIFIED" if i < 18 else "PENDING",
-            "created_at": "2026-01-20T09:00:00Z"
+            "created_at": comp_created
         })
     data["companies"] = companies
 
-    # 12. Recruiter Profiles (60 records)
+    # 12. Recruiter Profiles (60 records - Tạo sau khi account và company đã tồn tại)
     recruiter_profiles = []
     recruiter_accs = accounts[51:111]
     for i in range(60):
         acc = recruiter_accs[i % len(recruiter_accs)]
-        comp = companies[i % 20] # 20 companies, ~3 recruiters each
+        comp = companies[i % 20]
+        base_time = max(acc["created_at"], comp["created_at"])
         name = gen_name()
         recruiter_profiles.append({
             "recruiter_id": gen_uuid(),
@@ -378,28 +435,31 @@ def generate_seed_data():
             "job_title": random.choice(["HR Manager", "Technical Recruiter", "Talent Acquisition Lead", "Head of HR"]),
             "work_email": gen_email(name, i+1),
             "phone_number": f"0934567{i:03d}",
-            "created_at": "2026-02-01T10:00:00Z"
+            "created_at": add_rand_offset(base_time, 300, 86400 * 2)
         })
     data["recruiter_profiles"] = recruiter_profiles
 
-    # 13. Candidate Profiles (50 records)
+    # 13. Candidate Profiles (50 records - Tạo sau khi candidate account được tạo)
     candidate_profiles = []
-    candidate_accs = accounts[1:51] # 50 candidate accounts
+    candidate_accs = accounts[1:51]
     edu_levels = ["HIGH_SCHOOL", "ASSOCIATE", "BACHELOR", "BACHELOR", "BACHELOR", "MASTER", "DOCTORATE"]
     genders = ["MALE", "FEMALE", "OTHER"]
     for i in range(50):
         name = gen_name()
+        acc = candidate_accs[i]
+        addr = addresses[i % len(addresses)]
+        base_time = max(acc["created_at"], addr["created_at"])
         candidate_profiles.append({
             "candidate_id": gen_uuid(),
-            "account_id": candidate_accs[i]["account_id"],
+            "account_id": acc["account_id"],
             "full_name": name,
             "date_of_birth": f"{random.randint(1990, 2004)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}",
             "gender": random.choice(genders),
-            "address_id": addresses[i % len(addresses)]["address_id"],
+            "address_id": addr["address_id"],
             "current_job_title": random.choice(["Backend Developer", "Data Scientist", "Frontend Engineer", "DevOps Engineer", "Fullstack Developer", "Sinh viên năm 4"]),
             "years_of_experience": round(random.uniform(0.5, 10.0), 1),
             "education_level": random.choice(edu_levels),
-            "created_at": "2026-02-15T09:00:00Z"
+            "created_at": add_rand_offset(base_time, 120, 86400 * 3)
         })
     data["candidate_profiles"] = candidate_profiles
 
@@ -410,7 +470,7 @@ def generate_seed_data():
             "domain_id": i,
             "domain_name": d_name,
             "description": d_desc,
-            "created_at": "2026-01-01T00:00:00Z"
+            "created_at": rand_dt("2026-01-01T06:00:00Z", "2026-01-03T18:00:00Z")
         })
     data["domains"] = domains
 
@@ -422,7 +482,7 @@ def generate_seed_data():
             "skill_name": s_name,
             "category": s_cat,
             "description": f"Kỹ năng chuẩn hóa {s_name}",
-            "created_at": "2026-01-01T00:00:00Z"
+            "created_at": rand_dt("2026-01-01T06:00:00Z", "2026-01-04T18:00:00Z")
         })
     data["skills"] = skills
 
@@ -435,25 +495,26 @@ def generate_seed_data():
             "issuer": c_issuer,
             "score": round(random.uniform(7.0, 9.0), 1) if "IELTS" in c_name else None,
             "category": c_cat,
-            "created_at": "2026-01-01T00:00:00Z"
+            "created_at": rand_dt("2026-01-01T06:00:00Z", "2026-01-04T18:00:00Z")
         })
     data["certificates"] = certificates
 
-    # 17. Resumes (50 records - 1 per candidate)
+    # 17. Resumes (50 records - Tạo sau candidate_profiles)
     resumes = []
     for i in range(50):
+        cand = candidate_profiles[i]
         resumes.append({
             "resume_id": gen_uuid(),
-            "candidate_id": candidate_profiles[i]["candidate_id"],
-            "title": f"CV {candidate_profiles[i]['current_job_title']} 2026",
+            "candidate_id": cand["candidate_id"],
+            "title": f"CV {cand['current_job_title']} 2026",
             "file_name": f"cv_candidate_{i+1:02d}.pdf",
             "file_url": f"https://s3.cloud.vn/cview/resumes/cv_candidate_{i+1:02d}.pdf",
             "file_size_bytes": random.randint(250000, 2500000),
-            "created_at": "2026-03-01T10:00:00Z"
+            "created_at": add_rand_offset(cand["created_at"], 600, 86400 * 10)
         })
     data["resumes"] = resumes
 
-    # 18. Resume Skills (200 records: 4 per resume)
+    # 18. Resume Skills (200 records - Parse ngay sau khi upload CV 10s - 120s)
     resume_skills = []
     levels = ["BEGINNER", "MEDIUM", "ADVANCED", "EXPERT"]
     for r in resumes:
@@ -465,16 +526,20 @@ def generate_seed_data():
                 "years_experience": round(random.uniform(0.5, 6.0), 1),
                 "proficiency_level": random.choice(levels),
                 "confidence_score": round(random.uniform(0.85, 0.99), 3),
-                "created_at": "2026-03-01T10:30:00Z"
+                "created_at": add_rand_offset(r["created_at"], 10, 120)
             })
     data["resume_skills"] = resume_skills
 
-    # 19. Job Posts (50 records)
+    # 19. Job Posts (50 records - Đăng sau khi recruiter_profiles được tạo; approved_at sau created_at; deadline ngẫu nhiên)
     job_posts = []
     job_types = ["FULL_TIME", "FULL_TIME", "FULL_TIME", "PART_TIME", "INTERNSHIP", "CONTRACT", "FREELANCE"]
     workplace_types = ["ON_SITE", "HYBRID", "REMOTE"]
     for i in range(50):
         rec = recruiter_profiles[i % len(recruiter_profiles)]
+        jp_created = add_rand_offset(rec["created_at"], 3600, 86400 * 15)
+        is_approved = i < 45
+        jp_approved = add_rand_offset(jp_created, 600, 86400 * 3) if is_approved else None
+        jp_deadline = add_rand_offset(jp_created, 86400 * 30, 86400 * 90)
         job_posts.append({
             "job_post_id": gen_uuid(),
             "recruiter_id": rec["recruiter_id"],
@@ -492,16 +557,16 @@ def generate_seed_data():
             "is_salary_negotiable": False,
             "experience_years_min": round(random.choice([1.0, 2.0, 3.0, 5.0]), 1),
             "required_education": random.choice(["NONE", "BACHELOR", "BACHELOR", "MASTER"]),
-            "approval_status": "APPROVED" if i < 45 else "PENDING",
+            "approval_status": "APPROVED" if is_approved else "PENDING",
             "rejection_reason": None,
-            "approved_by": accounts[0]["account_id"] if i < 45 else None,
-            "approved_at": "2026-03-10T09:00:00Z" if i < 45 else None,
-            "deadline": "2026-12-31T23:59:59Z",
-            "created_at": "2026-03-10T08:00:00Z"
+            "approved_by": accounts[0]["account_id"] if is_approved else None,
+            "approved_at": jp_approved,
+            "deadline": jp_deadline,
+            "created_at": jp_created
         })
     data["job_posts"] = job_posts
 
-    # 20. Job Skills (200 records: 4 per job post)
+    # 20. Job Skills (200 records - Tạo cùng lúc đăng tin tuyển dụng)
     job_skills = []
     for jp in job_posts:
         selected_skills = random.sample(skills, 4)
@@ -511,11 +576,11 @@ def generate_seed_data():
                 "skill_id": s["skill_id"],
                 "requirement_type": random.choice(["MANDATORY", "MANDATORY", "PREFERRED"]),
                 "min_years_experience": round(random.choice([1.0, 2.0, 3.0]), 1),
-                "created_at": "2026-03-10T08:00:00Z"
+                "created_at": add_rand_offset(jp["created_at"], 0, 5)
             })
     data["job_skills"] = job_skills
 
-    # 21. Job Certificates (50 records: 1 per job post)
+    # 21. Job Certificates (50 records)
     job_certificates = []
     for jp in job_posts:
         cert = random.choice(certificates)
@@ -523,11 +588,11 @@ def generate_seed_data():
             "job_post_id": jp["job_post_id"],
             "certificate_id": cert["certificate_id"],
             "is_mandatory": random.choice([True, False]),
-            "created_at": "2026-03-10T08:00:00Z"
+            "created_at": add_rand_offset(jp["created_at"], 0, 5)
         })
     data["job_certificates"] = job_certificates
 
-    # 22. Job Domains (70 records: ~1.4 per job post)
+    # 22. Job Domains (70 records)
     job_domains = []
     two_domain_job_ids = set(random.sample(range(len(job_posts)), 20))
     for i, jp in enumerate(job_posts):
@@ -536,13 +601,15 @@ def generate_seed_data():
             job_domains.append({
                 "job_post_id": jp["job_post_id"],
                 "domain_id": d["domain_id"],
-                "created_at": "2026-03-10T08:00:00Z"
+                "created_at": add_rand_offset(jp["created_at"], 0, 5)
             })
     data["job_domains"] = job_domains
 
-    # 23. CV Analyses (50 records: 1 per resume)
+    # 23. CV Analyses (50 records - Phân tích CV sau khi resume được upload)
     cv_analyses = []
     for r in resumes:
+        exec_ms = random.randint(1200, 3500)
+        ca_created = add_rand_offset(r["created_at"], 300, 86400 * 14)
         cv_analyses.append({
             "analysis_id": gen_uuid(),
             "resume_id": r["resume_id"],
@@ -557,12 +624,12 @@ def generate_seed_data():
             "status": "COMPLETED",
             "total_jobs_scanned": 50,
             "matched_jobs_count": 20,
-            "execution_time_ms": random.randint(1200, 3500),
-            "created_at": "2026-04-01T10:00:00Z"
+            "execution_time_ms": exec_ms,
+            "created_at": ca_created
         })
     data["cv_analyses"] = cv_analyses
 
-    # 24. Matched Results (1,000 records: 50 analyses * 20 jobs matched)
+    # 24. Matched Results (1,000 records - Tạo ngay sau khi phiên phân tích CV hoàn tất 1s - 5s)
     matched_results = []
     match_counter = 1
     for ca in cv_analyses:
@@ -579,28 +646,30 @@ def generate_seed_data():
                 "education_score": round(overall + random.uniform(-5.0, 5.0), 2),
                 "missing_skills": json.dumps([{"skill_id": 10, "skill_name": "Docker"}]),
                 "ai_feedback": "Ứng viên có nền tảng tốt về Python/FastAPI, cần bổ sung thêm kinh nghiệm thực chiến với Kubernetes.",
-                "created_at": "2026-04-01T10:05:00Z"
+                "created_at": add_rand_offset(ca["created_at"], 1, 5)
             })
             match_counter += 1
     data["matched_results"] = matched_results
 
-    # 25. Saved Jobs (100 records: 2 per candidate)
+    # 25. Saved Jobs (100 records - Lưu sau khi cả candidate và job_post đều đã tồn tại)
     saved_jobs = []
     for cand in candidate_profiles:
         saved_sample = random.sample(job_posts, 2)
         for jp in saved_sample:
+            base_time = max(cand["created_at"], jp["created_at"])
             saved_jobs.append({
                 "candidate_id": cand["candidate_id"],
                 "job_post_id": jp["job_post_id"],
                 "notes": "Công việc tiềm năng, lương cao.",
-                "created_at": "2026-04-10T11:00:00Z"
+                "created_at": add_rand_offset(base_time, 600, 86400 * 20)
             })
     data["saved_jobs"] = saved_jobs
 
-    # 26. Job Applications (50 records: 1 per candidate)
+    # 26. Job Applications (50 records - Ứng tuyển sau khi resume và job_post đều tồn tại)
     job_applications = []
     statuses = ["SUBMITTED", "VIEWED", "SHORTLISTED", "INTERVIEWING", "OFFERED", "REJECTED"]
     for i in range(50):
+        base_time = max(resumes[i]["created_at"], job_posts[i]["created_at"])
         job_applications.append({
             "application_id": gen_uuid(),
             "job_post_id": job_posts[i]["job_post_id"],
@@ -608,7 +677,7 @@ def generate_seed_data():
             "resume_id": resumes[i]["resume_id"],
             "status": random.choice(statuses),
             "recruiter_notes": "Ứng viên tiềm năng cho vòng phỏng vấn kỹ thuật.",
-            "applied_at": "2026-04-12T14:00:00Z"
+            "applied_at": add_rand_offset(base_time, 1800, 86400 * 25)
         })
     data["job_applications"] = job_applications
 
@@ -625,16 +694,19 @@ def generate_seed_data():
             "city": random.choice(CITIES),
             "min_salary": 15000000,
             "results_count": random.randint(5, 45),
-            "created_at": "2026-04-15T09:00:00Z"
+            "created_at": add_rand_offset(cand["created_at"], 300, 86400 * 45)
         })
     data["search_history"] = search_history
 
-    # 28. Job Notifications (200 records)
+    # 28. Job Notifications (200 records - read_at luôn nằm sau created_at)
     job_notifications = []
     for i in range(1, 201):
         cand = random.choice(candidate_profiles)
         jp = random.choice(job_posts)
+        base_time = max(cand["created_at"], jp["created_at"])
+        notif_created = add_rand_offset(base_time, 600, 86400 * 30)
         is_read = random.choice([True, False])
+        notif_read = add_rand_offset(notif_created, 60, 86400 * 5) if is_read else None
         job_notifications.append({
             "notification_id": i,
             "candidate_id": cand["candidate_id"],
@@ -642,17 +714,19 @@ def generate_seed_data():
             "title": f"Gợi ý việc làm: {jp['title']}",
             "content": f"Hệ thống phát hiện bài tuyển dụng {jp['title']} có độ tương đồng >80% với hồ sơ của bạn.",
             "is_read": is_read,
-            "read_at": "2026-04-20T10:00:00Z" if is_read else None,
-            "created_at": "2026-04-20T08:00:00Z"
+            "read_at": notif_read,
+            "created_at": notif_created
         })
     data["job_notifications"] = job_notifications
 
-    # 29. Other Notifications (100 records)
+    # 29. Other Notifications (100 records - read_at luôn nằm sau created_at)
     other_notifications = []
     n_types = ["JOB_APPROVAL_STATUS", "APPLICATION_UPDATE", "CV_PARSE_COMPLETED", "ACCOUNT_SECURITY"]
     for i in range(1, 101):
         acc = random.choice(accounts)
+        notif_created = add_rand_offset(acc["created_at"], 600, 86400 * 45)
         is_read = random.choice([True, False])
+        notif_read = add_rand_offset(notif_created, 60, 86400 * 5) if is_read else None
         other_notifications.append({
             "notification_id": i,
             "account_id": acc["account_id"],
@@ -660,8 +734,8 @@ def generate_seed_data():
             "title": "Thông báo từ hệ thống CView",
             "message": "Chi tiết thông báo hệ thống liên quan đến tài khoản và hoạt động tuyển dụng.",
             "is_read": is_read,
-            "read_at": "2026-04-22T10:00:00Z" if is_read else None,
-            "created_at": "2026-04-22T08:00:00Z"
+            "read_at": notif_read,
+            "created_at": notif_created
         })
     data["other_notifications"] = other_notifications
 
