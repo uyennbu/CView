@@ -319,3 +319,29 @@ class JobDomain(Base):
 
     job_post: Mapped["JobPost"] = relationship("JobPost", back_populates="domains")
     domain: Mapped["Domain"] = relationship("Domain", lazy="joined")
+
+
+class SearchHistory(Base):
+    """Bảng 27: search_history."""
+
+    __tablename__ = "search_history"
+
+    search_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    candidate_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("candidate_profiles.candidate_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    keyword: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    domain_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("domains.domain_id", ondelete="SET NULL"), nullable=True
+    )
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    min_salary: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    results_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    candidate: Mapped["CandidateProfile"] = relationship("CandidateProfile")
+    domain: Mapped["Domain | None"] = relationship("Domain", lazy="joined")

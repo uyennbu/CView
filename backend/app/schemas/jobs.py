@@ -173,6 +173,21 @@ class RecruiterJobListResponse(BaseModel):
     limit: int
 
 
+class JobSearchResponse(BaseModel):
+    """Schema phản hồi kết quả tìm kiếm việc làm cho ứng viên."""
+
+    items: list[JobPostResponse]
+    total: int
+    page: int
+    limit: int
+    keyword: Optional[str] = None
+    city: Optional[str] = None
+    domain_id: Optional[int] = None
+    job_type: Optional[str] = None
+    workplace_type: Optional[str] = None
+    salary_min: Optional[int] = None
+
+
 class SkillCatalogItem(BaseModel):
     """Danh mục kỹ năng chuẩn hóa."""
 

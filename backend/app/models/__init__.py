@@ -10,6 +10,7 @@ from app.models.business import (
     JobPost,
     JobSkill,
     RecruiterProfile,
+    SearchHistory,
     Skill,
 )
 from app.models.system import (
@@ -47,4 +48,5 @@ __all__ = [
     "JobSkill",
     "JobCertificate",
     "JobDomain",
+    "SearchHistory",
 ]

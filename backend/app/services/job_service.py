@@ -7,11 +7,12 @@ from typing import Optional
 import uuid
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.business import (
     Address,
+    CandidateProfile,
     Certificate,
     Company,
     Domain,
@@ -20,6 +21,7 @@ from app.models.business import (
     JobPost,
     JobSkill,
     RecruiterProfile,
+    SearchHistory,
     Skill,
 )
 from app.schemas.candidate import AddressResponse
@@ -31,6 +33,7 @@ from app.schemas.jobs import (
     JobModerationResponse,
     JobPostCreateRequest,
     JobPostResponse,
+    JobSearchResponse,
     JobSkillResponse,
     RecruiterJobListResponse,
     SkillCatalogItem,
@@ -461,5 +464,103 @@ def get_pending_jobs(
 
     items = [_format_job_post_response(post, db) for post in posts]
     return RecruiterJobListResponse(items=items, total=total, page=page, limit=limit)
+
+
+def search_jobs(
+    db: Session,
+    keyword: Optional[str] = None,
+    city: Optional[str] = None,
+    domain_id: Optional[int] = None,
+    job_type: Optional[str] = None,
+    workplace_type: Optional[str] = None,
+    salary_min: Optional[int] = None,
+    page: int = 1,
+    limit: int = 20,
+    current_account_id: Optional[uuid.UUID] = None,
+) -> JobSearchResponse:
+    """Tìm kiếm việc làm đã phê duyệt theo từ khóa và các tiêu chí lọc, tự động ghi search_history nếu là ứng viên."""
+    query = select(JobPost).where(JobPost.approval_status == "APPROVED")
+
+    if keyword:
+        kw = keyword.strip()
+        if kw:
+            query = query.outerjoin(Company, JobPost.company_id == Company.company_id)
+            query = query.where(
+                or_(
+                    JobPost.title.ilike(f"%{kw}%"),
+                    JobPost.position.ilike(f"%{kw}%"),
+                    JobPost.job_description.ilike(f"%{kw}%"),
+                    JobPost.requirements.ilike(f"%{kw}%"),
+                    Company.name.ilike(f"%{kw}%"),
+                )
+            )
+
+    if city:
+        c = city.strip()
+        if c:
+            query = query.join(Address, JobPost.address_id == Address.address_id)
+            query = query.where(Address.city.ilike(f"%{c}%"))
+
+    if domain_id is not None:
+        query = query.where(JobPost.domains.any(JobDomain.domain_id == domain_id))
+
+    if job_type:
+        query = query.where(JobPost.job_type == job_type.upper().strip())
+
+    if workplace_type:
+        query = query.where(JobPost.workplace_type == workplace_type.upper().strip())
+
+    if salary_min is not None:
+        query = query.where(
+            or_(
+                JobPost.salary_max >= salary_min,
+                JobPost.salary_min >= salary_min,
+                JobPost.is_salary_negotiable.is_(True),
+            )
+        )
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total = db.scalar(count_query) or 0
+
+    offset = (page - 1) * limit
+    posts = (
+        db.scalars(
+            query.order_by(JobPost.created_at.desc()).offset(offset).limit(limit)
+        )
+        .unique()
+        .all()
+    )
+
+    items = [_format_job_post_response(post, db) for post in posts]
+
+    # Tự động ghi vết vào bảng search_history nếu tài khoản đăng nhập là Ứng viên (CANDIDATE)
+    if current_account_id:
+        candidate = db.scalar(
+            select(CandidateProfile).where(CandidateProfile.account_id == current_account_id)
+        )
+        if candidate:
+            history_record = SearchHistory(
+                candidate_id=candidate.candidate_id,
+                keyword=keyword.strip() if keyword else None,
+                domain_id=domain_id,
+                city=city.strip() if city else None,
+                min_salary=salary_min,
+                results_count=total,
+            )
+            db.add(history_record)
+            db.commit()
+
+    return JobSearchResponse(
+        items=items,
+        total=total,
+        page=page,
+        limit=limit,
+        keyword=keyword,
+        city=city,
+        domain_id=domain_id,
+        job_type=job_type,
+        workplace_type=workplace_type,
+        salary_min=salary_min,
+    )
 
 

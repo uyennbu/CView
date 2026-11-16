@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.dependencies import bearer_scheme, require_roles
+from app.core.dependencies import bearer_scheme, get_optional_token_payload, require_roles
 from app.middlewares import set_activity_log
 from app.schemas.jobs import (
     CertificateCatalogItem,
@@ -17,6 +17,7 @@ from app.schemas.jobs import (
     JobModerationResponse,
     JobPostCreateRequest,
     JobPostResponse,
+    JobSearchResponse,
     RecruiterJobListResponse,
     SkillCatalogItem,
 )
@@ -49,14 +50,47 @@ def get_domains_catalog(db: Session = Depends(get_db)):
     return job_service.get_domains_catalog(db)
 
 
-@router.get("/search", dependencies=[Depends(bearer_scheme)])
+@router.get("/search", response_model=JobSearchResponse)
 def search_jobs(
-    keyword: Optional[str] = None,
-    city: Optional[str] = None,
-    domain_id: Optional[int] = None,
+    keyword: Optional[str] = Query(None, description="Từ khóa tìm kiếm (tiêu đề, vị trí, công ty...)"),
+    city: Optional[str] = Query(None, description="Tỉnh/Thành phố làm việc"),
+    domain_id: Optional[int] = Query(None, description="ID lĩnh vực ngành nghề"),
+    job_type: Optional[str] = Query(
+        None,
+        pattern=r"^(FULL_TIME|PART_TIME|INTERNSHIP|CONTRACT|FREELANCE)$",
+        description="Hình thức làm việc: FULL_TIME, PART_TIME, INTERNSHIP, CONTRACT, FREELANCE",
+    ),
+    workplace_type: Optional[str] = Query(
+        None,
+        pattern=r"^(ON_SITE|HYBRID|REMOTE)$",
+        description="Môi trường làm việc: ON_SITE, HYBRID, REMOTE",
+    ),
+    salary_min: Optional[int] = Query(None, ge=0, description="Mức lương tối thiểu (VND)"),
+    page: int = Query(1, ge=1, description="Số trang hiển thị"),
+    limit: int = Query(20, ge=1, le=100, description="Số lượng tin mỗi trang"),
+    token_payload: Optional[dict] = Depends(get_optional_token_payload),
+    db: Session = Depends(get_db),
 ):
-    """Tìm kiếm việc làm theo từ khóa trên trang 'Tìm việc' và lưu lịch sử vào search_history."""
-    return {"items": [], "total": 0, "keyword": keyword, "city": city, "domain_id": domain_id}
+    """Tìm kiếm việc làm theo từ khóa và các bộ lọc, tự động lưu lịch sử tìm kiếm vào search_history đối với ứng viên."""
+    account_id = None
+    if token_payload and token_payload.get("sub"):
+        try:
+            account_id = uuid.UUID(token_payload.get("sub"))
+        except ValueError:
+            account_id = None
+
+    return job_service.search_jobs(
+        db=db,
+        keyword=keyword,
+        city=city,
+        domain_id=domain_id,
+        job_type=job_type,
+        workplace_type=workplace_type,
+        salary_min=salary_min,
+        page=page,
+        limit=limit,
+        current_account_id=account_id,
+    )
 
 
 @router.get("/my-jobs", response_model=RecruiterJobListResponse)
