@@ -5,11 +5,9 @@ import uuid
 
 from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
-from fastapi.testclient import TestClient
 import pytest
 from sqlalchemy import select
 
-from app.core.database import SessionLocal
 from app.core.security import create_access_token
 from app.main import app
 from app.middlewares import record_activity
@@ -40,17 +38,7 @@ def decorated_endpoint(item_id: str, request: Request):
 app.include_router(mock_router)
 
 
-@pytest.fixture(scope="module")
-def db_session():
-    """Fixture cung cấp SQLAlchemy Session kết nối tới CSDL cview_db."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@pytest.fixture(scope="module")
+@pytest.fixture
 def test_session_record(db_session):
     """Đảm bảo có một session hợp lệ trong bảng `sessions` để liên kết FK sessions_id."""
     session_record = db_session.scalar(select(SessionRecord).where(SessionRecord.is_revoked == False))
@@ -81,7 +69,7 @@ def test_session_record(db_session):
     return session_record
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def auth_headers(test_session_record):
     """Tạo Bearer token hợp lệ mang session_id."""
     token = create_access_token(
@@ -90,12 +78,6 @@ def auth_headers(test_session_record):
         extra_claims={"session_id": str(test_session_record.session_id)},
     )
     return {"Authorization": f"Bearer {token}"}
-
-
-@pytest.fixture(scope="module")
-def client():
-    """FastAPI TestClient."""
-    return TestClient(app)
 
 
 def test_middleware_auto_activity_logging_jobs_search(client, auth_headers, db_session, test_session_record):

@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from sqlalchemy import select
 
-from app.core.database import SessionLocal
 from app.middlewares import (
     VALID_ACTION_TYPES,
     VALID_SEVERITIES,
@@ -17,17 +16,7 @@ from app.middlewares import (
 from app.models.system import Account, ActivityLog, SessionRecord, SystemErrorLog
 
 
-@pytest.fixture(scope="module")
-def db_session():
-    """Fixture cung cấp SQLAlchemy Session kết nối tới CSDL cview_db."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@pytest.fixture(scope="module")
+@pytest.fixture
 def test_session_record(db_session):
     """Đảm bảo có một session hợp lệ trong bảng `sessions` để liên kết FK sessions_id."""
     session_record = db_session.scalar(select(SessionRecord).where(SessionRecord.is_revoked == False))

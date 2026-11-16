@@ -2,36 +2,17 @@
 
 import uuid
 
-from fastapi.testclient import TestClient
 import pytest
 from sqlalchemy import select
 
-from app.core.database import SessionLocal
 from app.core.security import create_access_token
-from app.main import app
 from app.models.business import Address, Company, RecruiterProfile
 from app.models.system import Account
 
 
-@pytest.fixture(scope="module")
-def db_session():
-    """Fixture cung cấp SQLAlchemy Session kết nối tới CSDL cview_db."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@pytest.fixture(scope="module")
-def client():
-    """FastAPI TestClient."""
-    return TestClient(app)
-
-
-@pytest.fixture(scope="module")
+@pytest.fixture
 def recruiter_auth_headers(db_session):
-    """Lấy hoặc tạo tài khoản recruiter để test và trả về Bearer Token."""
+    """Lấy hoặc tạo tài khoản recruiter và hồ sơ RecruiterProfile để test và trả về Bearer Token."""
     account = db_session.scalar(select(Account).where(Account.username == "recruiter01"))
     if not account:
         account = Account(
@@ -41,8 +22,14 @@ def recruiter_auth_headers(db_session):
             status="ACTIVE",
         )
         db_session.add(account)
-        db_session.flush()
+        db_session.commit()
+        db_session.refresh(account)
 
+    # Kiểm tra hồ sơ recruiter đã tồn tại trước khi tạo mới để tránh trùng lặp
+    recruiter = db_session.scalar(
+        select(RecruiterProfile).where(RecruiterProfile.account_id == account.account_id)
+    )
+    if not recruiter:
         address = Address(
             street_address="1 Phạm Văn Bạch",
             ward="Dịch Vọng",
@@ -71,7 +58,7 @@ def recruiter_auth_headers(db_session):
         )
         db_session.add(recruiter)
         db_session.commit()
-        db_session.refresh(account)
+        db_session.refresh(recruiter)
 
     token = create_access_token(
         subject=str(account.account_id),
@@ -80,7 +67,7 @@ def recruiter_auth_headers(db_session):
     return {"Authorization": f"Bearer {token}"}, account
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def candidate_auth_headers(db_session):
     """Token của tài khoản Candidate để kiểm thử phân quyền 403 Forbidden."""
     account = db_session.scalar(select(Account).where(Account.username == "candidate01"))

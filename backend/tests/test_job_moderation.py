@@ -4,13 +4,10 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import uuid
 
-from fastapi.testclient import TestClient
 import pytest
 from sqlalchemy import select
 
-from app.core.database import SessionLocal
 from app.core.security import create_access_token
-from app.main import app
 from app.models.business import (
     Address,
     Company,
@@ -20,23 +17,7 @@ from app.models.business import (
 from app.models.system import Account, OtherNotification
 
 
-@pytest.fixture(scope="module")
-def db_session():
-    """Fixture cung cấp SQLAlchemy Session kết nối tới CSDL cview_db."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@pytest.fixture(scope="module")
-def client():
-    """FastAPI TestClient."""
-    return TestClient(app)
-
-
-@pytest.fixture(scope="module")
+@pytest.fixture
 def admin_auth(db_session):
     """Tạo hoặc lấy tài khoản Admin và sinh Bearer Token."""
     account = db_session.scalar(select(Account).where(Account.username == "admin_root"))
@@ -58,7 +39,7 @@ def admin_auth(db_session):
     return {"Authorization": f"Bearer {token}"}, account
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def recruiter_info(db_session):
     """Tạo hoặc lấy tài khoản Recruiter có profile để nhận thông báo duyệt bài."""
     account = db_session.scalar(select(Account).where(Account.username == "recruiter01"))
@@ -70,8 +51,14 @@ def recruiter_info(db_session):
             status="ACTIVE",
         )
         db_session.add(account)
-        db_session.flush()
+        db_session.commit()
+        db_session.refresh(account)
 
+    # Kiểm tra hồ sơ recruiter đã tồn tại trước khi tạo mới để tránh trùng lặp
+    recruiter = db_session.scalar(
+        select(RecruiterProfile).where(RecruiterProfile.account_id == account.account_id)
+    )
+    if not recruiter:
         address = Address(
             street_address="456 Hoàng Hoa Thám",
             city="Hà Nội",
@@ -99,11 +86,7 @@ def recruiter_info(db_session):
         )
         db_session.add(recruiter)
         db_session.commit()
-        db_session.refresh(account)
-    else:
-        recruiter = db_session.scalar(
-            select(RecruiterProfile).where(RecruiterProfile.account_id == account.account_id)
-        )
+        db_session.refresh(recruiter)
 
     token = create_access_token(
         subject=str(account.account_id),
@@ -112,7 +95,7 @@ def recruiter_info(db_session):
     return {"Authorization": f"Bearer {token}"}, account, recruiter
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def candidate_headers():
     """Bearer token cho vai trò CANDIDATE để kiểm thử 403 Forbidden."""
     token = create_access_token(
@@ -304,7 +287,7 @@ def test_admin_get_pending_jobs(client, admin_auth, candidate_headers, pending_j
     assert "items" in data
     assert "total" in data
     assert data["total"] >= 1
-    job_ids = [item["job_post_id"] for item in data["items"]]
+    job_ids = [item["job_id"] for item in data["items"]]
     assert str(pending_job.job_post_id) in job_ids
 
     # Candidate không có quyền xem
