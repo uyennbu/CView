@@ -1,0 +1,29 @@
+"""SQLAlchemy ORM models mapped to tables in docs/DESIGN.md."""
+from app.models.business import Address, CandidateProfile, Company, RecruiterProfile
+from app.models.system import (
+    Account,
+    AccountRole,
+    ActivityLog,
+    AuthLog,
+    Permission,
+    Role,
+    RolePermission,
+    SessionRecord,
+    SystemErrorLog,
+)
+
+__all__ = [
+    "Account",
+    "Role",
+    "Permission",
+    "AccountRole",
+    "RolePermission",
+    "SessionRecord",
+    "AuthLog",
+    "ActivityLog",
+    "SystemErrorLog",
+    "Address",
+    "Company",
+    "RecruiterProfile",
+    "CandidateProfile",
+]
