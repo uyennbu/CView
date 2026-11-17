@@ -55,8 +55,8 @@
 - [x] Hoàn thiện tài liệu Kế hoạch kiểm thử tổng thể (`docs/TEST_PLAN.md`) và Thiết kế giao diện quản trị (`docs/WIREFRAMES.md`).
 - [x] Xây dựng bộ kịch bản kiểm thử tự động Postman/Newman gồm 18 requests và 34 assertions (`postman/CView_Auth_RBAC_Session.postman_collection.json`).
 - [x] Cấu hình Docker Compose môi trường dev (`docker-compose.dev.yml`) cho PostgreSQL và FastAPI Backend.
-- [ ] Cấu hình công cụ quản lý phiên bản CSDL Alembic (chuyển sang Sprint 2).
-- [ ] Ghép nối container `cview-frontend` vào `docker-compose.dev.yml` và hoàn thiện mạng nội bộ 3 VMs (chuyển sang Sprint 2).
+- [ ] Cấu hình công cụ quản lý phiên bản CSDL Alembic (chuyển sang Sprint 3).
+- [x] Ghép nối container `cview-frontend` vào `docker-compose.dev.yml` và hoàn thiện mạng nội bộ 3 VMs (hoàn thành ở Sprint 2).
 
 #### 📝 4. Review
 - Cần check lại cách handle lỗi và báo lại với người dùng (phần login/ register)
@@ -83,21 +83,24 @@
 | - Xây dựng Middleware ghi nhận tự động hành vi người dùng vào bảng `activity_logs` (`action_type`, `target_entity`, `target_id`, `details JSONB` gắn với `sessions_id`) và ghi lỗi vào `system_error_logs`.<br>- Xây dựng API cho trang **Account Ứng viên** (`GET/PUT /candidate/profile` cập nhật `candidate_profiles`, `addresses`) và **Hồ sơ Nhà tuyển dụng** (`companies`, `recruiter_profiles`).<br>- Xây dựng API cho phân hệ **Đăng bài của Nhà tuyển dụng (`job_posts`)**: Tạo bài tuyển dụng mới, gắn kỹ năng (`job_skills`: `'MANDATORY'`/`'PREFERRED'`), chứng chỉ (`job_certificates`), lĩnh vực (`job_domains`), xem danh sách bài đã đăng và trạng thái duyệt (`'PENDING'`, `'APPROVED'`, `'REJECTED'`).<br>- Xây dựng API **Kiểm duyệt và Đăng tuyển** cho Admin: Duyệt hoặc từ chối bài đăng (`approval_status`, `approved_by`, `approved_at`, `rejection_reason`) và gửi thông báo vào `other_notifications`. | - Viết script sinh dữ liệu tự động có thể tái tạo (`database/02_seed_data.py`) bám sát đúng quy mô trong `DESIGN.md`:<br>  1. **Bộ dữ liệu Demo gọn:** ~100 `accounts`, 20 `companies`, 60 `recruiter_profiles`, 50 `candidate_profiles`, 20 `domains`, 100 `skills`, 30 `certificates`, 50 `resumes`, 50 `job_posts`, 1.000 `matched_results`, 2.000 `activity_logs`.<br>  2. **Bộ dữ liệu Lớn (Đánh giá hiệu năng):**<br>     - **Các bảng $\ge 10.000$ bản ghi:** `accounts` (15k), `addresses` (15k), `candidate_profiles` (10k), `resumes` (10k), `resume_skills` (40k), `job_posts` (10k), `job_skills` (40k), `search_history` (30k), `job_notifications` (30k), `job_applications` (15k).<br>     - **02 bảng siêu lớn $\ge 100.000$ bản ghi:** `matched_results` (200.000 - 500.000 bản ghi) và `activity_logs` ($\ge 100.000$ bản ghi).<br>- Xây dựng API **Danh mục** (`domains`, `skills`, `certificates`) và API cho trang **Tìm việc theo từ khóa** (`GET /jobs/search` lọc theo `keyword`, `city`, `domain_id`, `job_type`, `workplace_type`, `salary_min`, phân trang) đồng thời tự động ghi vết vào bảng `search_history`.<br>- **Cấu hình Quản lý phiên bản CSDL (Alembic Database Migration) - Giải pháp quản lý & giảm thiểu rủi ro (Mitigation):**<br>  - Khởi tạo môi trường Alembic, cấu hình kết nối trực tiếp với các model SQLAlchemy trong `backend/app/models/`.<br>  - Tạo bản ghi migration đầu tiên (baseline migration cho 29 bảng) và thiết lập lệnh `alembic upgrade head` để đảm bảo việc nâng cấp schema trên các máy và VM3 đồng bộ, an toàn, không bị mất dữ liệu hay lỗi xung đột cấu trúc bảng khi phát triển song song. | - **Tập trung vào nghiệp vụ Tìm việc (`/jobs`):**<br>  - Thanh nhập từ khóa tìm kiếm công việc trực tiếp trên CSDL kèm bộ lọc nhanh (Địa điểm `city`, Lĩnh vực `domain`, Hình thức `FULL_TIME`/`PART_TIME`, `ON_SITE`/`REMOTE`, Mức lương).<br>  - Danh sách thẻ công việc (Job Cards), phân trang và Modal/Trang xem chi tiết JD, nút Lưu việc làm (`saved_jobs`).<br>- **Trau chuốt lại trang Homepage:**<br>  - Sửa lại giao diện Homepage cho đẹp mắt, căn chỉnh typography, hình ảnh linh vật tắc kè hoa.<br>  - **Tối ưu Responsive:** Thay đổi để xem được web trên cả điện thoại (tự động tinh chỉnh phù hợp kích thước cửa sổ màn hình Mobile / Tablet / Desktop).<br>- *(Nếu kịp tiến độ)*: Làm thêm giao diện trang **Account Ứng viên** (`/candidate/account`) để quản lý thông tin cá nhân và danh sách CV đã tải lên. | - **Bổ sung container cho Frontend vào Docker:** Thêm service `cview-frontend` vào `docker-compose.dev.yml` để hoàn thiện bộ 3 container local (`cview-frontend`, `cview-backend`, `cview-postgres`).<br>- **Tập trung vào nghiệp vụ Đăng bài tuyển dụng:**<br>  - **Phân hệ Nhà tuyển dụng:**<br>    - Giao diện cơ bản sau khi đăng nhập (chính là **Dashboard thống kê**: tạo khung template hiển thị các chỉ số tuyển dụng tổng quan).<br>    - Nút **"Đăng tuyển"** rõ ràng, trực quan.<br>    - Giao diện **Đăng bài tuyển dụng (Form)**: Nhập thông tin việc làm, gắn kỹ năng, chứng chỉ, ngành nghề, mức lương, địa điểm.<br>    - Bảng **Theo dõi trạng thái các bài đăng tuyển**: Danh sách tin đã đăng, ngày đăng, trạng thái (`Chờ duyệt - PENDING`, `Đã duyệt - APPROVED`, `Bị từ chối - REJECTED`).<br>  - **Phân hệ Admin:**<br>    - Giao diện cơ bản của Admin cho phép **Kiểm duyệt bài tuyển dụng** (duyệt sang `APPROVED` hoặc từ chối kèm lý do `REJECTED`).<br>    - Các phần thống kê, báo cáo khác của Admin chưa cần làm đến ở tuần này (chỉ cần tạo template khung hoặc để trống).<br>- Dựng **VM3 (DB + Storage)**: Triển khai PostgreSQL container với persistent volume, khởi tạo 29 bảng và nạp thử dữ liệu từ script của Thương.<br>- Viết bổ sung kịch bản kiểm thử Postman cho các API mới của Sprint 2: Luồng Đăng bài tuyển dụng (NTD), Kiểm duyệt bài đăng (Admin), và Tìm kiếm việc làm theo từ khóa/bộ lọc (Ứng viên). |
 
 #### ✅ 3. Kết quả đạt được
-- [ ] Bổ sung container `cview-frontend` vào `docker-compose.dev.yml` và khởi chạy thành công bộ 3 containers local.
-- [ ] Script sinh dữ liệu tự động `database/02_seed_data.py` (Bộ Demo & Bộ Lớn $\ge 100.000$ dòng `matched_results`, `activity_logs`).
-- [ ] Cấu hình môi trường Alembic Migration và tạo bản ghi migration baseline cho 29 bảng CSDL.
-- [ ] API Danh mục (`domains`, `skills`, `certificates`) và API Tìm việc `GET /jobs/search` tự động ghi bảng `search_history`.
-- [ ] Giao diện hoàn chỉnh trang **Tìm việc** (`/jobs`): Thanh search, bộ lọc, thẻ Job Cards, phân trang, Modal xem chi tiết JD.
-- [ ] Tối ưu giao diện Homepage đẹp mắt và Responsive mượt mà trên cả điện thoại di động (Mobile) lẫn Desktop.
-- [ ] Giao diện cơ bản Nhà tuyển dụng: Dashboard thống kê mẫu, nút Đăng tuyển, Form tạo tin đa tiêu chí và Bảng theo dõi trạng thái tin đăng.
-- [ ] Giao diện cơ bản Admin: Màn hình kiểm duyệt duyệt/từ chối bài đăng tuyển dụng (các mục thống kê khác để dạng template/placeholder).
-- [ ] Giao diện trang **Account Ứng viên** (`/candidate/account`) hiển thị thông tin cá nhân (nếu Đạt hoàn thành sớm).
-- [ ] Middleware tự động ghi vết `activity_logs` và bắt ngoại lệ ghi `system_error_logs`.
-- [ ] Triển khai VM3 (DB + Storage) trên hạ tầng máy ảo thực tế và bộ test Postman Sprint 2.
+- [x] Bổ sung container `cview-frontend` vào `docker-compose.dev.yml` và khởi chạy thành công bộ 3 containers local.
+- [x] Script sinh dữ liệu tự động `database/02_seed_data.py` (Bộ Demo & Bộ Lớn $\ge 100.000$ dòng `matched_results`, `activity_logs`).
+- [ ] Cấu hình môi trường Alembic Migration và tạo bản ghi migration baseline cho 29 bảng CSDL (chuyển sang Sprint 3).
+- [x] API Danh mục (`domains`, `skills`, `certificates`) và API Tìm việc `GET /jobs/search` tự động ghi bảng `search_history`.
+- [x] Giao diện hoàn chỉnh trang **Tìm việc** (`/jobs`): Thanh search, bộ lọc, thẻ Job Cards, phân trang, Modal xem chi tiết JD.
+- [x] Tối ưu giao diện Homepage đẹp mắt và Responsive mượt mà trên cả điện thoại di động (Mobile) lẫn Desktop.
+- [ ] Giao diện cơ bản Nhà tuyển dụng: Đã hoàn thiện Wireframe & Prototype trên Figma (`docs/figma_links.md`); phần code React chuyển sang Sprint 3 ghép nối API.
+- [ ] Giao diện cơ bản Admin: Đã hoàn thiện Wireframe & Prototype duyệt tin trên Figma (`docs/figma_links.md`); phần code React chuyển sang Sprint 3 ghép nối API.
+- [ ] Giao diện trang **Account Ứng viên** (`/candidate/account`) hiển thị thông tin cá nhân (chuyển sang Sprint 3).
+- [x] Middleware tự động ghi vết `activity_logs` và bắt ngoại lệ ghi `system_error_logs`.
+- [x] Triển khai VM3 (DB + Storage) trên hạ tầng máy ảo thực tế và bộ test Postman Sprint 2.
 
 #### 📝 4. Review
-- *Ghi chú / Lưu ý điều chỉnh:* Giao diện Frontend do Thu Uyên phụ trách ở Sprint 2 (Đăng bài tuyển dụng của NTD & Duyệt bài của Admin) chỉ cần thiết kế ở mức cơ bản mục tiêu là có khung template và phục vụ việc kết nối với backend để kiểm thử. Tiến Đạt sẽ tiếp nhận để trau chuốt lại thẩm mỹ, căn chỉnh màu sắc và responsive ở các sprint tiếp theo.
-- *(Đánh giá chi tiết để trống - Trưởng nhóm ghi nhận sau buổi họp Sprint 2 Retrospective)*
+- *Ghi chú / Lưu ý điều chỉnh:* 
+  - Các nghiệp vụ cốt lõi Backend (API Đăng bài tuyển dụng, Kiểm duyệt bài đăng, Danh mục chuẩn hóa, Tìm kiếm việc làm, Middleware Log hoạt động/lỗi hệ thống), CSDL (Bộ seed data Demo & Big Benchmark data), Hạ tầng Docker Compose 3 containers, VM3 và Bộ kiểm thử Postman Sprint 2 đã hoàn thành đúng tiến độ.
+  - Phân hệ Frontend trang Tìm việc (`/jobs`) và tối ưu Homepage Responsive đa thiết bị đã hoàn thành mượt mà.
+  - Phân hệ Frontend cho Nhà tuyển dụng (Form đăng tin, Dashboard) và Admin (Kiểm duyệt tin) đã hoàn thành thiết kế & Prototype tương tác trên Figma (`docs/figma_links.md`), chuyển tiếp sang Sprint 3 để lập trình Component React kết nối trực tiếp với Backend API đã sẵn sàng.
+  - Nhiệm vụ cấu hình Alembic Database Migration và trang `/candidate/account` chuyển sang thực hiện trong Sprint 3.
 
 ---
 
