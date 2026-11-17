@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import auth, jobs, notifications, resumes, statistics
+from app.middlewares import ActivityAndSystemErrorLoggingMiddleware
+from app.routers import auth, candidate, jobs, notifications, recruiter, resumes, statistics
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -10,6 +11,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
+app.add_middleware(ActivityAndSystemErrorLoggingMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
@@ -19,6 +21,8 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
+app.include_router(candidate.router, prefix=settings.API_V1_PREFIX)
+app.include_router(recruiter.router, prefix=settings.API_V1_PREFIX)
 app.include_router(jobs.router, prefix=settings.API_V1_PREFIX)
 app.include_router(resumes.router, prefix=settings.API_V1_PREFIX)
 app.include_router(notifications.router, prefix=settings.API_V1_PREFIX)

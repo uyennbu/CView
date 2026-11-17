@@ -1,0 +1,566 @@
+"""Service layer for Job Postings, Skills, Certificates, and Domains."""
+
+from datetime import datetime, timezone
+from decimal import Decimal
+import logging
+from typing import Optional
+import uuid
+
+from fastapi import HTTPException, status
+from sqlalchemy import func, or_, select
+from sqlalchemy.orm import Session
+
+from app.models.business import (
+    Address,
+    CandidateProfile,
+    Certificate,
+    Company,
+    Domain,
+    JobCertificate,
+    JobDomain,
+    JobPost,
+    JobSkill,
+    RecruiterProfile,
+    SearchHistory,
+    Skill,
+)
+from app.schemas.candidate import AddressResponse
+from app.schemas.jobs import (
+    CertificateCatalogItem,
+    DomainCatalogItem,
+    JobCertificateResponse,
+    JobDomainResponse,
+    JobModerationResponse,
+    JobPostCreateRequest,
+    JobPostResponse,
+    JobSearchResponse,
+    JobSkillResponse,
+    RecruiterJobListResponse,
+    SkillCatalogItem,
+)
+from app.services import notification_service
+
+logger = logging.getLogger(__name__)
+
+
+def _format_job_post_response(post: JobPost, db: Session) -> JobPostResponse:
+    """Format JobPost ORM model into JobPostResponse schema."""
+    address_response: Optional[AddressResponse] = None
+    if post.address:
+        address_response = AddressResponse.model_validate(post.address)
+    elif post.address_id:
+        addr = db.get(Address, post.address_id)
+        if addr:
+            address_response = AddressResponse.model_validate(addr)
+
+    company_name: Optional[str] = None
+    if post.company:
+        company_name = post.company.name
+    elif post.company_id:
+        comp = db.get(Company, post.company_id)
+        if comp:
+            company_name = comp.name
+
+    skills_data = [
+        JobSkillResponse(
+            skill_id=js.skill_id,
+            skill_name=js.skill.skill_name if js.skill else "",
+            category=js.skill.category if js.skill else "",
+            requirement_type=js.requirement_type,
+            min_years_experience=float(js.min_years_experience or 0.0),
+        )
+        for js in post.skills
+    ]
+
+    certs_data = [
+        JobCertificateResponse(
+            certificate_id=jc.certificate_id,
+            certificate_name=jc.certificate.certificate_name if jc.certificate else "",
+            issuer=jc.certificate.issuer if jc.certificate else "",
+            is_mandatory=jc.is_mandatory,
+        )
+        for jc in post.certificates
+    ]
+
+    domains_data = [
+        JobDomainResponse(
+            domain_id=jd.domain_id,
+            domain_name=jd.domain.domain_name if jd.domain else "",
+            description=jd.domain.description if jd.domain else None,
+        )
+        for jd in post.domains
+    ]
+
+    return JobPostResponse(
+        job_id=post.job_post_id,
+        recruiter_id=post.recruiter_id,
+        company_id=post.company_id,
+        company_name=company_name,
+        title=post.title,
+        position=post.position,
+        job_description=post.job_description,
+        requirements=post.requirements,
+        benefits=post.benefits,
+        job_type=post.job_type,
+        workplace_type=post.workplace_type,
+        address_id=post.address_id,
+        address=address_response,
+        salary_min=post.salary_min,
+        salary_max=post.salary_max,
+        is_salary_negotiable=post.is_salary_negotiable,
+        experience_years_min=float(post.experience_years_min or 0.0),
+        required_education=post.required_education,
+        approval_status=post.approval_status,
+        rejection_reason=post.rejection_reason,
+        approved_by=post.approved_by,
+        approved_at=post.approved_at,
+        deadline=post.deadline,
+        created_at=post.created_at,
+        skills=skills_data,
+        certificates=certs_data,
+        domains=domains_data,
+    )
+
+
+def create_job_post(
+    db: Session, account_id: uuid.UUID, payload: JobPostCreateRequest
+) -> JobPostResponse:
+    """Tạo mới tin tuyển dụng gắn kèm kỹ năng, chứng chỉ và lĩnh vực hoạt động."""
+    recruiter = db.scalar(
+        select(RecruiterProfile).where(RecruiterProfile.account_id == account_id)
+    )
+    if not recruiter:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ tài khoản Nhà tuyển dụng mới có quyền đăng tin tuyển dụng.",
+        )
+
+    company = db.get(Company, recruiter.company_id)
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy thông tin công ty của nhà tuyển dụng.",
+        )
+
+    now_utc = datetime.now(timezone.utc)
+    deadline_dt = payload.deadline
+    if deadline_dt.tzinfo is None:
+        deadline_dt = deadline_dt.replace(tzinfo=timezone.utc)
+
+    if deadline_dt <= now_utc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Hạn chót nộp hồ sơ (deadline) phải lớn hơn thời điểm hiện tại.",
+        )
+
+    # Xử lý địa chỉ làm việc
+    address_id: Optional[uuid.UUID] = payload.address_id
+    if payload.address:
+        new_address = Address(
+            street_address=payload.address.street_address,
+            ward=payload.address.ward,
+            city=payload.address.city,
+            country=payload.address.country,
+        )
+        db.add(new_address)
+        db.flush()
+        address_id = new_address.address_id
+    elif address_id:
+        existing_addr = db.get(Address, address_id)
+        if not existing_addr:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Địa chỉ với ID {address_id} không tồn tại trong hệ thống.",
+            )
+    elif payload.workplace_type != "REMOTE" and company.address_id:
+        address_id = company.address_id
+
+    # Kiểm tra tính hợp lệ và chống trùng lặp kỹ năng
+    skill_ids = [s.skill_id for s in payload.skills]
+    if len(skill_ids) != len(set(skill_ids)):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Danh sách kỹ năng chứa các ID kỹ năng trùng lặp.",
+        )
+    for s in payload.skills:
+        skill = db.get(Skill, s.skill_id)
+        if not skill:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Kỹ năng với ID {s.skill_id} không tồn tại trong hệ thống.",
+            )
+
+    # Kiểm tra chứng chỉ
+    cert_ids = [c.certificate_id for c in payload.certificates]
+    if len(cert_ids) != len(set(cert_ids)):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Danh sách chứng chỉ chứa các ID chứng chỉ trùng lặp.",
+        )
+    for c in payload.certificates:
+        cert = db.get(Certificate, c.certificate_id)
+        if not cert:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Chứng chỉ với ID {c.certificate_id} không tồn tại trong hệ thống.",
+            )
+
+    # Kiểm tra lĩnh vực
+    if len(payload.domain_ids) != len(set(payload.domain_ids)):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Danh sách lĩnh vực chứa các ID lĩnh vực trùng lặp.",
+        )
+    for d_id in payload.domain_ids:
+        domain = db.get(Domain, d_id)
+        if not domain:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Lĩnh vực với ID {d_id} không tồn tại trong hệ thống.",
+            )
+
+    # Tạo bản ghi bài đăng tuyển dụng
+    job_post = JobPost(
+        recruiter_id=recruiter.recruiter_id,
+        company_id=recruiter.company_id,
+        position=payload.position,
+        title=payload.title,
+        job_description=payload.job_description,
+        requirements=payload.requirements,
+        benefits=payload.benefits,
+        job_type=payload.job_type,
+        workplace_type=payload.workplace_type,
+        address_id=address_id,
+        salary_min=payload.salary_min,
+        salary_max=payload.salary_max,
+        is_salary_negotiable=payload.is_salary_negotiable,
+        experience_years_min=Decimal(str(payload.experience_years_min)),
+        required_education=payload.required_education,
+        approval_status="PENDING",
+        deadline=deadline_dt,
+    )
+    db.add(job_post)
+    db.flush()
+
+    for s in payload.skills:
+        db.add(
+            JobSkill(
+                job_post_id=job_post.job_post_id,
+                skill_id=s.skill_id,
+                requirement_type=s.requirement_type,
+                min_years_experience=Decimal(str(s.min_years_experience)),
+            )
+        )
+
+    for c in payload.certificates:
+        db.add(
+            JobCertificate(
+                job_post_id=job_post.job_post_id,
+                certificate_id=c.certificate_id,
+                is_mandatory=c.is_mandatory,
+            )
+        )
+
+    for d_id in payload.domain_ids:
+        db.add(
+            JobDomain(
+                job_post_id=job_post.job_post_id,
+                domain_id=d_id,
+            )
+        )
+
+    db.commit()
+    db.refresh(job_post)
+    logger.info(
+        "Tạo tin tuyển dụng thành công: %s bởi recruiter %s",
+        job_post.job_post_id,
+        recruiter.recruiter_id,
+    )
+    return _format_job_post_response(job_post, db)
+
+
+def get_recruiter_jobs(
+    db: Session,
+    account_id: uuid.UUID,
+    approval_status: Optional[str] = None,
+    page: int = 1,
+    limit: int = 20,
+) -> RecruiterJobListResponse:
+    """Lấy danh sách tin tuyển dụng do nhà tuyển dụng đăng tải kèm trạng thái duyệt."""
+    recruiter = db.scalar(
+        select(RecruiterProfile).where(RecruiterProfile.account_id == account_id)
+    )
+    if not recruiter:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ tài khoản Nhà tuyển dụng mới có danh sách tin đã đăng.",
+        )
+
+    query = select(JobPost).where(JobPost.recruiter_id == recruiter.recruiter_id)
+    count_query = select(func.count(JobPost.job_post_id)).where(
+        JobPost.recruiter_id == recruiter.recruiter_id
+    )
+
+    if approval_status:
+        status_normalized = approval_status.upper().strip()
+        query = query.where(JobPost.approval_status == status_normalized)
+        count_query = count_query.where(JobPost.approval_status == status_normalized)
+
+    total = db.scalar(count_query) or 0
+    offset = (page - 1) * limit
+    posts = db.scalars(
+        query.order_by(JobPost.created_at.desc()).offset(offset).limit(limit)
+    ).all()
+
+    items = [_format_job_post_response(post, db) for post in posts]
+    return RecruiterJobListResponse(items=items, total=total, page=page, limit=limit)
+
+
+def get_job_detail(db: Session, job_id: uuid.UUID) -> JobPostResponse:
+    """Xem chi tiết bài đăng tuyển dụng theo ID."""
+    job_post = db.get(JobPost, job_id)
+    if not job_post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy tin tuyển dụng.",
+        )
+    return _format_job_post_response(job_post, db)
+
+
+def get_skills_catalog(db: Session, category: Optional[str] = None) -> list[SkillCatalogItem]:
+    """Lấy danh mục các kỹ năng chuẩn hóa hệ thống."""
+    query = select(Skill)
+    if category:
+        query = query.where(Skill.category == category)
+    skills = db.scalars(query.order_by(Skill.skill_name.asc())).all()
+    return [SkillCatalogItem.model_validate(s) for s in skills]
+
+
+def get_certificates_catalog(
+    db: Session, category: Optional[str] = None
+) -> list[CertificateCatalogItem]:
+    """Lấy danh mục các chứng chỉ chuẩn hóa hệ thống."""
+    query = select(Certificate)
+    if category:
+        query = query.where(Certificate.category == category)
+    certs = db.scalars(query.order_by(Certificate.certificate_name.asc())).all()
+    return [CertificateCatalogItem.model_validate(c) for c in certs]
+
+
+def get_domains_catalog(db: Session) -> list[DomainCatalogItem]:
+    """Lấy danh mục các lĩnh vực chuẩn hóa hệ thống."""
+    domains = db.scalars(select(Domain).order_by(Domain.domain_name.asc())).all()
+    return [DomainCatalogItem.model_validate(d) for d in domains]
+
+
+def moderate_job_post(
+    db: Session,
+    job_id: uuid.UUID,
+    admin_account_id: uuid.UUID,
+    approval_status: str,
+    rejection_reason: Optional[str] = None,
+) -> JobModerationResponse:
+    """Admin duyệt hoặc từ chối bài đăng tuyển dụng và tự động gửi thông báo tới nhà tuyển dụng."""
+    job_post = db.get(JobPost, job_id)
+    if not job_post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy tin tuyển dụng với ID đã cung cấp.",
+        )
+
+    status_upper = approval_status.upper().strip()
+    if status_upper not in ("APPROVED", "REJECTED"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Trạng thái kiểm duyệt chỉ chấp nhận 'APPROVED' hoặc 'REJECTED'.",
+        )
+
+    if status_upper == "REJECTED":
+        if not rejection_reason or not rejection_reason.strip():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Vui lòng cung cấp lý do từ chối bài đăng tuyển dụng.",
+            )
+        rejection_reason_clean = rejection_reason.strip()
+    else:
+        rejection_reason_clean = None
+
+    now_utc = datetime.now(timezone.utc)
+    job_post.approval_status = status_upper
+    job_post.approved_by = admin_account_id
+    job_post.approved_at = now_utc
+    job_post.rejection_reason = rejection_reason_clean
+
+    # Gửi thông báo đến tài khoản nhà tuyển dụng
+    notification_id: Optional[int] = None
+    recruiter = db.get(RecruiterProfile, job_post.recruiter_id)
+    if recruiter:
+        if status_upper == "APPROVED":
+            notif_title = "Tin tuyển dụng của bạn đã được phê duyệt"
+            notif_msg = (
+                f'Tin tuyển dụng "{job_post.title}" đã được Admin phê duyệt thành công '
+                f"và hiện đang được hiển thị công khai trên hệ thống CView."
+            )
+        else:
+            notif_title = "Tin tuyển dụng của bạn bị từ chối phê duyệt"
+            notif_msg = (
+                f'Tin tuyển dụng "{job_post.title}" đã bị Admin từ chối phê duyệt. '
+                f"Lý do: {rejection_reason_clean}. Vui lòng kiểm tra và cập nhật lại bài đăng."
+            )
+
+        notif = notification_service.create_other_notification(
+            db=db,
+            account_id=recruiter.account_id,
+            notification_type="JOB_APPROVAL_STATUS",
+            title=notif_title,
+            message=notif_msg,
+        )
+        notification_id = notif.notification_id
+
+    db.commit()
+    db.refresh(job_post)
+
+    msg = (
+        f"Tin tuyển dụng '{job_post.title}' đã được phê duyệt thành công."
+        if status_upper == "APPROVED"
+        else f"Tin tuyển dụng '{job_post.title}' đã bị từ chối phê duyệt."
+    )
+
+    logger.info(
+        "Admin %s đã kiểm duyệt tin %s: status=%s",
+        admin_account_id,
+        job_id,
+        status_upper,
+    )
+
+    return JobModerationResponse(
+        job_id=job_post.job_post_id,
+        title=job_post.title,
+        approval_status=job_post.approval_status,
+        approved_by=job_post.approved_by,
+        approved_at=job_post.approved_at,
+        rejection_reason=job_post.rejection_reason,
+        notification_id=notification_id,
+        message=msg,
+    )
+
+
+def get_pending_jobs(
+    db: Session,
+    page: int = 1,
+    limit: int = 20,
+) -> RecruiterJobListResponse:
+    """Lấy danh sách các tin tuyển dụng đang chờ kiểm duyệt (approval_status = 'PENDING')."""
+    query = select(JobPost).where(JobPost.approval_status == "PENDING")
+    count_query = select(func.count(JobPost.job_post_id)).where(
+        JobPost.approval_status == "PENDING"
+    )
+
+    total = db.scalar(count_query) or 0
+    offset = (page - 1) * limit
+    posts = db.scalars(
+        query.order_by(JobPost.created_at.desc()).offset(offset).limit(limit)
+    ).all()
+
+    items = [_format_job_post_response(post, db) for post in posts]
+    return RecruiterJobListResponse(items=items, total=total, page=page, limit=limit)
+
+
+def search_jobs(
+    db: Session,
+    keyword: Optional[str] = None,
+    city: Optional[str] = None,
+    domain_id: Optional[int] = None,
+    job_type: Optional[str] = None,
+    workplace_type: Optional[str] = None,
+    salary_min: Optional[int] = None,
+    page: int = 1,
+    limit: int = 20,
+    current_account_id: Optional[uuid.UUID] = None,
+) -> JobSearchResponse:
+    """Tìm kiếm việc làm đã phê duyệt theo từ khóa và các tiêu chí lọc, tự động ghi search_history nếu là ứng viên."""
+    query = select(JobPost).where(JobPost.approval_status == "APPROVED")
+
+    if keyword:
+        kw = keyword.strip()
+        if kw:
+            query = query.outerjoin(Company, JobPost.company_id == Company.company_id)
+            query = query.where(
+                or_(
+                    JobPost.title.ilike(f"%{kw}%"),
+                    JobPost.position.ilike(f"%{kw}%"),
+                    JobPost.job_description.ilike(f"%{kw}%"),
+                    JobPost.requirements.ilike(f"%{kw}%"),
+                    Company.name.ilike(f"%{kw}%"),
+                )
+            )
+
+    if city:
+        c = city.strip()
+        if c:
+            query = query.join(Address, JobPost.address_id == Address.address_id)
+            query = query.where(Address.city.ilike(f"%{c}%"))
+
+    if domain_id is not None:
+        query = query.where(JobPost.domains.any(JobDomain.domain_id == domain_id))
+
+    if job_type:
+        query = query.where(JobPost.job_type == job_type.upper().strip())
+
+    if workplace_type:
+        query = query.where(JobPost.workplace_type == workplace_type.upper().strip())
+
+    if salary_min is not None:
+        query = query.where(
+            or_(
+                JobPost.salary_max >= salary_min,
+                JobPost.salary_min >= salary_min,
+                JobPost.is_salary_negotiable.is_(True),
+            )
+        )
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total = db.scalar(count_query) or 0
+
+    offset = (page - 1) * limit
+    posts = (
+        db.scalars(
+            query.order_by(JobPost.created_at.desc()).offset(offset).limit(limit)
+        )
+        .unique()
+        .all()
+    )
+
+    items = [_format_job_post_response(post, db) for post in posts]
+
+    # Tự động ghi vết vào bảng search_history nếu tài khoản đăng nhập là Ứng viên (CANDIDATE)
+    if current_account_id:
+        candidate = db.scalar(
+            select(CandidateProfile).where(CandidateProfile.account_id == current_account_id)
+        )
+        if candidate:
+            history_record = SearchHistory(
+                candidate_id=candidate.candidate_id,
+                keyword=keyword.strip() if keyword else None,
+                domain_id=domain_id,
+                city=city.strip() if city else None,
+                min_salary=salary_min,
+                results_count=total,
+            )
+            db.add(history_record)
+            db.commit()
+
+    return JobSearchResponse(
+        items=items,
+        total=total,
+        page=page,
+        limit=limit,
+        keyword=keyword,
+        city=city,
+        domain_id=domain_id,
+        job_type=job_type,
+        workplace_type=workplace_type,
+        salary_min=salary_min,
+    )
+
+

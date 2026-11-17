@@ -36,6 +36,22 @@ def get_current_token_payload(
         ) from exc
 
 
+def get_optional_token_payload(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> dict | None:
+    """Decode and validate Bearer JWT token if present; return None if unauthenticated."""
+    if credentials is None:
+        return None
+    try:
+        return jwt.decode(
+            credentials.credentials,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+        )
+    except jwt.PyJWTError:
+        return None
+
+
 def require_roles(*allowed_roles: str) -> Callable:
     """Dependency factory to enforce RBAC roles ('CANDIDATE', 'RECRUITER', 'ADMIN')."""
 
