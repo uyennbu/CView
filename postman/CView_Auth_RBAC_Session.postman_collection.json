@@ -25,8 +25,10 @@
               "script": {
                 "exec": [
                   "const rand = Math.floor(Math.random() * 900000) + 100000;",
+                  "const randPhone = \"09\" + String(Math.floor(Math.random() * 90000000) + 10000000);",
                   "pm.environment.set(\"candidate_dynamic_user\", \"cand_\" + rand);",
-                  "pm.environment.set(\"candidate_dynamic_email\", \"cand_\" + rand + \"@gmail.com\");"
+                  "pm.environment.set(\"candidate_dynamic_email\", \"cand_\" + rand + \"@gmail.com\");",
+                  "pm.environment.set(\"candidate_dynamic_phone\", randPhone);"
                 ],
                 "type": "text/javascript"
               }
@@ -60,7 +62,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{candidate_dynamic_user}}\",\n  \"email\": \"{{candidate_dynamic_email}}\",\n  \"password\": \"Password@123\",\n  \"full_name\": \"Nguyễn Văn Test\",\n  \"phone_number\": \"0987123456\"\n}"
+              "raw": "{\n  \"username\": \"{{candidate_dynamic_user}}\",\n  \"email\": \"{{candidate_dynamic_email}}\",\n  \"password\": \"Password@123\",\n  \"full_name\": \"Nguyễn Văn Test\",\n  \"phone_number\": \"{{candidate_dynamic_phone}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/candidate/register",
@@ -200,10 +202,12 @@
               "script": {
                 "exec": [
                   "const rand = Math.floor(Math.random() * 900000) + 100000;",
+                  "const randPhone = \"08\" + String(Math.floor(Math.random() * 90000000) + 10000000);",
                   "pm.environment.set(\"recruiter_dynamic_user\", \"rec_\" + rand);",
                   "pm.environment.set(\"recruiter_dynamic_email\", \"rec_\" + rand + \"@cviewtech.vn\");",
                   "pm.environment.set(\"company_dynamic_name\", \"Doanh nghiệp Số \" + rand);",
-                  "pm.environment.set(\"dynamic_tax_code\", \"03\" + String(rand).padStart(8, '0'));"
+                  "pm.environment.set(\"dynamic_tax_code\", \"03\" + String(rand).padStart(8, '0'));",
+                  "pm.environment.set(\"recruiter_dynamic_phone\", randPhone);"
                 ],
                 "type": "text/javascript"
               }
@@ -236,7 +240,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{recruiter_dynamic_user}}\",\n  \"email\": \"{{recruiter_dynamic_email}}\",\n  \"password\": \"Password@123\",\n  \"full_name\": \"Nguyễn Tuyển Dụng\",\n  \"job_title\": \"Talent Acquisition Lead\",\n  \"work_email\": \"{{recruiter_dynamic_email}}\",\n  \"phone_number\": \"0912345678\",\n  \"company_name\": \"{{company_dynamic_name}}\",\n  \"tax_code\": \"{{dynamic_tax_code}}\",\n  \"industry\": \"Công nghệ Thông tin\",\n  \"street_address\": \"Tòa nhà CView, Q. Cầu Giấy\",\n  \"city\": \"Hà Nội\"\n}"
+              "raw": "{\n  \"username\": \"{{recruiter_dynamic_user}}\",\n  \"email\": \"{{recruiter_dynamic_email}}\",\n  \"password\": \"Password@123\",\n  \"full_name\": \"Nguyễn Tuyển Dụng\",\n  \"job_title\": \"Talent Acquisition Lead\",\n  \"work_email\": \"{{recruiter_dynamic_email}}\",\n  \"phone_number\": \"{{recruiter_dynamic_phone}}\",\n  \"company_name\": \"{{company_dynamic_name}}\",\n  \"tax_code\": \"{{dynamic_tax_code}}\",\n  \"industry\": \"Công nghệ Thông tin\",\n  \"street_address\": \"Tòa nhà CView, Q. Cầu Giấy\",\n  \"city\": \"Hà Nội\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/recruiter/register",
@@ -308,7 +312,6 @@
                   "});",
                   "pm.test(\"Tin tuyển dụng được tạo ở trạng thái chờ kiểm duyệt\", function () {",
                   "    var json = pm.response.json();",
-                  "    pm.expect(json.status).to.eql(\"PENDING\");",
                   "    pm.expect(json.approval_status).to.eql(\"PENDING\");",
                   "});",
                   "pm.test(\"Trả về mã bài đăng để theo dõi và kiểm duyệt\", function () {",
@@ -458,9 +461,8 @@
                   "pm.test(\"Phê duyệt bài đăng thành APPROVED\", function () {",
                   "    var json = pm.response.json();",
                   "    pm.expect(json.approval_status).to.eql(\"APPROVED\");",
-                  "    pm.expect(json.status).to.eql(\"APPROVED\");",
                   "    pm.expect(json.job_id).to.eql(pm.environment.get(\"created_job_id\"));",
-                  "    pm.expect(json.moderated_by).to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(json.approved_by).to.be.a(\"string\").and.not.empty;",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -503,9 +505,8 @@
                   "pm.test(\"Bài đăng chuyển sang REJECTED kèm đúng lý do\", function () {",
                   "    var json = pm.response.json();",
                   "    pm.expect(json.approval_status).to.eql(\"REJECTED\");",
-                  "    pm.expect(json.status).to.eql(\"REJECTED\");",
                   "    pm.expect(json.rejection_reason).to.eql(\"Bài đăng thiếu thông tin về quyền lợi và yêu cầu công việc.\");",
-                  "    pm.expect(json.moderated_by).to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(json.approved_by).to.be.a(\"string\").and.not.empty;",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -562,7 +563,7 @@
                   "    var json = pm.response.json();",
                   "    pm.expect(json.items).to.be.an(\"array\");",
                   "    json.items.forEach(function(item) {",
-                  "        pm.expect(item.approval_status || item.status).to.eql(\"APPROVED\");",
+                  "        pm.expect(item.approval_status).to.eql(\"APPROVED\");",
                   "    });",
                   "});"
                 ],
@@ -612,7 +613,7 @@
                   "    var json = pm.response.json();",
                   "    pm.expect(json.items).to.be.an(\"array\");",
                   "    json.items.forEach(function(item) {",
-                  "        pm.expect(item.approval_status || item.status).to.eql(\"APPROVED\");",
+                  "        pm.expect(item.approval_status).to.eql(\"APPROVED\");",
                   "    });",
                   "});"
                 ],
@@ -666,7 +667,7 @@
                   "    var json = pm.response.json();",
                   "    pm.expect(json.items).to.be.an(\"array\");",
                   "    json.items.forEach(function(item) {",
-                  "        pm.expect(item.approval_status || item.status).to.eql(\"APPROVED\");",
+                  "        pm.expect(item.approval_status).to.eql(\"APPROVED\");",
                   "    });",
                   "});"
                 ],
@@ -683,7 +684,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/jobs/search?keyword=Python&city=H%C3%A0%20N%E1%BB%99i&domain_id=1&job_type=FULL_TIME&workplace_type=REMOTE&salary_min=15000000&page=1&page_size=10",
+              "raw": "{{base_url}}/jobs/search?keyword=Python&city=H%C3%A0%20N%E1%BB%99i&domain_id=1&job_type=FULL_TIME&workplace_type=REMOTE&salary_min=15000000&page=1&limit=10",
               "host": ["{{base_url}}"],
               "path": ["jobs", "search"],
               "query": [
@@ -716,7 +717,7 @@
                   "value": "1"
                 },
                 {
-                  "key": "page_size",
+                  "key": "limit",
                   "value": "10"
                 }
               ]

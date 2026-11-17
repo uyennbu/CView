@@ -94,6 +94,8 @@ def register_recruiter_account(
 
     if db.scalar(select(Account).where(or_(Account.username == payload.username, Account.email == email_lower))):
         raise HTTPException(status.HTTP_409_CONFLICT, "Username hoặc Email tài khoản đã tồn tại.")
+    if payload.phone_number and db.scalar(select(Account).where(Account.phone_number == payload.phone_number)):
+        raise HTTPException(status.HTTP_409_CONFLICT, "Số điện thoại đã được sử dụng.")
     if db.scalar(select(Company).where(or_(Company.name == payload.company_name, Company.tax_code == payload.tax_code))):
         raise HTTPException(status.HTTP_409_CONFLICT, "Tên doanh nghiệp hoặc Mã số thuế đã được đăng ký.")
     if db.scalar(select(RecruiterProfile).where(RecruiterProfile.work_email == work_email_lower)):

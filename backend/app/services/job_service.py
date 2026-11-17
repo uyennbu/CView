@@ -498,11 +498,27 @@ def search_jobs(
     if city:
         c = city.strip()
         if c:
-            query = query.join(Address, JobPost.address_id == Address.address_id)
-            query = query.where(Address.city.ilike(f"%{c}%"))
+            c_variants = [c]
+            c_lower = c.lower()
+            if "hà nội" in c_lower or "ha noi" in c_lower:
+                c_variants.extend(["Ha Noi", "Hà Nội"])
+            elif "hồ chí minh" in c_lower or "ho chi minh" in c_lower:
+                c_variants.extend(["Ho Chi Minh", "Hồ Chí Minh", "TP. Hồ Chí Minh"])
+            elif "đà nẵng" in c_lower or "da nang" in c_lower:
+                c_variants.extend(["Da Nang", "Đà Nẵng"])
 
+            query = query.join(Address, JobPost.address_id == Address.address_id)
+            query = query.where(or_(*[Address.city.ilike(f"%{v}%") for v in set(c_variants)]))
+
+    valid_domain_id = None
     if domain_id is not None:
-        query = query.where(JobPost.domains.any(JobDomain.domain_id == domain_id))
+        dom = db.get(Domain, domain_id)
+        if dom:
+            valid_domain_id = domain_id
+            query = query.where(JobPost.domains.any(JobDomain.domain_id == domain_id))
+        else:
+            # Nếu domain_id không tồn tại trong hệ thống, không có bài tuyển dụng nào khớp
+            query = query.where(JobPost.job_post_id == None)
 
     if job_type:
         query = query.where(JobPost.job_type == job_type.upper().strip())
@@ -539,16 +555,20 @@ def search_jobs(
             select(CandidateProfile).where(CandidateProfile.account_id == current_account_id)
         )
         if candidate:
-            history_record = SearchHistory(
-                candidate_id=candidate.candidate_id,
-                keyword=keyword.strip() if keyword else None,
-                domain_id=domain_id,
-                city=city.strip() if city else None,
-                min_salary=salary_min,
-                results_count=total,
-            )
-            db.add(history_record)
-            db.commit()
+            try:
+                history_record = SearchHistory(
+                    candidate_id=candidate.candidate_id,
+                    keyword=keyword.strip() if keyword else None,
+                    domain_id=valid_domain_id,
+                    city=city.strip() if city else None,
+                    min_salary=salary_min,
+                    results_count=total,
+                )
+                db.add(history_record)
+                db.commit()
+            except Exception as exc:
+                db.rollback()
+                logger.warning("Không thể lưu search_history do lỗi ràng buộc: %s", exc)
 
     return JobSearchResponse(
         items=items,
