@@ -5,12 +5,14 @@
 -- =============================================================================
 -- UUID tái sử dụng từ các file trước:
 --   candidate_profiles : f6000000-0000-0000-0000-00000000000x
---   job_posts          : h8000000-0000-0000-0000-00000000000x
+--   job_posts          : 08000000-0000-0000-0000-00000000000x
 --   accounts           : a1000000-0000-0000-0000-00000000000x
 --     001-003 = ADMIN | 004-009 = RECRUITER | 005,010-013 = CANDIDATE
 -- =============================================================================
 
 SET client_min_messages TO WARNING;
+
+TRUNCATE TABLE job_notifications, other_notifications CASCADE;
 
 -- =============================================================================
 -- 28. job_notifications (thông báo việc làm gợi ý tự động cho ứng viên)
@@ -22,35 +24,35 @@ INSERT INTO job_notifications (candidate_id, job_post_id, title, content, is_rea
 
     -- 1. Nguyen Van An nhận gợi ý JP-01 (Backend TechCorp) → đã đọc
     ('f6000000-0000-0000-0000-000000000001',
-     'h8000000-0000-0000-0000-000000000001',
+     '08000000-0000-0000-0000-000000000001',
      'Viec lam phu hop voi ban: Senior Backend Developer',
      'CView phat hien tin tuyen dung "Senior Backend Developer (Java Spring Boot)" tai TechCorp Vietnam JSC phu hop 82% voi CV cua ban. Luong 25-45 trieu, lam viec Hybrid tai Ha Noi. Xem ngay!',
      TRUE,  NOW() - INTERVAL '4 days'),
 
     -- 2. Nguyen Van An nhận gợi ý JP-05 (DS Tiki remote) → chưa đọc
     ('f6000000-0000-0000-0000-000000000001',
-     'h8000000-0000-0000-0000-000000000005',
+     '08000000-0000-0000-0000-000000000005',
      'Co 1 co hoi viec lam moi danh cho ban',
      'Tin tuyen dung "Senior Data Scientist — Recommendation System" tai Tiki Corporation vua duoc dang. Vi tri lam viec Remote toan phan, luong thuong luong. Kiem tra ngay!',
      FALSE, NULL),
 
     -- 3. Tran Thi Bich Ngoc nhận gợi ý JP-02 (Python FPT) → đã đọc
     ('f6000000-0000-0000-0000-000000000002',
-     'h8000000-0000-0000-0000-000000000002',
+     '08000000-0000-0000-0000-000000000002',
      'Viec lam phu hop: Python Data Engineer tai FPT Software',
      'Dua tren ky nang Python va kinh nghiem 1.5 nam cua ban, chung toi de xuat vi tri "Python Data Engineer (Mid-Senior)" tai FPT Software Ha Noi. Luong 20-38 trieu. Nop don ngay!',
      TRUE,  NOW() - INTERVAL '2 days'),
 
     -- 4. Le Hoang Nam nhận gợi ý JP-03 (DevOps Vingroup) → đã đọc
     ('f6000000-0000-0000-0000-000000000003',
-     'h8000000-0000-0000-0000-000000000003',
+     '08000000-0000-0000-0000-000000000003',
      '[Hot Job] Senior DevOps / Cloud Engineer phu hop cao voi CV cua ban',
      'CV cua ban khop 91% voi vi tri "Senior DevOps / Cloud Engineer" tai Vingroup Digital Solutions. Luong 35-60 trieu, On-site HCM. Day la co hoi hang dau cho ban! Ung tuyen truoc ngay ' || TO_CHAR(NOW() + INTERVAL '20 days', 'DD/MM/YYYY') || '.',
      TRUE,  NOW() - INTERVAL '6 days'),
 
     -- 5. Pham Ngoc Linh nhận gợi ý JP-04 (Fresher VNPAY) → chưa đọc
     ('f6000000-0000-0000-0000-000000000004',
-     'h8000000-0000-0000-0000-000000000004',
+     '08000000-0000-0000-0000-000000000004',
      'Co hoi thuc tap: Fresher React Native Developer tai VNPAY',
      'CView tim thay vi tri "Fresher React Native Developer" tai VNPAY Technology Corp phu hop voi ho so sinh vien cua ban. Luong thuc tap 5-8 trieu, co the chuyen full-time sau 3 thang. Dung bo lo!',
      FALSE, NULL);
