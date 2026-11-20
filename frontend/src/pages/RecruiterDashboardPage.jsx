@@ -819,7 +819,396 @@ export default function RecruiterDashboardPage() {
           </div>
       </main>
 
+      {/* =========================================================================
+          SLIDE-OVER DRAWER: FORM ĐĂNG BÀI TUYỂN DỤNG (TRƯỢT TỪ BÊN PHẢI)
+      ========================================================================= */}
+      <div
+        className={`fixed inset-0 z-50 transition-all duration-300 ${
+          isDrawerOpen ? 'visible pointer-events-auto' : 'invisible pointer-events-none'
+        }`}
+        aria-hidden={!isDrawerOpen}
+      >
+        {/* Backdrop che mờ nền Dashboard */}
+        <div
+          onClick={() => setIsDrawerOpen(false)}
+          className={`fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300 ${
+            isDrawerOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+
+        {/* Khung Drawer trượt ra từ bên phải */}
+        <div
+          className={`fixed inset-y-0 right-0 flex w-full max-w-2xl flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+            isDrawerOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          {/* Header Drawer cố định */}
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 bg-white sticky top-0 z-10">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E6FADD] text-[#1E5631]">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-extrabold text-[#1A241E] tracking-tight">
+                  Đăng bài tuyển dụng
+                </h2>
+                <p className="text-xs text-gray-500">
+                  Kết nối với ứng viên phù hợp. Bắt đầu từ một cơ hội mới.
+                </p>
+              </div>
+            </div>
+
+            {/* Nút đóng X */}
+            <button
+              type="button"
+              onClick={() => setIsDrawerOpen(false)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition cursor-pointer"
+              title="Đóng (ESC)"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Form Content cuộn riêng biệt */}
+          <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8 space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div>
+                <h3 className="text-sm font-bold text-[#1A241E]">Thông tin tuyển dụng</h3>
+                <p className="text-xs text-gray-400 mt-0.5">Điền thông tin bên dưới để tạo bài đăng của bạn.</p>
+              </div>
+              <span className="text-xs text-gray-400 font-medium">* Bắt buộc</span>
+            </div>
+
+            {/* Thông báo lỗi nếu có */}
+            {formError && (
+              <div className="rounded-xl bg-red-50 p-4 text-xs font-semibold text-red-600 border border-red-200">
+                ⚠️ {formError}
+              </div>
+            )}
+
+            <form id="recruiter-drawer-form" onSubmit={handleSubmitJob} className="space-y-6">
+              {/* 1. Tiêu đề công việc * */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2">
+                  Tiêu đề công việc <span className="text-[#059669]">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Ví dụ: Chuyên viên Marketing"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:border-[#059669] focus:ring-1 focus:ring-[#059669] focus:outline-none transition"
+                />
+              </div>
+
+              {/* 2. Ngành nghề * */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2">
+                  Ngành nghề <span className="text-[#059669]">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    required
+                    value={formData.domainId}
+                    onChange={(e) => setFormData({ ...formData, domainId: e.target.value })}
+                    className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-3 pr-10 text-sm text-gray-800 focus:border-[#059669] focus:ring-1 focus:ring-[#059669] focus:outline-none transition cursor-pointer"
+                  >
+                    <option value="">Chọn ngành nghề</option>
+                    {domainsCatalog.map((d, idx) => {
+                      const id = d.domain_id ?? d.id ?? (idx + 1)
+                      const name = d.domain_name ?? d.name ?? d.title ?? 'Ngành nghề'
+                      return (
+                        <option key={id} value={id}>
+                          {name}
+                        </option>
+                      )
+                    })}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Kỹ năng & Chứng chỉ */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2">
+                  Kỹ năng & Chứng chỉ
+                </label>
+                <div className="rounded-xl border border-gray-200 p-2.5 flex flex-wrap items-center gap-2 bg-white focus-within:border-[#059669] transition">
+                  {formData.selectedSkills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#E6FADD] px-3 py-1.5 text-xs font-bold text-[#1E5631] border border-[#4CAF50]/30"
+                    >
+                      {skill}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSkill(skill)}
+                        className="hover:text-red-600 transition cursor-pointer ml-0.5"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
+
+                  <input
+                    type="text"
+                    value={formData.newSkillInput}
+                    onChange={(e) => setFormData({ ...formData, newSkillInput: e.target.value })}
+                    onKeyDown={handleAddSkill}
+                    placeholder="Thêm kỹ năng..."
+                    className="flex-1 min-w-[130px] border-none bg-transparent px-2 py-1 text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+                  />
+                </div>
+                <p className="mt-1.5 text-[11px] text-gray-400">
+                  Nhập tên kỹ năng và nhấn Enter để thêm (được đối soát tự động với CSDL).
+                </p>
+              </div>
+
+              {/* 4. Mức lương * */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2">
+                  Mức lương <span className="text-[#059669]">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="500000"
+                      value={formData.salaryMin}
+                      onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })}
+                      placeholder="Tối thiểu"
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 pr-14 text-sm text-gray-800 placeholder-gray-400 focus:border-[#059669] focus:ring-1 focus:ring-[#059669] focus:outline-none transition"
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-xs font-semibold text-gray-400">
+                      VNĐ
+                    </span>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="500000"
+                      value={formData.salaryMax}
+                      onChange={(e) => setFormData({ ...formData, salaryMax: e.target.value })}
+                      placeholder="Tối đa"
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 pr-14 text-sm text-gray-800 placeholder-gray-400 focus:border-[#059669] focus:ring-1 focus:ring-[#059669] focus:outline-none transition"
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-xs font-semibold text-gray-400">
+                      VNĐ
+                    </span>
+                  </div>
+                </div>
+                <p className="mt-1.5 text-[11px] text-gray-400">Mức lương theo tháng (VNĐ)</p>
+              </div>
+
+              {/* 5. Địa điểm * */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2">
+                  Địa điểm <span className="text-[#059669]">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    required
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-3 pr-10 text-sm text-gray-800 focus:border-[#059669] focus:ring-1 focus:ring-[#059669] focus:outline-none transition cursor-pointer"
+                  >
+                    <option value="">Chọn tỉnh / thành phố</option>
+                    <option value="Hà Nội">Hà Nội</option>
+                    <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                    <option value="Đà Nẵng">Đà Nẵng</option>
+                    <option value="Cần Thơ">Cần Thơ</option>
+                    <option value="Hải Phòng">Hải Phòng</option>
+                    <option value="Toàn quốc">Toàn quốc (Remote)</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* 6. Mô tả chi tiết * */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2">
+                  Mô tả chi tiết <span className="text-[#059669]">*</span>
+                </label>
+                <textarea
+                  required
+                  rows={5}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Mô tả công việc, yêu cầu ứng viên và quyền lợi được hưởng..."
+                  className="w-full rounded-xl border border-gray-200 p-4 text-sm text-gray-800 placeholder-gray-400 focus:border-[#059669] focus:ring-1 focus:ring-[#059669] focus:outline-none transition leading-relaxed"
+                />
+              </div>
+            </form>
+          </div>
+
+          {/* Footer Drawer cố định */}
+          <div className="border-t border-gray-100 bg-gray-50/80 px-6 py-4 flex items-center justify-end gap-3 backdrop-blur-xs">
+            <button
+              type="button"
+              onClick={() => setIsDrawerOpen(false)}
+              className="rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-2xs hover:bg-gray-50 transition cursor-pointer"
+            >
+              Hủy
+            </button>
+
+            <button
+              type="submit"
+              form="recruiter-drawer-form"
+              disabled={isSubmitting}
+              className="rounded-xl bg-[#059669] px-7 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#047857] transition disabled:opacity-50 cursor-pointer active:scale-95 flex items-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Đang lưu...</span>
+                </>
+              ) : (
+                'Đăng tuyển'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          MODAL XEM CHI TIẾT TIN TUYỂN DỤNG
+      ========================================================================= */}
+      {selectedJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
+            <div className="flex items-start justify-between pb-4 border-b border-gray-100">
+              <div>
+                <span className="text-xs text-gray-400 font-medium">Chi tiết bài đăng tuyển dụng</span>
+                <h3 className="text-lg font-bold text-[#1A241E] mt-0.5">{selectedJob.title}</h3>
+              </div>
+              <button
+                onClick={() => setSelectedJob(null)}
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition cursor-pointer"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="py-4 space-y-3.5 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 text-xs">Trạng thái:</span>
+                <div>
+                  {selectedJob.status === 'PENDING' && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FEF3C7] px-3 py-0.5 text-xs font-semibold text-[#B45309]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#D97706]" />
+                      Chờ duyệt
+                    </span>
+                  )}
+                  {selectedJob.status === 'APPROVED' && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#DCFCE7] px-3 py-0.5 text-xs font-semibold text-[#15803D]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#16A34A]" />
+                      Đã duyệt
+                    </span>
+                  )}
+                  {selectedJob.status === 'REJECTED' && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FEE2E2] px-3 py-0.5 text-xs font-semibold text-[#B91C1C]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#DC2626]" />
+                      Từ chối
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {selectedJob.rejectionReason && (
+                <div className="rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-100">
+                  <span className="font-bold">Lý do từ chối:</span> {selectedJob.rejectionReason}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 text-xs">Ngành nghề:</span>
+                <span className="font-semibold text-gray-800">{selectedJob.domain}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 text-xs">Mức lương:</span>
+                <span className="font-semibold text-[#059669]">
+                  {(selectedJob.salaryMin / 1000000).toLocaleString('vi-VN')} - {(selectedJob.salaryMax / 1000000).toLocaleString('vi-VN')} triệu VNĐ
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 text-xs">Địa điểm:</span>
+                <span className="font-semibold text-gray-800">{selectedJob.city}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 text-xs">Ngày đăng:</span>
+                <span className="font-semibold text-gray-800">{selectedJob.createdAt}</span>
+              </div>
+
+              <div>
+                <span className="block text-gray-500 text-xs mb-1.5">Kỹ năng yêu cầu:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedJob.skills.map((s) => (
+                    <span key={s} className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <span className="block text-gray-500 text-xs mb-1">Mô tả công việc:</span>
+                <p className="text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed max-h-32 overflow-y-auto">
+                  {selectedJob.description}
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-gray-100 flex justify-end">
+              <button
+                onClick={() => setSelectedJob(null)}
+                className="rounded-xl bg-gray-100 px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-200 transition cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FOOTER */}
+      <footer className="mt-16 border-t border-gray-200/60 bg-transparent py-6 text-xs text-gray-500">
+        <div className="mx-auto flex max-w-[1440px] flex-col sm:flex-row items-center justify-between gap-3 px-6 lg:px-14">
+          <div>© 2026 CView. Kết nối nhân tài, kiến tạo tương lai.</div>
+          <div className="flex items-center gap-4">
+            <span className="hover:text-gray-600 cursor-pointer">Trung tâm hỗ trợ</span>
+            <span>·</span>
+            <span className="hover:text-gray-600 cursor-pointer">Chính sách bảo mật</span>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
-
