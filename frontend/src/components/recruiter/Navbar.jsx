@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import logoCView from '../assets/logo-cview.png'
 
 const navItems = [
@@ -11,6 +11,11 @@ const navItems = [
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth()
   const location = useLocation()
+
+  // Ẩn Navbar chung khi đang ở trang Dashboard chuyên biệt của Nhà tuyển dụng
+  if (location.pathname === '/recruiter/dashboard') {
+    return null
+  }
 
   return (
     <header className="w-full bg-transparent">
