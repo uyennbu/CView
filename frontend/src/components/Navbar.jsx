@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import logoCView from '../assets/logo-cview.png'
 
@@ -9,12 +9,21 @@ const navItems = [
 ]
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth()
+  const { user, isAuthenticated, loading, logout } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
 
   // Ẩn Navbar chung khi đang ở trang Dashboard chuyên biệt của Nhà tuyển dụng
-  if (location.pathname === '/recruiter/dashboard') {
+  if (
+    location.pathname === '/recruiter/dashboard'
+    || location.pathname.startsWith('/recruiter/dashboard/')
+  ) {
     return null
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
   }
 
   return (
@@ -32,7 +41,9 @@ export default function Navbar() {
         {/* Navigation Items */}
         <div className="flex items-center gap-10">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path
+            const isActive = item.path === '/'
+              ? location.pathname === '/'
+              : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
             return (
               <Link
                 key={item.label}
@@ -54,7 +65,7 @@ export default function Navbar() {
 
         {/* Account Actions */}
         <div className="flex items-center gap-3">
-          {isAuthenticated ? (
+          {loading ? null : isAuthenticated ? (
             <div className="flex items-center gap-3">
               {/* Avatar + Tên hiển thị từ CSDL */}
               <Link
@@ -76,7 +87,8 @@ export default function Navbar() {
 
               {/* Nút Đăng xuất */}
               <button
-                onClick={logout}
+                type="button"
+                onClick={handleLogout}
                 className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100"
               >
                 Đăng xuất
