@@ -345,3 +345,35 @@ class SearchHistory(Base):
 
     candidate: Mapped["CandidateProfile"] = relationship("CandidateProfile")
     domain: Mapped["Domain | None"] = relationship("Domain", lazy="joined")
+
+
+class JobNotification(Base):
+    """Bảng 28: job_notifications."""
+
+    __tablename__ = "job_notifications"
+
+    notification_id: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True
+    )
+    candidate_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("candidate_profiles.candidate_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    job_post_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("job_posts.job_post_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    read_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    candidate: Mapped["CandidateProfile"] = relationship("CandidateProfile")
+    job_post: Mapped["JobPost"] = relationship("JobPost", lazy="joined")

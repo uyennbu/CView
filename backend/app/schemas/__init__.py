@@ -36,6 +36,15 @@ from app.schemas.recruiter import (
     RecruiterProfileResponse,
     RecruiterProfileUpdateRequest,
 )
+from app.schemas.notifications import (
+    CreateJobNotificationRequest,
+    CreateOtherNotificationRequest,
+    JobNotificationResponse,
+    MarkAllNotificationsReadResponse,
+    MarkNotificationReadResponse,
+    NotificationListResponse,
+    UnreadCountResponse,
+)
 
 __all__ = [
     "LoginRequest",
@@ -66,4 +75,11 @@ __all__ = [
     "JobModerationRequest",
     "JobModerationResponse",
     "OtherNotificationResponse",
+    "JobNotificationResponse",
+    "NotificationListResponse",
+    "UnreadCountResponse",
+    "MarkNotificationReadResponse",
+    "MarkAllNotificationsReadResponse",
+    "CreateOtherNotificationRequest",
+    "CreateJobNotificationRequest",
 ]
