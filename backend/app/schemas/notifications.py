@@ -49,6 +49,10 @@ class NotificationListResponse(BaseModel):
         default_factory=list, description="Danh sách thông báo hệ thống / kiểm duyệt"
     )
     total_unread: int = Field(0, description="Tổng số lượng thông báo chưa đọc")
+    total: int = Field(0, description="Tổng số lượng thông báo thỏa mãn điều kiện lọc")
+    page: int = Field(1, description="Trang hiện tại")
+    limit: int = Field(20, description="Số lượng thông báo trên mỗi trang")
+    total_pages: int = Field(0, description="Tổng số trang")
 
 
 class UnreadCountResponse(BaseModel):

@@ -113,52 +113,101 @@ def get_candidate_job_notifications(
 def get_notifications_for_account(
     db: Session,
     account_id: uuid.UUID,
+    page: int = 1,
+    limit: int = 20,
+    is_read: Optional[bool] = None,
+    notification_type: Optional[str] = None,
     unread_only: bool = False,
-    limit: int = 50,
 ) -> dict[str, Any]:
-    """Lấy toàn bộ thông báo hệ thống và gợi ý việc làm cho tài khoản."""
-    other_notifs = get_account_notifications(
-        db=db, account_id=account_id, unread_only=unread_only, limit=limit
-    )
+    """Lấy danh sách thông báo hệ thống và gợi ý việc làm kèm phân trang và bộ lọc trạng thái/loại."""
+    # Xác định trạng thái đọc
+    effective_is_read = is_read
+    if effective_is_read is None and unread_only:
+        effective_is_read = False
+
+    type_clean = notification_type.strip().upper() if notification_type else None
+    offset = (page - 1) * limit
 
     candidate = db.scalar(
         select(CandidateProfile).where(CandidateProfile.account_id == account_id)
     )
-    job_notifs: list[JobNotification] = []
-    if candidate:
-        job_notifs = get_candidate_job_notifications(
-            db=db,
-            candidate_id=candidate.candidate_id,
-            unread_only=unread_only,
-            limit=limit,
-        )
 
-    # Đếm tổng số thông báo chưa đọc
-    unread_other = (
-        db.scalar(
-            select(func.count(OtherNotification.notification_id)).where(
-                OtherNotification.account_id == account_id,
-                OtherNotification.is_read.is_(False),
-            )
+    # 1. Xử lý job_notifications (nếu loại yêu cầu bao gồm JOB)
+    job_notifs: list[JobNotification] = []
+    total_job = 0
+    allow_job = type_clean in [None, "ALL", "JOB", "JOB_SUGGESTION"]
+    if allow_job and candidate:
+        query_job = select(JobNotification).where(
+            JobNotification.candidate_id == candidate.candidate_id
         )
-        or 0
-    )
-    unread_job = 0
-    if candidate:
-        unread_job = (
+        if effective_is_read is not None:
+            query_job = query_job.where(JobNotification.is_read.is_(effective_is_read))
+
+        total_job = (
             db.scalar(
-                select(func.count(JobNotification.notification_id)).where(
-                    JobNotification.candidate_id == candidate.candidate_id,
-                    JobNotification.is_read.is_(False),
+                select(func.count()).select_from(
+                    query_job.subquery()
                 )
             )
             or 0
         )
+        job_notifs = list(
+            db.scalars(
+                query_job.order_by(JobNotification.created_at.desc())
+                .offset(offset)
+                .limit(limit)
+            ).all()
+        )
+
+    # 2. Xử lý other_notifications (nếu loại yêu cầu bao gồm SYSTEM / OTHER hoặc mã cụ thể)
+    other_notifs: list[OtherNotification] = []
+    total_other = 0
+    allow_other = type_clean not in ["JOB", "JOB_SUGGESTION"]
+    if allow_other:
+        query_other = select(OtherNotification).where(
+            OtherNotification.account_id == account_id
+        )
+        if effective_is_read is not None:
+            query_other = query_other.where(
+                OtherNotification.is_read.is_(effective_is_read)
+            )
+
+        if type_clean and type_clean not in ["ALL", "SYSTEM", "OTHER"]:
+            query_other = query_other.where(
+                OtherNotification.notification_type == type_clean
+            )
+
+        total_other = (
+            db.scalar(
+                select(func.count()).select_from(
+                    query_other.subquery()
+                )
+            )
+            or 0
+        )
+        other_notifs = list(
+            db.scalars(
+                query_other.order_by(OtherNotification.created_at.desc())
+                .offset(offset)
+                .limit(limit)
+            ).all()
+        )
+
+    # 3. Đếm tổng số thông báo chưa đọc toàn bộ của tài khoản (dành cho badge)
+    unread_counts = get_unread_count(db=db, account_id=account_id)
+    total_unread = unread_counts["total_unread"]
+
+    total = total_job + total_other
+    total_pages = (total + limit - 1) // limit if limit > 0 and total > 0 else (0 if total == 0 else 1)
 
     return {
         "job_notifications": job_notifs,
         "other_notifications": other_notifs,
-        "total_unread": unread_other + unread_job,
+        "total_unread": total_unread,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": total_pages,
     }
 
 

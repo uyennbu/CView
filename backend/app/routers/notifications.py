@@ -25,18 +25,33 @@ router = APIRouter(prefix="/notifications", tags=["Notifications (Thông báo Jo
 
 @router.get("", response_model=NotificationListResponse)
 def list_notifications(
-    unread_only: bool = Query(False, description="Chỉ lấy các thông báo chưa đọc"),
-    limit: int = Query(50, ge=1, le=100, description="Số lượng thông báo tối đa"),
+    page: int = Query(1, ge=1, description="Số thứ tự trang hiện tại"),
+    limit: int = Query(20, ge=1, le=100, description="Số lượng thông báo tối đa mỗi trang"),
+    is_read: Optional[bool] = Query(
+        None, description="Lọc theo trạng thái đã đọc: True (đã đọc), False (chưa đọc), None (tất cả)"
+    ),
+    type: Optional[str] = Query(
+        None,
+        description=(
+            "Lọc theo loại: 'ALL', 'JOB' (gợi ý việc làm), 'SYSTEM' (thông báo hệ thống), "
+            "hoặc chi tiết: 'JOB_APPROVAL_STATUS', 'APPLICATION_UPDATE', "
+            "'CV_PARSE_COMPLETED', 'ACCOUNT_SECURITY', 'SYSTEM_ANNOUNCEMENT'"
+        ),
+    ),
+    unread_only: bool = Query(False, description="Tương thích ngược: Nếu True tương đương is_read=False"),
     token_payload: dict = Depends(get_current_token_payload),
     db: Session = Depends(get_db),
 ):
-    """Lấy danh sách job_notifications và other_notifications cho chuông thông báo trên Navbar."""
+    """Lấy danh sách job_notifications và other_notifications (hỗ trợ phân trang, lọc theo loại, chưa đọc/đã đọc)."""
     account_id = uuid.UUID(token_payload.get("sub"))
     notif_data = notification_service.get_notifications_for_account(
         db=db,
         account_id=account_id,
-        unread_only=unread_only,
+        page=page,
         limit=limit,
+        is_read=is_read,
+        notification_type=type,
+        unread_only=unread_only,
     )
 
     job_notifs_formatted = []
@@ -57,6 +72,10 @@ def list_notifications(
         job_notifications=job_notifs_formatted,
         other_notifications=other_notifs_formatted,
         total_unread=notif_data["total_unread"],
+        total=notif_data["total"],
+        page=notif_data["page"],
+        limit=notif_data["limit"],
+        total_pages=notif_data["total_pages"],
     )
 
 

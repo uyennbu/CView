@@ -298,3 +298,107 @@ def test_auto_generate_job_notifications_on_approval(
     matched = [jn for jn in jobs_notifs if jn["job_post_id"] == str(sample_job_post.job_post_id)]
     assert len(matched) == 1
     assert "ReactJS" in matched[0]["title"]
+
+
+def test_list_notifications_pagination_and_filtering(
+    client, db_session, candidate_user, sample_job_post
+):
+    """Kiểm thử toàn diện API GET /notifications: phân trang, lọc theo loại, lọc chưa đọc/đã đọc."""
+    cand_headers, cand_account, candidate = candidate_user
+
+    # Tạo 2 other_notifications: 1 đã đọc, 1 chưa đọc
+    on_read = OtherNotification(
+        account_id=cand_account.account_id,
+        notification_type="SYSTEM_ANNOUNCEMENT",
+        title="Thông báo hệ thống đã đọc",
+        message="Hệ thống đã nâng cấp phiên bản mới",
+        is_read=True,
+    )
+    on_unread = OtherNotification(
+        account_id=cand_account.account_id,
+        notification_type="ACCOUNT_SECURITY",
+        title="Cảnh báo bảo mật",
+        message="Phát hiện đăng nhập mới",
+        is_read=False,
+    )
+    # Tạo 2 job_notifications: 1 đã đọc, 1 chưa đọc
+    jn_read = JobNotification(
+        candidate_id=candidate.candidate_id,
+        job_post_id=sample_job_post.job_post_id,
+        title="Job đã đọc",
+        content="Nội dung job đã đọc",
+        is_read=True,
+    )
+    jn_unread = JobNotification(
+        candidate_id=candidate.candidate_id,
+        job_post_id=sample_job_post.job_post_id,
+        title="Job chưa đọc",
+        content="Nội dung job chưa đọc",
+        is_read=False,
+    )
+    db_session.add_all([on_read, on_unread, jn_read, jn_unread])
+    db_session.commit()
+
+    # 1. Lọc chưa đọc (is_read=false)
+    res_unread = client.get("/api/v1/notifications?is_read=false", headers=cand_headers)
+    assert res_unread.status_code == 200
+    data_unread = res_unread.json()
+    assert all(not j["is_read"] for j in data_unread["job_notifications"])
+    assert all(not o["is_read"] for o in data_unread["other_notifications"])
+    assert data_unread["total"] == 2
+
+    # 2. Lọc đã đọc (is_read=true)
+    res_read = client.get("/api/v1/notifications?is_read=true", headers=cand_headers)
+    assert res_read.status_code == 200
+    data_read = res_read.json()
+    assert all(j["is_read"] for j in data_read["job_notifications"])
+    assert all(o["is_read"] for o in data_read["other_notifications"])
+    assert data_read["total"] == 2
+
+    # 3. Lọc theo loại việc làm (type=JOB)
+    res_job_type = client.get("/api/v1/notifications?type=JOB", headers=cand_headers)
+    assert res_job_type.status_code == 200
+    data_job_type = res_job_type.json()
+    assert len(data_job_type["job_notifications"]) == 2
+    assert len(data_job_type["other_notifications"]) == 0
+    assert data_job_type["total"] == 2
+
+    # 4. Lọc theo loại hệ thống (type=SYSTEM)
+    res_sys_type = client.get("/api/v1/notifications?type=SYSTEM", headers=cand_headers)
+    assert res_sys_type.status_code == 200
+    data_sys_type = res_sys_type.json()
+    assert len(data_sys_type["job_notifications"]) == 0
+    assert len(data_sys_type["other_notifications"]) == 2
+    assert data_sys_type["total"] == 2
+
+    # 5. Lọc theo mã loại chi tiết (type=ACCOUNT_SECURITY)
+    res_detail_type = client.get(
+        "/api/v1/notifications?type=ACCOUNT_SECURITY", headers=cand_headers
+    )
+    assert res_detail_type.status_code == 200
+    data_detail_type = res_detail_type.json()
+    assert len(data_detail_type["job_notifications"]) == 0
+    assert len(data_detail_type["other_notifications"]) == 1
+    assert data_detail_type["other_notifications"][0]["notification_type"] == "ACCOUNT_SECURITY"
+
+    # 6. Kiểm tra phân trang (page=1, limit=1)
+    res_page1 = client.get(
+        "/api/v1/notifications?type=JOB&page=1&limit=1", headers=cand_headers
+    )
+    assert res_page1.status_code == 200
+    p1_data = res_page1.json()
+    assert len(p1_data["job_notifications"]) == 1
+    assert p1_data["page"] == 1
+    assert p1_data["limit"] == 1
+    assert p1_data["total"] == 2
+    assert p1_data["total_pages"] == 2
+
+    res_page2 = client.get(
+        "/api/v1/notifications?type=JOB&page=2&limit=1", headers=cand_headers
+    )
+    assert res_page2.status_code == 200
+    p2_data = res_page2.json()
+    assert len(p2_data["job_notifications"]) == 1
+    assert p2_data["page"] == 2
+    assert p1_data["job_notifications"][0]["notification_id"] != p2_data["job_notifications"][0]["notification_id"]
+
