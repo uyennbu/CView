@@ -110,30 +110,35 @@ def mark_all_notifications_read(
 @router.patch("/{notification_id}/read", response_model=MarkNotificationReadResponse)
 def mark_notification_read(
     notification_id: int,
+    type: Optional[str] = Query(
+        None,
+        description="Loại thông báo: 'JOB' (việc làm) hoặc 'SYSTEM'/'OTHER' (hệ thống) để tối ưu tìm kiếm",
+    ),
     token_payload: dict = Depends(get_current_token_payload),
     db: Session = Depends(get_db),
 ):
     """Đánh dấu 1 thông báo là đã đọc (hỗ trợ cả thông báo hệ thống và việc làm)."""
     account_id = uuid.UUID(token_payload.get("sub"))
-    notif = notification_service.mark_notification_as_read(
+    result = notification_service.mark_notification_as_read(
         db=db,
         notification_id=notification_id,
         account_id=account_id,
+        notification_type=type,
     )
-    if not notif:
-        return MarkNotificationReadResponse(
-            success=False,
-            notification_id=notification_id,
-            is_read=False,
-            read_at=None,
-            message="Thông báo không tồn tại hoặc không thuộc quyền sở hữu.",
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Thông báo không tồn tại hoặc bạn không có quyền truy cập.",
         )
+
+    notif, notif_type = result
     return MarkNotificationReadResponse(
         success=True,
         notification_id=notif.notification_id,
         is_read=notif.is_read,
         read_at=notif.read_at,
-        message="Đã cập nhật trạng thái đã đọc thành công.",
+        notification_type=notif_type,
+        message="Đánh dấu thông báo đã đọc thành công.",
     )
 
 

@@ -402,3 +402,77 @@ def test_list_notifications_pagination_and_filtering(
     assert p2_data["page"] == 2
     assert p1_data["job_notifications"][0]["notification_id"] != p2_data["job_notifications"][0]["notification_id"]
 
+
+def test_mark_notification_read_endpoints(client, db_session, candidate_user, admin_user, sample_job_post):
+    """Kiểm thử chi tiết API PATCH /notifications/{notification_id}/read."""
+    cand_headers, cand_account, candidate = candidate_user
+    admin_headers, admin_account = admin_user
+
+    # 1. Tạo 1 job_notification và 1 other_notification chưa đọc
+    job_notif = JobNotification(
+        candidate_id=candidate.candidate_id,
+        job_post_id=sample_job_post.job_post_id,
+        title="Thông báo tuyển dụng chưa đọc",
+        content="Chi tiết vị trí mới",
+        is_read=False,
+    )
+    other_notif = OtherNotification(
+        account_id=cand_account.account_id,
+        notification_type="SYSTEM_ANNOUNCEMENT",
+        title="Thông báo hệ thống chưa đọc",
+        message="Bảo trì vào cuối tuần",
+        is_read=False,
+    )
+    db_session.add_all([job_notif, other_notif])
+    db_session.commit()
+    db_session.refresh(job_notif)
+    db_session.refresh(other_notif)
+
+    # 2. Đánh dấu đọc job_notification kèm query param type=JOB
+    res_job = client.patch(
+        f"/api/v1/notifications/{job_notif.notification_id}/read?type=JOB",
+        headers=cand_headers,
+    )
+    assert res_job.status_code == 200
+    job_data = res_job.json()
+    assert job_data["success"] is True
+    assert job_data["is_read"] is True
+    assert job_data["notification_type"] == "JOB"
+    assert job_data["read_at"] is not None
+
+    # 3. Đánh dấu đọc other_notification kèm query param type=SYSTEM
+    res_other = client.patch(
+        f"/api/v1/notifications/{other_notif.notification_id}/read?type=SYSTEM",
+        headers=cand_headers,
+    )
+    assert res_other.status_code == 200
+    other_data = res_other.json()
+    assert other_data["success"] is True
+    assert other_data["is_read"] is True
+    assert other_data["notification_type"] == "SYSTEM_ANNOUNCEMENT"
+    assert other_data["read_at"] is not None
+
+    # 4. Đánh dấu đọc lại thông báo đã đọc (idempotent, giữ nguyên read_at)
+    first_read_at = other_data["read_at"]
+    res_re_read = client.patch(
+        f"/api/v1/notifications/{other_notif.notification_id}/read",
+        headers=cand_headers,
+    )
+    assert res_re_read.status_code == 200
+    assert res_re_read.json()["read_at"] == first_read_at
+
+    # 5. ID không tồn tại -> 404 Not Found
+    res_404 = client.patch(
+        "/api/v1/notifications/99999999/read",
+        headers=cand_headers,
+    )
+    assert res_404.status_code == 404
+
+    # 6. Người dùng khác cố tình đọc thông báo không thuộc quyền sở hữu -> 404 Not Found
+    res_forbidden = client.patch(
+        f"/api/v1/notifications/{other_notif.notification_id}/read",
+        headers=admin_headers,
+    )
+    assert res_forbidden.status_code == 404
+
+

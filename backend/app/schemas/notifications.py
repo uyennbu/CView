@@ -70,6 +70,9 @@ class MarkNotificationReadResponse(BaseModel):
     notification_id: int
     is_read: bool
     read_at: Optional[datetime] = None
+    notification_type: Optional[str] = Field(
+        None, description="Loại thông báo ('JOB' hoặc mã loại thông báo hệ thống)"
+    )
     message: Optional[str] = None
 
 

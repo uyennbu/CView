@@ -249,31 +249,37 @@ def mark_notification_as_read(
     db: Session,
     notification_id: int,
     account_id: uuid.UUID,
-) -> Optional[Any]:
+    notification_type: Optional[str] = None,
+) -> Optional[tuple[Any, str]]:
     """Đánh dấu một thông báo là đã đọc (hỗ trợ cả OtherNotification và JobNotification)."""
     now_utc = datetime.now(timezone.utc)
+    type_clean = notification_type.strip().upper() if notification_type else None
 
-    # 1. Kiểm tra trong other_notifications
-    other_notif = db.get(OtherNotification, notification_id)
-    if other_notif and other_notif.account_id == account_id:
-        other_notif.is_read = True
-        other_notif.read_at = now_utc
-        db.commit()
-        db.refresh(other_notif)
-        return other_notif
+    # 1. Kiểm tra trong other_notifications nếu type cho phép
+    if type_clean not in ["JOB", "JOB_SUGGESTION"]:
+        other_notif = db.get(OtherNotification, notification_id)
+        if other_notif and other_notif.account_id == account_id:
+            if not other_notif.is_read:
+                other_notif.is_read = True
+                other_notif.read_at = now_utc
+                db.commit()
+                db.refresh(other_notif)
+            return other_notif, other_notif.notification_type
 
-    # 2. Kiểm tra trong job_notifications nếu tài khoản là Candidate
-    candidate = db.scalar(
-        select(CandidateProfile).where(CandidateProfile.account_id == account_id)
-    )
-    if candidate:
-        job_notif = db.get(JobNotification, notification_id)
-        if job_notif and job_notif.candidate_id == candidate.candidate_id:
-            job_notif.is_read = True
-            job_notif.read_at = now_utc
-            db.commit()
-            db.refresh(job_notif)
-            return job_notif
+    # 2. Kiểm tra trong job_notifications nếu tài khoản là Candidate và type cho phép
+    if type_clean in [None, "ALL", "JOB", "JOB_SUGGESTION"]:
+        candidate = db.scalar(
+            select(CandidateProfile).where(CandidateProfile.account_id == account_id)
+        )
+        if candidate:
+            job_notif = db.get(JobNotification, notification_id)
+            if job_notif and job_notif.candidate_id == candidate.candidate_id:
+                if not job_notif.is_read:
+                    job_notif.is_read = True
+                    job_notif.read_at = now_utc
+                    db.commit()
+                    db.refresh(job_notif)
+                return job_notif, "JOB"
 
     return None
 
