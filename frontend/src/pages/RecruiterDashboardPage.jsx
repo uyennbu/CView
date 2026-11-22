@@ -1,8 +1,10 @@
+
 export default function RecruiterDashboardPage() {
   return (
-    <div className="mx-auto max-w-[1440px] px-6 py-16 lg:px-14 min-h-[60vh]">
-      {/* Trang thống kê Dashboard của Nhà tuyển dụng (đang để trống để hoàn thiện sau) */}
-    </div>
+    <main className="min-h-[60vh] w-full">
+      <div className="mx-auto min-h-[60vh] w-full max-w-[1440px] px-4 py-10 sm:px-6 sm:py-12 lg:px-14 lg:py-16">
+        {/* Trang thống kê Dashboard của Nhà tuyển dụng */}
+      </div>
+    </main>
   )
 }
-

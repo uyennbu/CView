@@ -15,27 +15,64 @@ export default function CVAnalysisPage() {
   }
 
   return (
-    <main className="relative mx-auto min-h-[80vh] w-full max-w-[1440px] px-4 py-8 sm:px-6 sm:py-12 lg:px-14">
+    <main className="relative min-h-[80vh] w-full overflow-x-clip">
+      <div
+        className="
+          mx-auto w-full max-w-[1440px]
+          px-4 py-8
+          sm:px-6 sm:py-10
+          md:py-12
+          lg:px-14 lg:py-14
+        "
+      >
+        {!showResults ? (
+          <>
+            {/* Page Heading */}
+            <section
+              className="
+                mx-auto mb-8 w-full max-w-3xl
+                text-center
+                sm:mb-10
+                lg:mb-12
+              "
+            >
+              <h1
+                className="
+                  break-words text-3xl font-extrabold
+                  uppercase leading-tight tracking-tight
+                  text-cview-dark
+                  sm:text-4xl
+                  md:text-5xl
+                "
+              >
+                Phân tích CV
+              </h1>
 
-      {!showResults ? (
-        <>
-          <section className="mx-auto mb-8 max-w-3xl text-center">
-            <h1 className="text-3xl font-extrabold uppercase text-cview-dark sm:text-4xl lg:text-5xl">
-              Phân tích CV
-            </h1>
+              <p
+                className="
+                  mx-auto mt-3 max-w-2xl
+                  text-sm leading-relaxed text-cview-dark
+                  sm:mt-4 sm:text-base
+                  md:text-lg
+                "
+              >
+                Phân tích độ phù hợp của CV với các công việc đang có,
+                gợi ý cách cải thiện CV, nâng cao cơ hội nghề nghiệp.
+              </p>
+            </section>
 
-            <p className="mt-4 text-sm leading-relaxed text-cview-dark sm:text-base lg:text-lg">
-              Phân tích độ phù hợp của CV với các công việc đang có,
-              gợi ý cách cải thiện CV, nâng cao cơ hội nghề nghiệp.
-            </p>
+            {/* CV Upload */}
+            <section className="mx-auto w-full max-w-5xl">
+              <CVUpload onAnalyze={handleAnalyze} />
+            </section>
+          </>
+        ) : (
+          /* Analysis Results */
+          <section className="w-full min-w-0">
+            <CVAnalysisOverview />
           </section>
-
-          <CVUpload onAnalyze={handleAnalyze} />
-        </>
-      ) : (
-        <CVAnalysisOverview />
-      )}
-
+        )}
+      </div>
     </main>
   )
 }
