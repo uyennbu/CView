@@ -78,7 +78,10 @@ const categories = [
   'Business',
 ]
 
-export default function MatchingJobs({ jobs = sampleJobs, onViewDetails }) {
+export default function MatchingJobs({
+  jobs = sampleJobs,
+  onViewDetails,
+}) {
   const [activeCategory, setActiveCategory] = useState('Tất cả')
 
   const filteredJobs = useMemo(() => {
@@ -88,27 +91,61 @@ export default function MatchingJobs({ jobs = sampleJobs, onViewDetails }) {
   }, [jobs, activeCategory])
 
   return (
-    <section className="mt-6 w-full rounded-2xl border border-[#E5EDE2] bg-white/95 p-4 shadow-sm sm:mt-8 sm:p-6">
-
-      {/* Section heading */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-xl font-extrabold text-cview-dark sm:text-2xl">
-            Công việc <span className="text-cview-green">phù hợp với bạn</span>
+    <section className="
+      mt-5 w-full min-w-0 overflow-hidden
+      rounded-2xl border border-[#E5EDE2]
+      bg-white/95 p-3 shadow-sm
+      sm:mt-8 sm:p-5
+      lg:p-6
+    ">
+      {/* Section Heading */}
+      <div className="
+        flex min-w-0 flex-col gap-2
+        sm:flex-row sm:items-end sm:justify-between
+        sm:gap-4
+      ">
+        <div className="min-w-0">
+          <h2 className="
+            break-words text-lg font-extrabold
+            leading-snug text-cview-dark
+            sm:text-xl lg:text-2xl
+          ">
+            Công việc{' '}
+            <span className="text-cview-green">
+              phù hợp với bạn
+            </span>
           </h2>
 
-          <p className="mt-1 text-xs leading-relaxed text-gray-500 sm:text-sm">
+          <p className="
+            mt-1 max-w-2xl text-xs
+            leading-relaxed text-gray-500
+            sm:text-sm
+          ">
             Dựa trên kỹ năng, kinh nghiệm và mức độ phù hợp trong CV của bạn.
           </p>
         </div>
 
-        <span className="text-xs font-semibold text-cview-primary">
+        <span className="
+          inline-flex w-fit shrink-0
+          items-center rounded-full
+          bg-cview-mint px-3 py-1.5
+          text-[11px] font-semibold
+          text-cview-primary
+          sm:text-xs
+        ">
           {filteredJobs.length} công việc được đề xuất
         </span>
       </div>
 
-      {/* Category filters */}
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+      {/* Category Filters */}
+      <div
+        className="
+          mt-4 flex w-full min-w-0
+          gap-2 overflow-x-auto overscroll-x-contain
+          pb-2
+        "
+        aria-label="Lọc công việc theo danh mục"
+      >
         {categories.map((category) => {
           const isActive = activeCategory === category
 
@@ -117,11 +154,23 @@ export default function MatchingJobs({ jobs = sampleJobs, onViewDetails }) {
               key={category}
               type="button"
               onClick={() => setActiveCategory(category)}
-              className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${
-                isActive
-                  ? 'border-cview-green bg-cview-green text-white'
-                  : 'border-[#DCE8D8] bg-white text-gray-600 hover:border-cview-green hover:text-cview-primary'
-              }`}
+              aria-pressed={isActive}
+              className={`
+                min-h-9 shrink-0 whitespace-nowrap
+                rounded-full border px-3 py-2
+                text-[11px] font-semibold
+                transition-colors duration-200
+                sm:px-4 sm:text-xs
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-cview-green
+                focus-visible:ring-offset-2
+                ${
+                  isActive
+                    ? 'border-cview-green bg-cview-green text-white'
+                    : 'border-[#DCE8D8] bg-white text-gray-600 hover:border-cview-green hover:text-cview-primary'
+                }
+              `}
             >
               {category}
             </button>
@@ -129,25 +178,41 @@ export default function MatchingJobs({ jobs = sampleJobs, onViewDetails }) {
         })}
       </div>
 
-      {/* Job list */}
-      <div className="mt-3 space-y-3">
+      {/* Job List */}
+      <div className="
+        mt-3 flex min-w-0 flex-col gap-3
+        sm:mt-4 sm:gap-4
+      ">
         {filteredJobs.length > 0 ? (
           filteredJobs.map((job) => (
-            <JobMatchCard
-              key={job.id}
-              job={job}
-              onViewDetails={onViewDetails}
-            />
+            <div key={job.id} className="w-full min-w-0">
+              <JobMatchCard
+                job={job}
+                onViewDetails={onViewDetails}
+              />
+            </div>
           ))
         ) : (
-          <div className="rounded-xl bg-gray-50 px-4 py-10 text-center">
-            <p className="text-sm font-semibold text-gray-600">
+          <div className="
+            rounded-xl bg-gray-50
+            px-4 py-8 text-center
+            sm:py-10
+          ">
+            <p className="
+              text-xs font-semibold
+              leading-relaxed text-gray-600
+              sm:text-sm
+            ">
               Chưa có công việc phù hợp trong danh mục này.
             </p>
+
             <button
               type="button"
               onClick={() => setActiveCategory('Tất cả')}
-              className="mt-3 text-xs font-bold text-cview-primary hover:underline"
+              className="
+                mt-3 text-xs font-bold
+                text-cview-primary hover:underline
+              "
             >
               Xem tất cả công việc
             </button>
@@ -155,8 +220,12 @@ export default function MatchingJobs({ jobs = sampleJobs, onViewDetails }) {
         )}
       </div>
 
-      {/* Footer note */}
-      <p className="mt-4 text-[10px] leading-relaxed text-gray-400">
+      {/* Footer Note */}
+      <p className="
+        mt-4 border-t border-gray-100
+        pt-3 text-[10px] leading-relaxed
+        text-gray-400 sm:mt-5
+      ">
         * Danh sách và tỷ lệ phù hợp hiện tại là dữ liệu minh họa phục vụ kiểm thử giao diện.
       </p>
     </section>
