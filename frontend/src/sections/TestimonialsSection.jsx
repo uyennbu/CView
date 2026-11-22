@@ -52,14 +52,14 @@ function TestimonialCard({ testimonial, index, active, onSelect }) {
           onSelect(index)
         }
       }}
-      className={`relative flex h-full cursor-pointer flex-col items-center rounded-[26px] border bg-[#FFFFF8]/90 px-4 pb-5 pt-5 shadow-[0_8px_24px_rgba(77,139,54,0.06)] transition-all duration-500 ease-out ${
+      className={`relative flex h-full cursor-pointer flex-col items-center rounded-[26px] border bg-[#FFFFF8]/90 px-4 pb-5 pt-5 shadow-[0_8px_24px_rgba(77,139,54,0.06)] transition-all duration-300 ease-out ${
         active
-          ? 'z-10 scale-[1.03] border-[#4CAF50] shadow-[0_16px_35px_rgba(77,139,54,0.18)] lg:scale-[1.07]'
-          : 'z-0 scale-[0.97] border-[#A8D987] opacity-80 hover:opacity-100 lg:scale-[0.94]'
+          ? 'z-10 scale-[1.02] border-[#4CAF50] shadow-[0_16px_35px_rgba(77,139,54,0.18)]'
+          : 'z-0 scale-[0.98] border-[#A8D987] opacity-90 hover:opacity-100'
       }`}
     >
       {/* Avatar and decorative frame */}
-      <div className="relative mb-3 aspect-square w-[145px] max-w-full">
+      <div className="relative mb-3 aspect-square w-[125px] max-w-full sm:w-[145px]">
         {testimonial.avatar ? (
           <img
             src={testimonial.avatar}
@@ -67,7 +67,7 @@ function TestimonialCard({ testimonial, index, active, onSelect }) {
             className="absolute inset-[13%] h-[74%] w-[74%] rounded-[18px] object-cover"
           />
         ) : (
-          <div className="absolute inset-[16%] flex items-center justify-center rounded-[18px] bg-gradient-to-br from-[#E5F7D9] to-[#B9E9A5] text-5xl font-extrabold text-[#347C36]">
+          <div className="absolute inset-[16%] flex items-center justify-center rounded-[18px] bg-gradient-to-br from-[#E5F7D9] to-[#B9E9A5] text-4xl font-extrabold text-[#347C36] sm:text-5xl">
             {testimonial.initials}
           </div>
         )}
@@ -84,17 +84,17 @@ function TestimonialCard({ testimonial, index, active, onSelect }) {
             src={sparkleSmall}
             alt=""
             aria-hidden="true"
-            className="absolute -right-2 -top-2 w-8"
+            className="absolute -right-2 -top-2 w-7 sm:w-8"
           />
         )}
       </div>
 
       {/* User information */}
-      <h3 className="text-center text-sm font-extrabold text-[#26351E] md:text-base">
+      <h3 className="text-center text-sm font-extrabold text-[#26351E] sm:text-base">
         {testimonial.name}
       </h3>
 
-      <p className="mt-1 text-center text-xs font-medium text-[#46513E] md:text-sm">
+      <p className="mt-1 text-center text-xs font-medium text-[#46513E] sm:text-sm">
         {testimonial.role}
       </p>
 
@@ -104,7 +104,7 @@ function TestimonialCard({ testimonial, index, active, onSelect }) {
         aria-label="Đánh giá minh họa 5 trên 5 sao"
       >
         {Array.from({ length: 5 }).map((_, starIndex) => (
-          <span key={starIndex} className="text-base md:text-lg">
+          <span key={starIndex} className="text-base sm:text-lg">
             ★
           </span>
         ))}
@@ -116,7 +116,7 @@ function TestimonialCard({ testimonial, index, active, onSelect }) {
           “
         </span>
 
-        <p className="text-justify text-xs leading-[1.6] text-[#30392B] md:text-sm">
+        <p className="text-justify text-xs leading-[1.6] text-[#30392B] sm:text-sm">
           {testimonial.quote}
         </p>
       </div>
@@ -127,10 +127,22 @@ function TestimonialCard({ testimonial, index, active, onSelect }) {
 function TestimonialsSection() {
   const [activeIndex, setActiveIndex] = useState(0)
 
+  const showPrevious = () => {
+    setActiveIndex((prev) => (
+      prev - 1 + testimonials.length
+    ) % testimonials.length)
+  }
+
+  const showNext = () => {
+    setActiveIndex((prev) => (
+      prev + 1
+    ) % testimonials.length)
+  }
+
   return (
     <section
       id="danh-gia"
-      className="relative isolate min-h-screen overflow-hidden bg-transparent px-5 py-16 md:px-10 lg:px-[8%] lg:py-20"
+      className="relative isolate w-full overflow-hidden bg-transparent px-4 py-12 sm:px-6 sm:py-16 md:px-10 lg:px-[8%] lg:py-20"
     >
       {/* Background decorations */}
       <div className="pointer-events-none absolute -left-24 -top-24 -z-10 h-64 w-64 rounded-full bg-[#D9F6D2]/70 blur-3xl" />
@@ -139,76 +151,73 @@ function TestimonialsSection() {
 
       <div className="pointer-events-none absolute -bottom-28 left-1/4 -z-10 h-64 w-96 rounded-full bg-[#E4F8D8]/70 blur-3xl" />
 
-      <div className="relative mx-auto max-w-6xl">
+      <div className="relative mx-auto w-full max-w-6xl">
         {/* Section heading */}
         <ScrollReveal direction="up">
-          <div className="relative mx-auto mb-8 flex w-fit items-center justify-center">
-            {/* Left sparkle */}
+          <div className="relative mx-auto mb-8 flex w-fit max-w-full items-center justify-center px-7">
             <img
               src={sparkleMedium}
               alt=""
               aria-hidden="true"
-              className="absolute -left-10 -top-5 w-10 -rotate-[20deg] md:w-12"
+              className="absolute left-0 top-1/2 w-6 -translate-x-full -translate-y-1/2 -rotate-[20deg] sm:w-10 md:w-12"
             />
 
-            <h2 className="text-center text-2xl font-extrabold tracking-tight text-[#26351E] md:text-3xl lg:text-4xl">
+            <h2 className="text-center text-xl font-extrabold tracking-tight text-[#26351E] sm:text-2xl md:text-3xl lg:text-4xl">
               ĐÁNH GIÁ TỪ NGƯỜI DÙNG
             </h2>
 
-            {/* Right sparkle */}
             <img
               src={sparkleMedium}
               alt=""
               aria-hidden="true"
-              className="absolute -right-10 -top-5 w-10 scale-x-[-1] rotate-[20deg] md:w-12"
+              className="absolute right-0 top-1/2 w-6 translate-x-full -translate-y-1/2 scale-x-[-1] rotate-[20deg] sm:w-10 md:w-12"
             />
           </div>
         </ScrollReveal>
 
         {/* Achievement banner */}
         <ScrollReveal direction="up" delay={100}>
-          <div className="relative mx-auto mb-14 flex w-full max-w-[900px] items-center justify-center gap-4 rounded-full border border-[#A6D96F] bg-gradient-to-r from-[#F5FBD9] via-[#FFFFE9] to-[#F4FBD9] px-7 py-5 shadow-[0_5px_20px_rgba(130,174,76,0.08)] md:gap-7 md:px-12 md:py-6">
-            {/* Briefcase icon */}
+          <div className="relative mx-auto mb-10 flex w-full max-w-[900px] flex-col items-center justify-center gap-3 rounded-3xl border border-[#A6D96F] bg-gradient-to-r from-[#F5FBD9] via-[#FFFFE9] to-[#F4FBD9] px-4 py-5 shadow-[0_5px_20px_rgba(130,174,76,0.08)] sm:flex-row sm:gap-4 sm:rounded-full sm:px-7 md:mb-14 md:gap-7 md:px-12 md:py-6">
             <img
               src={bannerIcon}
               alt=""
-              className="h-16 w-16 shrink-0 object-contain md:h-20 md:w-20"
+              aria-hidden="true"
+              className="h-12 w-12 shrink-0 object-contain sm:h-14 sm:w-14 md:h-20 md:w-20"
             />
 
             <div className="flex min-w-0 flex-col items-center">
-              <div className="flex flex-wrap items-center justify-center gap-3 md:gap-5">
-                <span className="text-base font-extrabold text-[#26351E] md:text-lg lg:text-xl">
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-5">
+                <span className="text-sm font-extrabold text-[#26351E] sm:text-base md:text-lg lg:text-xl">
                   HƠN
                 </span>
 
                 <img
                   src={bannerNumber}
                   alt="1.000 cộng"
-                  className="w-40 object-contain md:w-56 lg:w-60"
+                  className="w-32 object-contain sm:w-40 md:w-56 lg:w-60"
                 />
 
-                <span className="max-w-[170px] text-sm font-extrabold leading-tight text-[#26351E] md:text-base">
+                <span className="max-w-[180px] text-center text-xs font-extrabold leading-tight text-[#26351E] sm:text-sm md:text-base">
                   NGƯỜI ĐÃ TÌM ĐƯỢC CÔNG VIỆC ƯNG Ý
                 </span>
               </div>
 
-              <p className="mt-2 text-center text-xs font-medium text-[#34432B] md:text-sm">
+              <p className="mt-2 text-center text-xs font-medium text-[#34432B] sm:text-sm">
                 Kết nối đúng cơ hội, tự tin bứt phá sự nghiệp
               </p>
             </div>
 
-            {/* Banner sparkle */}
-      <img
-  src={sparkleBurst}
-  alt=""
-  aria-hidden="true"
-  className="absolute -right-2 top-1/2 hidden w-16 -translate-y-1/2 md:block lg:w-20"
-/>
+            <img
+              src={sparkleBurst}
+              alt=""
+              aria-hidden="true"
+              className="absolute -right-2 top-1/2 hidden w-12 -translate-y-1/2 md:block lg:w-20"
+            />
           </div>
         </ScrollReveal>
 
         {/* Testimonial cards */}
-        <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+        <div className="mx-auto grid w-full max-w-[1100px] grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
           {testimonials.map((testimonial, index) => (
             <div
               key={testimonial.name}
@@ -234,22 +243,42 @@ function TestimonialsSection() {
           ))}
         </div>
 
-        {/* Carousel indicators */}
-        <div className="mt-8 flex items-center justify-center gap-3">
-          {testimonials.map((testimonial, index) => (
-            <button
-              key={testimonial.name}
-              type="button"
-              onClick={() => setActiveIndex(index)}
-              aria-label={`Xem đánh giá ${index + 1}`}
-              aria-pressed={activeIndex === index}
-              className={`h-3 rounded-full transition-all duration-300 ${
-                activeIndex === index
-                  ? 'w-3 bg-[#43A943]'
-                  : 'w-3 border-2 border-[#43A943] bg-transparent hover:bg-[#BDE8A7]'
-              }`}
-            />
-          ))}
+        {/* Carousel controls */}
+        <div className="mt-7 flex items-center justify-center gap-5 sm:mt-8">
+          <button
+            type="button"
+            onClick={showPrevious}
+            aria-label="Đánh giá trước"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#43A943] text-lg font-bold text-[#1E5631] transition hover:bg-[#E6FADD] sm:hidden"
+          >
+            ‹
+          </button>
+
+          <div className="flex items-center justify-center gap-3">
+            {testimonials.map((testimonial, index) => (
+              <button
+                key={testimonial.name}
+                type="button"
+                onClick={() => setActiveIndex(index)}
+                aria-label={`Xem đánh giá ${index + 1}`}
+                aria-pressed={activeIndex === index}
+                className={`h-3 rounded-full transition-all duration-300 ${
+                  activeIndex === index
+                    ? 'w-6 bg-[#43A943]'
+                    : 'w-3 border-2 border-[#43A943] bg-transparent hover:bg-[#BDE8A7]'
+                }`}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={showNext}
+            aria-label="Đánh giá tiếp theo"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#43A943] text-lg font-bold text-[#1E5631] transition hover:bg-[#E6FADD] sm:hidden"
+          >
+            ›
+          </button>
         </div>
       </div>
     </section>
