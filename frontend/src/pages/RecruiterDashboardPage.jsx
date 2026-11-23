@@ -117,7 +117,7 @@ export default function RecruiterDashboardPage() {
   const [formData, setFormData] = useState({
     title: '',
     domainId: '',
-    selectedSkills: ['Digital Marketing', 'SEO', 'Google Ads'],
+    selectedSkills: [],
     newSkillInput: '',
     salaryMin: '',
     salaryMax: '',
@@ -161,7 +161,7 @@ export default function RecruiterDashboardPage() {
       // Query param lọc theo trạng thái duyệt nếu người dùng chọn
       const params = new URLSearchParams()
       params.append('page', String(currentPage))
-      params.append('limit', '20')
+      params.append('limit', String(itemsPerPage))
       if (statusFilter !== 'ALL') {
         params.append('approval_status', statusFilter)
       }
@@ -170,9 +170,9 @@ export default function RecruiterDashboardPage() {
 
       // Đã kết nối thành công với Backend & DB
       setIsDbConnected(true)
-      setTotalDbCount(res.total || 0)
 
       if (res && res.items) {
+        setTotalDbCount(res.total || 0)
         const mapped = res.items.map((item) => ({
           id: item.job_id,
           title: item.title,
@@ -364,7 +364,7 @@ export default function RecruiterDashboardPage() {
       setFormData({
         title: '',
         domainId: '',
-        selectedSkills: ['Digital Marketing', 'SEO', 'Google Ads'],
+        selectedSkills: [],
         newSkillInput: '',
         salaryMin: '',
         salaryMax: '',
@@ -401,7 +401,7 @@ export default function RecruiterDashboardPage() {
       setFormData({
         title: '',
         domainId: '',
-        selectedSkills: ['Digital Marketing', 'SEO', 'Google Ads'],
+        selectedSkills: [],
         newSkillInput: '',
         salaryMin: '',
         salaryMax: '',
