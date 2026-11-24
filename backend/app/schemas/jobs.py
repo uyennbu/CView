@@ -248,18 +248,6 @@ class JobModerationResponse(BaseModel):
     message: str
 
 
-class OtherNotificationResponse(BaseModel):
-    """Schema thông báo hệ thống (bảng other_notifications)."""
-
-    notification_id: int
-    account_id: uuid.UUID
-    notification_type: str
-    title: str
-    message: str
-    is_read: bool
-    read_at: Optional[datetime] = None
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
+from app.schemas.notifications import OtherNotificationResponse
 
 
