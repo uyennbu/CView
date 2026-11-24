@@ -49,9 +49,8 @@ export default function Navbar() {
           onClick={closeMenu}
           aria-current={isActive ? 'page' : undefined}
           className={`
-            relative rounded-lg py-2 text-base font-semibold
-            transition-colors duration-200
-            ${mobile ? 'block w-full px-4' : 'whitespace-nowrap text-[18px]'}
+            relative py-2 font-semibold transition-colors
+            ${mobile ? 'block w-full rounded-lg px-4 text-base' : 'whitespace-nowrap text-[18px]'}
             ${
               isActive
                 ? 'text-[#1E5631]'
@@ -94,46 +93,30 @@ export default function Navbar() {
             }
           `}
         >
+          {/* Avatar + Tên hiển thị từ CSDL */}
           <Link
             to={accountPath}
             onClick={closeMenu}
-            className="
-              flex min-w-0 items-center gap-2 rounded-full
-              border border-[#4CAF50]/30 bg-[#E6FADD]
-              px-3 py-2 shadow-sm transition
-              hover:bg-[#d8f5cb] sm:px-4
-            "
+            className="flex items-center gap-2 rounded-full bg-[#E6FADD] px-4 py-2 border border-[#4CAF50]/30 shadow-sm transition hover:bg-[#d8f5cb]"
           >
-            <div className="
-              flex h-9 w-9 shrink-0 items-center justify-center
-              rounded-full bg-[#1E5631] text-sm font-bold
-              uppercase text-white
-            ">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1E5631] text-sm font-bold text-white uppercase">
               {(user?.full_name || user?.username || 'U')[0]}
             </div>
-
             <div className="min-w-0 text-left">
-              <div className="
-                max-w-[150px] truncate text-sm font-bold
-                leading-tight text-[#1E5631]
-              ">
+              <div className="truncate text-sm font-bold text-[#1E5631] leading-tight">
                 {user?.full_name || user?.username}
               </div>
-
-              <div className="text-[11px] font-medium text-gray-500">
+              <div className="text-[11px] text-gray-500 font-medium">
                 {user?.roles?.join(', ') || 'Ứng viên'}
               </div>
             </div>
           </Link>
 
+          {/* Nút Đăng xuất */}
           <button
             type="button"
             onClick={handleLogout}
-            className="
-              rounded-lg border border-red-200 bg-red-50
-              px-4 py-2.5 text-sm font-semibold text-red-600
-              transition-colors hover:bg-red-100
-            "
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100"
           >
             Đăng xuất
           </button>
@@ -148,19 +131,17 @@ export default function Navbar() {
           ${
             mobile
               ? 'w-full flex-col items-stretch gap-2'
-              : 'items-center gap-2 xl:gap-3'
+              : 'items-center gap-3'
           }
         `}
       >
+        {/* Khi chưa đăng nhập */}
         <Link
           to="/login"
           onClick={closeMenu}
-          className="
-            rounded-lg border border-[#1E5631]
-            px-4 py-3 text-center text-sm font-semibold
-            text-[#1A241E] transition-colors
-            hover:bg-[#E6FADD] xl:px-5
-          "
+          className={`rounded-lg border border-[#1E5631] font-semibold text-[#1A241E] transition-colors hover:bg-[#E6FADD] ${
+            mobile ? 'px-4 py-3 text-center text-sm' : 'px-6 py-3 text-[16px]'
+          }`}
         >
           Đăng nhập
         </Link>
@@ -168,11 +149,9 @@ export default function Navbar() {
         <Link
           to="/register"
           onClick={closeMenu}
-          className="
-            rounded-lg bg-[#FF4B6E] px-4 py-3
-            text-center text-sm font-semibold text-white
-            transition-colors hover:bg-[#ed3d60] xl:px-5
-          "
+          className={`rounded-lg bg-[#FF4B6E] font-semibold text-white transition-colors hover:bg-[#ed3d60] ${
+            mobile ? 'px-4 py-3 text-center text-sm' : 'px-6 py-3 text-[16px]'
+          }`}
         >
           Đăng ký
         </Link>
@@ -180,11 +159,9 @@ export default function Navbar() {
         <Link
           to="/recruiter/login"
           onClick={closeMenu}
-          className="
-            rounded-lg bg-[#1A241E] px-4 py-3
-            text-center text-sm font-semibold !text-white
-            transition-colors hover:bg-[#1E5631] xl:px-5
-          "
+          className={`rounded-lg bg-[#1A241E] font-semibold !text-white transition-colors hover:bg-[#1E5631] ${
+            mobile ? 'px-4 py-3 text-center text-sm' : 'px-6 py-3 text-[16px]'
+          }`}
         >
           Tuyển dụng
         </Link>
@@ -196,12 +173,7 @@ export default function Navbar() {
     <header className="relative z-50 w-full bg-transparent">
       <nav
         aria-label="Điều hướng chính"
-        className="
-          mx-auto flex w-full max-w-[1440px]
-          items-center justify-between gap-3
-          px-4 py-3 sm:px-6 sm:py-4
-          lg:px-8 lg:py-5 xl:px-14
-        "
+        className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-5 lg:px-14"
       >
         {/* Logo */}
         <Link
@@ -213,24 +185,21 @@ export default function Navbar() {
           <img
             src={logoCView}
             alt="CView"
-            className="
-              h-auto w-[105px] object-contain
-              sm:w-[120px] lg:w-[135px]
-            "
+            className="w-[135px] h-auto object-contain"
           />
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden items-center gap-5 xl:flex 2xl:gap-10">
-          {renderNavLinks()}
+        {/* Navigation Items (Ngăn ngang như cũ trên màn hình >= md) */}
+        <div className="hidden md:flex items-center gap-10">
+          {renderNavLinks(false)}
         </div>
 
-        {/* Desktop Account Actions */}
-        <div className="hidden shrink-0 items-center xl:flex">
-          {renderAccountActions()}
+        {/* Account Actions (Nằm ngang như cũ trên màn hình >= md) */}
+        <div className="hidden md:flex items-center gap-3">
+          {renderAccountActions(false)}
         </div>
 
-        {/* Mobile / Tablet Menu Button */}
+        {/* Nút Menu Hamburger (Chỉ hiện khi màn hình bị nhỏ < md) */}
         <button
           type="button"
           onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -244,7 +213,7 @@ export default function Navbar() {
             transition-colors hover:bg-[#E6FADD]
             focus-visible:outline-none focus-visible:ring-2
             focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2
-            xl:hidden
+            md:hidden
           "
         >
           {isMenuOpen ? (
@@ -284,14 +253,14 @@ export default function Navbar() {
         </button>
       </nav>
 
-      {/* Mobile / Tablet Navigation */}
+      {/* Menu xổ xuống khi màn hình nhỏ (< md) */}
       <div
         id="mobile-navigation"
         className={`
           absolute left-0 right-0 top-full
           border-t border-[#1E5631]/10
           bg-[#FEFFFA] shadow-lg
-          transition-all duration-200 xl:hidden
+          transition-all duration-200 md:hidden
           ${
             isMenuOpen
               ? 'visible translate-y-0 opacity-100'
@@ -299,11 +268,7 @@ export default function Navbar() {
           }
         `}
       >
-        <div className="
-          mx-auto flex w-full max-w-[1440px]
-          flex-col gap-2 px-4 pb-5 pt-3
-          sm:px-6 lg:px-8
-        ">
+        <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-2 px-6 pb-5 pt-3">
           {/* Navigation Links */}
           <div className="flex flex-col gap-1">
             {renderNavLinks(true)}
