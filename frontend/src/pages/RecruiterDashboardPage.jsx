@@ -103,6 +103,7 @@ export default function RecruiterDashboardPage() {
   // Danh sách tin tuyển dụng từ CSDL (khởi tạo sẵn với dữ liệu mẫu)
   const [jobs, setJobs] = useState(SAMPLE_FALLBACK_JOBS)
   const [totalDbCount, setTotalDbCount] = useState(SAMPLE_FALLBACK_JOBS.length)
+  const [dbStats, setDbStats] = useState(null)
 
   // Bộ lọc trạng thái ở bảng: 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -208,6 +209,32 @@ export default function RecruiterDashboardPage() {
     }
   }, [currentPage, statusFilter])
 
+  const fetchMyJobStats = useCallback(async () => {
+    try {
+      const firstPage = await apiRequest('/jobs/my-jobs?page=1&limit=100')
+      const pageCount = Math.ceil((firstPage.total || 0) / 100)
+      const remainingPages = await Promise.all(
+        Array.from({ length: Math.max(0, pageCount - 1) }, (_, index) =>
+          apiRequest(`/jobs/my-jobs?page=${index + 2}&limit=100`)
+        )
+      )
+      const allJobs = [firstPage, ...remainingPages].flatMap((page) => page.items || [])
+      const totalViews = allJobs.reduce(
+        (total, job) => total + (job.view_count || job.views || 0),
+        0
+      )
+
+      setDbStats({
+        total: firstPage.total || 0,
+        pending: allJobs.filter((job) => job.approval_status === 'PENDING').length,
+        avgViews: allJobs.length ? Math.round(totalViews / allJobs.length) : 0,
+      })
+    } catch (err) {
+      setDbStats(null)
+      console.warn('Lỗi tải thống kê tin tuyển dụng:', err)
+    }
+  }, [])
+
   // Kích hoạt nạp dữ liệu khi đổi trang hoặc đổi bộ lọc trạng thái
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -215,6 +242,13 @@ export default function RecruiterDashboardPage() {
     }, 0)
     return () => clearTimeout(timer)
   }, [fetchMyJobsFromDb])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchMyJobStats()
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [fetchMyJobStats])
 
   // Tự động tắt Toast thông báo sau 4s
   useEffect(() => {
@@ -253,12 +287,33 @@ export default function RecruiterDashboardPage() {
     if (e.key === 'Enter' || e.type === 'blur') {
       e.preventDefault()
       const val = formData.newSkillInput.trim()
-      if (val && !formData.selectedSkills.includes(val)) {
+      if (val) {
+        const matched = skillsCatalog.find(
+          (skill) =>
+            (skill.skill_name || skill.name || '').toLowerCase() === val.toLowerCase()
+        )
+        if (!matched) {
+          setFormError('Vui lòng chọn kỹ năng có trong danh mục.')
+          return
+        }
+
+        const skillName = matched.skill_name || matched.name
+        if (!skillName) {
+          setFormError('Kỹ năng trong danh mục không hợp lệ.')
+          return
+        }
+        if (formData.selectedSkills.includes(skillName)) {
+          setFormData((prev) => ({ ...prev, newSkillInput: '' }))
+          setFormError('')
+          return
+        }
+
         setFormData((prev) => ({
           ...prev,
-          selectedSkills: [...prev.selectedSkills, val],
+          selectedSkills: [...prev.selectedSkills, skillName],
           newSkillInput: '',
         }))
+        setFormError('')
       }
     }
   }
@@ -300,25 +355,30 @@ export default function RecruiterDashboardPage() {
       return
     }
 
-    setIsSubmitting(true)
-
     // Tìm tên ngành nghề đã chọn để hiển thị
     const selectedDomain = domainsCatalog.find(
       (d) => String(d.domain_id ?? d.id) === String(formData.domainId)
     )
     const selectedDomainName = selectedDomain?.domain_name || selectedDomain?.name || 'Chuyên môn'
 
-    // Tìm hoặc ánh xạ skill_id tương ứng trong CSDL
-    const mappedSkillsPayload = formData.selectedSkills.map((skillName, index) => {
+    const mappedSkillsPayload = formData.selectedSkills.map((skillName) => {
       const matched = skillsCatalog.find(
         (s) => (s.skill_name || s.name || '').toLowerCase() === skillName.toLowerCase()
       )
+      if (!matched) return null
+
       return {
-        skill_id: matched ? (matched.skill_id ?? matched.id) : index + 1,
+        skill_id: matched.skill_id ?? matched.id,
         requirement_type: 'MANDATORY',
         min_years_experience: 1.0,
       }
     })
+    if (mappedSkillsPayload.some((skill) => !skill || skill.skill_id == null)) {
+      setFormError('Vui lòng chọn kỹ năng có trong danh mục.')
+      return
+    }
+
+    setIsSubmitting(true)
 
     // Cấu trúc Payload chuẩn Pydantic JobPostCreateRequest
     const postPayload = {
@@ -359,6 +419,7 @@ export default function RecruiterDashboardPage() {
 
       // Nạp lại danh sách mới nhất từ Database
       await fetchMyJobsFromDb()
+      await fetchMyJobStats()
 
       // Reset form
       setFormData({
@@ -418,20 +479,15 @@ export default function RecruiterDashboardPage() {
   }
 
   // Phân trang dữ liệu
-  const totalPages = Math.ceil(jobs.length / itemsPerPage) || 1
+  const totalPages = Math.ceil((isDbConnected ? totalDbCount : jobs.length) / itemsPerPage) || 1
   const startIndex = (currentPage - 1) * itemsPerPage
-  const currentJobs = jobs.slice(startIndex, startIndex + itemsPerPage)
+  const currentJobs = isDbConnected ? jobs : jobs.slice(startIndex, startIndex + itemsPerPage)
 
   // Tính toán số liệu thống kê THỰC TẾ từ danh sách tin (hoặc fallback nếu là tài khoản mới)
-  const dynamicTotalJobs = isDbConnected ? totalDbCount : 12
-  const dynamicPendingJobs = isDbConnected
-    ? jobs.filter((j) => j.status === 'PENDING').length
-    : 3
-  const dynamicAvgViews = isDbConnected
-    ? jobs.length > 0
-      ? Math.round(jobs.reduce((acc, j) => acc + (j.views || 0), 0) / jobs.length)
-      : 0
-    : 345
+  const dynamicTotalJobs = isDbConnected ? dbStats?.total ?? '—' : 12
+  const dynamicPendingJobs = isDbConnected ? dbStats?.pending ?? '—' : 3
+  const dynamicAvgViews = isDbConnected ? dbStats?.avgViews ?? '—' : 345
+  const listTotalJobs = isDbConnected ? totalDbCount : dynamicTotalJobs
 
   const recruiterName = user?.full_name || user?.username || 'Nguyễn Thị Anh'
 
@@ -573,7 +629,10 @@ export default function RecruiterDashboardPage() {
               </Link>
             )}
             <button
-              onClick={fetchMyJobsFromDb}
+              onClick={() => {
+                fetchMyJobsFromDb()
+                fetchMyJobStats()
+              }}
               disabled={loadingJobs}
               className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-50"
             >
@@ -663,7 +722,7 @@ export default function RecruiterDashboardPage() {
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg lg:text-xl font-bold text-[#1A241E]">Tin tuyển dụng của bạn</h2>
                     <span className="rounded-full bg-[#E6FADD] px-2.5 py-0.5 text-xs font-bold text-[#1E5631]">
-                      {dynamicTotalJobs}
+                      {listTotalJobs}
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-gray-400">
@@ -776,7 +835,7 @@ export default function RecruiterDashboardPage() {
               {/* Phân trang */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-2 border-t border-gray-100 text-xs text-gray-500">
                 <div>
-                  Hiển thị {currentJobs.length} trong tổng số {dynamicTotalJobs} tin tuyển dụng
+                  Hiển thị {currentJobs.length} trong tổng số {listTotalJobs} tin tuyển dụng
                 </div>
 
                 <div className="flex items-center gap-1.5">
@@ -971,7 +1030,7 @@ export default function RecruiterDashboardPage() {
                   />
                 </div>
                 <p className="mt-1.5 text-[11px] text-gray-400">
-                  Nhập tên kỹ năng và nhấn Enter để thêm (được đối soát tự động với CSDL).
+                  Nhập kỹ năng có trong danh mục và nhấn Enter để thêm.
                 </p>
               </div>
 
