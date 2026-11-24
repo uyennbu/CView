@@ -32,34 +32,32 @@ function HeroSection() {
   return (
     <section
       id="home"
-      className="relative isolate min-h-[650px] overflow-hidden bg-transparent"
+      className="relative isolate w-full overflow-hidden bg-transparent"
     >
-<div className="mx-auto grid min-h-[650px] max-w-[1440px] translate-x-12 -translate-y-12 items-center gap-8 px-6 py-12 md:grid-cols-2 lg:px-14">
+      <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 items-center gap-8 px-4 py-10 sm:px-6 sm:py-12 md:grid-cols-2 md:gap-6 lg:gap-10 lg:px-14 lg:py-16">
 
         {/* Left content */}
         <ScrollReveal
           direction="left"
-          className="z-10 max-w-[590px]"
+          className="relative z-10 mx-auto w-full max-w-[590px] text-center md:mx-0 md:text-left"
         >
-          <h1 className="text-[clamp(2.5rem,3.6vw,4rem)] font-extrabold leading-[1.15] tracking-tight">
-            <span className="whitespace-nowrap">
-              KẾT NỐI CÔNG VIỆC MƠ ƯỚC
-            </span>
+          <h1 className="text-[clamp(2rem,5vw,4rem)] font-extrabold leading-[1.15] tracking-tight">
+            KẾT NỐI CÔNG VIỆC MƠ ƯỚC
             <br />
             BỨT PHÁ SỰ NGHIỆP
           </h1>
 
-          <p className="mt-5 max-w-[540px] text-base leading-relaxed text-[#1A241E] md:text-lg">
+          <p className="mx-auto mt-5 max-w-[540px] text-sm leading-relaxed text-[#1A241E] sm:text-base md:mx-0 md:text-lg">
             Tìm kiếm công việc phù hợp dựa trên CV của bạn, chấm
             điểm độ phù hợp trên kỹ năng, kinh nghiệm
           </p>
 
           {/* Benefits */}
-          <div className="mt-7 flex flex-wrap gap-x-5 gap-y-4">
+          <div className="mx-auto mt-7 flex max-w-[540px] flex-wrap justify-center gap-x-5 gap-y-4 md:mx-0 md:justify-start">
             {benefits.map((benefit) => (
               <div
                 key={benefit.title}
-                className="flex items-center gap-2"
+                className="flex min-w-0 items-center gap-2 text-left"
               >
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg font-bold ${benefit.color}`}
@@ -67,7 +65,7 @@ function HeroSection() {
                   {benefit.icon}
                 </span>
 
-                <div className="text-[10px] leading-relaxed">
+                <div className="text-xs leading-relaxed sm:text-sm">
                   <p className="font-semibold">{benefit.title}</p>
                   <p>{benefit.description}</p>
                 </div>
@@ -78,18 +76,18 @@ function HeroSection() {
           {/* Main CTA */}
           <Link
             to="/cv-analysis"
-            className="mt-9 inline-flex items-center gap-4 rounded-full bg-[#FF4B6E] px-7 py-3.5 !text-white font-bold shadow-sm transition hover:-translate-y-1 hover:bg-[#ed3d60] md:text-lg"
+            className="mx-auto mt-9 inline-flex max-w-full items-center justify-center gap-2 rounded-full bg-[#FF4B6E] px-5 py-3.5 text-sm font-bold !text-white shadow-sm transition hover:-translate-y-1 hover:bg-[#ed3d60] sm:gap-4 sm:px-7 sm:text-base md:mx-0 md:text-lg"
           >
-            BẮT ĐẦU PHÂN TÍCH CV
-            <span className="text-2xl leading-none">⟶</span>
+            <span>BẮT ĐẦU PHÂN TÍCH CV</span>
+            <span className="text-xl leading-none sm:text-2xl">⟶</span>
           </Link>
 
           {/* Feature tags */}
-          <div className="mt-4 flex flex-wrap gap-3">
+          <div className="mt-4 flex flex-wrap justify-center gap-2 sm:gap-3 md:justify-start">
             {['Chấm điểm', 'Góp ý', 'Đề xuất việc làm'].map((item) => (
               <span
                 key={item}
-                className="rounded-lg bg-[#4CAF50] px-4 py-1.5 text-xs font-bold text-white"
+                className="rounded-lg bg-[#4CAF50] px-3 py-1.5 text-[11px] font-bold text-white sm:px-4 sm:text-xs"
               >
                 {item}
               </span>
@@ -99,47 +97,54 @@ function HeroSection() {
 
         {/* Right mascot */}
         <ScrollReveal
-  direction="right"
-  delay={200}
-  className="relative flex -translate-y-3 items-center justify-center"
->
-          <div className="absolute h-[360px] w-[360px] rounded-full bg-gradient-to-br from-[#E6FADD] to-[#F9FACA] blur-2xl md:h-[450px] md:w-[450px]" />
+          direction="right"
+          delay={200}
+          className="relative mx-auto flex w-full max-w-[520px] items-center justify-center md:-translate-y-3"
+        >
+          {/* Background glow */}
+          <div className="absolute h-[230px] w-[230px] rounded-full bg-gradient-to-br from-[#E6FADD] to-[#F9FACA] blur-2xl sm:h-[320px] sm:w-[320px] md:h-[380px] md:w-[380px] lg:h-[450px] lg:w-[450px]" />
 
+          {/* Main mascot */}
           <img
             src={heroMascot}
             alt="Mascot tắc kè CView cầm CV"
-            className="relative z-10 w-full max-w-[430px] object-contain drop-shadow-sm md:max-w-[500px]"
+            className="relative z-10 w-full max-w-[300px] object-contain drop-shadow-sm sm:max-w-[380px] md:max-w-[430px] lg:max-w-[500px]"
           />
 
+          {/* Decorations */}
           <img
             src={sparkle}
             alt=""
-            className="absolute left-[12%] top-[8%] z-20 w-16 object-contain"
+            aria-hidden="true"
+            className="absolute left-[12%] top-[8%] z-20 w-9 object-contain sm:w-12 md:w-16"
           />
 
           <img
             src={searchIcon}
             alt=""
-            className="absolute left-[2%] top-[48%] z-20 w-12 object-contain"
+            aria-hidden="true"
+            className="absolute left-[2%] top-[48%] z-20 w-8 object-contain sm:w-10 md:w-12"
           />
 
           <img
             src={documentIcon}
             alt=""
-            className="absolute right-[4%] top-[34%] z-20 w-12 object-contain"
+            aria-hidden="true"
+            className="absolute right-[4%] top-[34%] z-20 w-8 object-contain sm:w-10 md:w-12"
           />
 
           <img
             src={briefcaseIcon}
             alt=""
-            className="absolute bottom-[12%] left-0 z-20 w-14 object-contain"
+            aria-hidden="true"
+            className="absolute bottom-[12%] left-0 z-20 w-10 object-contain sm:w-12 md:w-14"
           />
 
-          <span className="absolute right-5 top-12 z-20 text-4xl text-[#F5D34F]">
+          <span className="absolute right-5 top-8 z-20 text-2xl text-[#F5D34F] sm:text-3xl md:top-12 md:text-4xl">
             ✦
           </span>
 
-          <span className="absolute bottom-12 left-5 z-20 text-3xl text-[#4CAF50]">
+          <span className="absolute bottom-8 left-5 z-20 text-2xl text-[#4CAF50] sm:text-3xl md:bottom-12">
             ✦
           </span>
         </ScrollReveal>

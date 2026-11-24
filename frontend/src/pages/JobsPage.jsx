@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../services/api'
 
@@ -90,17 +91,32 @@ export default function JobsPage() {
 
     // Chuẩn hóa query params cho API /jobs/search
     const queryParams = new URLSearchParams()
-    if (filters.keyword.trim()) queryParams.append('keyword', filters.keyword.trim())
+
+    if (filters.keyword.trim()) {
+      queryParams.append('keyword', filters.keyword.trim())
+    }
+
     if (filters.city) queryParams.append('city', filters.city)
     if (filters.domain_id) queryParams.append('domain_id', filters.domain_id)
-    if (filters.employmentType) queryParams.append('job_type', filters.employmentType)
-    if (filters.workMode) queryParams.append('workplace_type', filters.workMode)
+
+    if (filters.employmentType) {
+      queryParams.append('job_type', filters.employmentType)
+    }
+
+    if (filters.workMode) {
+      queryParams.append('workplace_type', filters.workMode)
+    }
 
     if (filters.salary) {
-      if (filters.salary === 'under10') queryParams.append('salary_min', '0')
-      else if (filters.salary === '10to15') queryParams.append('salary_min', '10000000')
-      else if (filters.salary === '15to20') queryParams.append('salary_min', '15000000')
-      else if (filters.salary === 'over20') queryParams.append('salary_min', '20000000')
+      if (filters.salary === 'under10') {
+        queryParams.append('salary_min', '0')
+      } else if (filters.salary === '10to15') {
+        queryParams.append('salary_min', '10000000')
+      } else if (filters.salary === '15to20') {
+        queryParams.append('salary_min', '15000000')
+      } else if (filters.salary === 'over20') {
+        queryParams.append('salary_min', '20000000')
+      }
     }
 
     queryParams.append('page', String(currentPage))
@@ -109,6 +125,7 @@ export default function JobsPage() {
     apiRequest(`/jobs/search?${queryParams.toString()}`)
       .then((res) => {
         if (!isMounted) return
+
         setIsBackendConnected(true)
         setTotalJobs(res.total || 0)
 
@@ -125,9 +142,9 @@ export default function JobsPage() {
           const splitLines = (text) =>
             typeof text === 'string'
               ? text
-                .split('\n')
-                .map((s) => s.trim().replace(/^[-*•]\s*/, ''))
-                .filter(Boolean)
+                  .split('\n')
+                  .map((s) => s.trim().replace(/^[-*•]\s*/, ''))
+                  .filter(Boolean)
               : Array.isArray(text)
                 ? text
                 : []
@@ -145,7 +162,9 @@ export default function JobsPage() {
             description: item.job_description,
             requirements: splitLines(item.requirements),
             benefits: splitLines(item.benefits),
-            deadline: item.deadline ? new Date(item.deadline).toLocaleDateString('vi-VN') : 'Không giới hạn',
+            deadline: item.deadline
+              ? new Date(item.deadline).toLocaleDateString('vi-VN')
+              : 'Không giới hạn',
           }
         })
 
@@ -153,7 +172,12 @@ export default function JobsPage() {
       })
       .catch((err) => {
         if (!isMounted) return
-        console.warn('Backend chưa sẵn sàng hoặc lỗi kết nối, fallback dữ liệu mẫu:', err)
+
+        console.warn(
+          'Backend chưa sẵn sàng hoặc lỗi kết nối, fallback dữ liệu mẫu:',
+          err
+        )
+
         setIsBackendConnected(false)
         setJobs(sampleJobs)
         setTotalJobs(sampleJobs.length)
@@ -173,6 +197,7 @@ export default function JobsPage() {
       ...prev,
       [name]: value,
     }))
+
     setCurrentPage(1)
   }
 
@@ -199,23 +224,26 @@ export default function JobsPage() {
         setSelectedJob(null)
       }
     }
+
     window.addEventListener('keydown', handleEscape)
+
     return () => {
       window.removeEventListener('keydown', handleEscape)
     }
   }, [])
 
   const selectClass =
-    'w-full rounded-xl border border-[#4CAF50] bg-white px-3 py-3 text-sm text-[#26352B] outline-none transition focus:ring-2 focus:ring-[#4CAF50]/20'
+    'w-full min-w-0 rounded-xl border border-[#4CAF50] bg-white px-3 py-3 text-sm text-[#26352B] outline-none transition focus:ring-2 focus:ring-[#4CAF50]/20'
 
   const quickChip = (active) =>
-    `rounded-full px-4 py-2 text-xs font-semibold transition cursor-pointer ${active
-      ? 'bg-[#43A047] text-white'
-      : 'bg-white/80 text-[#26352B] hover:bg-[#E6FADD]'
+    `rounded-full px-4 py-2 text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+      active
+        ? 'bg-[#43A047] text-white'
+        : 'bg-white/80 text-[#26352B] hover:bg-[#E6FADD]'
     }`
 
   return (
-    <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 py-10 lg:px-14">
+    <main className="mx-auto min-h-[70vh] w-full max-w-[1440px] px-4 py-7 sm:px-6 sm:py-9 lg:px-14 lg:py-10">
       {/* Tiêu đề */}
       <section className="mb-7">
         <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#E6FADD] px-3 py-1 text-sm font-semibold text-[#1E5631]">
@@ -223,27 +251,30 @@ export default function JobsPage() {
           Việc làm
         </div>
 
-        <h1 className="text-3xl font-extrabold text-[#1A241E] md:text-4xl">
-          TÌM CÔNG VIỆC <span className="text-[#43A047]">PHÙ HỢP VỚI BẠN</span>
+        <h1 className="break-words text-[clamp(1.5rem,5vw,2.5rem)] font-extrabold leading-tight text-[#1A241E]">
+          TÌM CÔNG VIỆC{' '}
+          <span className="text-[#43A047]">PHÙ HỢP VỚI BẠN</span>
         </h1>
 
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600 sm:text-base">
           Khám phá cơ hội việc làm từ hàng nghìn doanh nghiệp uy tín trên hệ thống CView.
         </p>
       </section>
 
       {/* Thanh tìm kiếm và bộ lọc */}
       <section className="space-y-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {/* Hàng bộ lọc thứ nhất */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {/* Từ khóa */}
-          <div className="flex items-center gap-2 rounded-xl border border-[#4CAF50] bg-white px-4">
-            <span className="text-lg text-gray-400">⌕</span>
+          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-[#4CAF50] bg-white px-4">
+            <span className="shrink-0 text-lg text-gray-400">⌕</span>
+
             <input
               type="text"
               value={filters.keyword}
               onChange={(e) => updateFilter('keyword', e.target.value)}
               placeholder="Vị trí, kỹ năng hoặc tiêu đề công việc..."
-              className="w-full bg-transparent py-3 text-sm outline-none"
+              className="w-full min-w-0 bg-transparent py-3 text-sm outline-none"
             />
           </div>
 
@@ -269,6 +300,7 @@ export default function JobsPage() {
             onChange={(e) => updateFilter('domain_id', e.target.value)}
           >
             <option value="">Tất cả lĩnh vực</option>
+
             {domains.map((dom) => (
               <option key={dom.domain_id} value={dom.domain_id}>
                 {dom.domain_name}
@@ -277,6 +309,7 @@ export default function JobsPage() {
           </select>
         </div>
 
+        {/* Hàng bộ lọc thứ hai */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {/* Loại công việc */}
           <select
@@ -318,26 +351,43 @@ export default function JobsPage() {
           </select>
         </div>
 
-        {/* Lọc nhanh & Nút Xóa bộ lọc */}
+        {/* Lọc nhanh và nút xóa bộ lọc */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          <span className="text-xs font-semibold text-gray-500">Lọc nhanh:</span>
+          <span className="mr-1 text-xs font-semibold text-gray-500">
+            Lọc nhanh:
+          </span>
 
           <button
-            onClick={() => updateFilter('employmentType', filters.employmentType === 'FULL_TIME' ? '' : 'FULL_TIME')}
+            onClick={() =>
+              updateFilter(
+                'employmentType',
+                filters.employmentType === 'FULL_TIME' ? '' : 'FULL_TIME'
+              )
+            }
             className={quickChip(filters.employmentType === 'FULL_TIME')}
           >
             Toàn thời gian
           </button>
 
           <button
-            onClick={() => updateFilter('employmentType', filters.employmentType === 'INTERNSHIP' ? '' : 'INTERNSHIP')}
+            onClick={() =>
+              updateFilter(
+                'employmentType',
+                filters.employmentType === 'INTERNSHIP' ? '' : 'INTERNSHIP'
+              )
+            }
             className={quickChip(filters.employmentType === 'INTERNSHIP')}
           >
             Thực tập sinh
           </button>
 
           <button
-            onClick={() => updateFilter('workMode', filters.workMode === 'REMOTE' ? '' : 'REMOTE')}
+            onClick={() =>
+              updateFilter(
+                'workMode',
+                filters.workMode === 'REMOTE' ? '' : 'REMOTE'
+              )
+            }
             className={quickChip(filters.workMode === 'REMOTE')}
           >
             Remote
@@ -345,7 +395,7 @@ export default function JobsPage() {
 
           <button
             onClick={clearFilters}
-            className="ml-auto px-3 py-2 text-xs font-semibold text-[#1E5631] hover:underline cursor-pointer"
+            className="ml-auto rounded-full px-3 py-2 text-xs font-semibold text-[#1E5631] transition hover:bg-[#E6FADD] hover:underline cursor-pointer"
           >
             Xóa bộ lọc
           </button>
@@ -356,14 +406,15 @@ export default function JobsPage() {
       <section className="mt-8">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-[#26352B]">
-            <span className="font-bold text-[#43A047]">{totalJobs}</span> công việc phù hợp
+            <span className="font-bold text-[#43A047]">{totalJobs}</span>{' '}
+            công việc phù hợp
           </p>
         </div>
 
         {/* Danh sách Job Cards */}
         {loading ? (
-          <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center text-gray-500">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#1E5631] border-t-transparent mb-3"></div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-500 sm:p-12">
+            <div className="mb-3 inline-block h-8 w-8 animate-spin rounded-full border-4 border-[#1E5631] border-t-transparent"></div>
             <div>Đang tải kết quả tìm kiếm việc làm...</div>
           </div>
         ) : jobs.length > 0 ? (
@@ -371,33 +422,51 @@ export default function JobsPage() {
             {jobs.map((job) => (
               <article
                 key={job.id}
-                className="rounded-2xl border border-gray-200 bg-white/95 p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#4CAF50] hover:shadow-md flex flex-col justify-between"
+                className="flex min-w-0 flex-col justify-between rounded-2xl border border-gray-200 bg-white/95 p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#4CAF50] hover:shadow-md sm:p-5"
               >
                 <div>
-                  <div className="flex items-start gap-3.5">
+                  <div className="flex min-w-0 items-start gap-3">
                     {/* Logo công ty */}
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#E6FADD] text-lg font-extrabold text-[#1E5631]">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E6FADD] text-lg font-extrabold text-[#1E5631] sm:h-12 sm:w-12">
                       {job.company.charAt(0)}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap justify-between gap-2">
-                        <h2 className="font-bold text-base text-[#1A241E] hover:text-[#1E5631] transition">
+                      {/* Tên công việc và mức lương */}
+                      <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between">
+                        <h2 className="min-w-0 break-words text-base font-bold text-[#1A241E] transition hover:text-[#1E5631] sm:text-lg">
                           {job.title}
                         </h2>
-                        <span className="text-sm font-bold text-[#43A047]">{job.salaryText}</span>
+
+                        <span className="shrink-0 text-sm font-bold text-[#43A047]">
+                          {job.salaryText}
+                        </span>
                       </div>
 
-                      <p className="mt-0.5 text-xs text-gray-500 font-medium">{job.company}</p>
+                      <p className="mt-0.5 break-words text-xs font-medium text-gray-500">
+                        {job.company}
+                      </p>
 
                       {/* Thông tin công việc */}
                       <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-gray-600">
                         <span>📍 {job.city}</span>
+
                         <span>
-                          💼 {job.employmentType === 'FULL_TIME' ? 'Toàn thời gian' : job.employmentType === 'INTERNSHIP' ? 'Thực tập' : job.employmentType}
+                          💼{' '}
+                          {job.employmentType === 'FULL_TIME'
+                            ? 'Toàn thời gian'
+                            : job.employmentType === 'INTERNSHIP'
+                              ? 'Thực tập'
+                              : job.employmentType}
                         </span>
+
                         <span>
-                          🏢 {job.workMode === 'ON_SITE' ? 'Tại văn phòng' : job.workMode === 'REMOTE' ? 'Từ xa' : 'Linh hoạt'}
+                          🏢{' '}
+                          {job.workMode === 'ON_SITE'
+                            ? 'Tại văn phòng'
+                            : job.workMode === 'REMOTE'
+                              ? 'Từ xa'
+                              : 'Linh hoạt'}
                         </span>
                       </div>
 
@@ -407,7 +476,7 @@ export default function JobsPage() {
                           {job.tags.slice(0, 5).map((tag, idx) => (
                             <span
                               key={idx}
-                              className="rounded-full bg-[#F0F5EE] px-2.5 py-0.5 text-[11px] font-medium text-[#42634A]"
+                              className="break-words rounded-full bg-[#F0F5EE] px-2.5 py-1 text-[11px] font-medium text-[#42634A]"
                             >
                               {tag}
                             </span>
@@ -419,11 +488,12 @@ export default function JobsPage() {
                 </div>
 
                 {/* Xem chi tiết */}
-                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
+                <div className="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-3 text-xs text-gray-400 sm:flex-row sm:items-center sm:justify-between">
                   <span>Hạn nộp: {job.deadline}</span>
+
                   <button
                     onClick={() => setSelectedJob(job)}
-                    className="rounded-full bg-[#1E5631] px-5 py-2 text-xs font-semibold text-white transition hover:bg-[#43A047] cursor-pointer"
+                    className="w-full rounded-full bg-[#1E5631] px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-[#43A047] cursor-pointer sm:w-auto"
                   >
                     Xem chi tiết
                   </button>
@@ -432,12 +502,18 @@ export default function JobsPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-white/70 px-5 py-16 text-center">
-            <p className="font-bold text-lg text-[#1A241E]">Không tìm thấy công việc phù hợp.</p>
-            <p className="mt-1 text-sm text-gray-500">Hãy thử thay đổi từ khóa hoặc bộ lọc của bạn.</p>
+          <div className="rounded-2xl border border-dashed border-gray-300 bg-white/70 px-5 py-12 text-center sm:py-16">
+            <p className="text-lg font-bold text-[#1A241E]">
+              Không tìm thấy công việc phù hợp.
+            </p>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Hãy thử thay đổi từ khóa hoặc bộ lọc của bạn.
+            </p>
+
             <button
               onClick={clearFilters}
-              className="mt-5 rounded-full bg-[#43A047] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#1E5631] cursor-pointer"
+              className="mt-5 rounded-full bg-[#43A047] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1E5631] cursor-pointer"
             >
               Xóa bộ lọc
             </button>
@@ -446,35 +522,43 @@ export default function JobsPage() {
 
         {/* Phân trang */}
         {totalPages > 1 && (
-          <div className="mt-8 flex items-center justify-center gap-2">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
             <button
               disabled={currentPage === 1}
               onClick={() => goToPage(currentPage - 1)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#4CAF50] text-[#1E5631] transition hover:bg-[#E6FADD] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+              aria-label="Trang trước"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#4CAF50] text-sm text-[#1E5631] transition hover:bg-[#E6FADD] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer sm:h-10 sm:w-10"
             >
               ←
             </button>
 
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
-              const pageNum = index + 1
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => goToPage(pageNum)}
-                  className={`h-10 w-10 rounded-lg font-semibold transition cursor-pointer ${currentPage === pageNum
-                      ? 'bg-[#1E5631] text-white'
-                      : 'border border-[#4CAF50] bg-white text-[#1E5631] hover:bg-[#E6FADD]'
+            {Array.from(
+              { length: Math.min(totalPages, 5) },
+              (_, index) => {
+                const pageNum = index + 1
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => goToPage(pageNum)}
+                    aria-current={currentPage === pageNum ? 'page' : undefined}
+                    className={`h-9 w-9 rounded-lg text-sm font-semibold transition cursor-pointer sm:h-10 sm:w-10 ${
+                      currentPage === pageNum
+                        ? 'bg-[#1E5631] text-white'
+                        : 'border border-[#4CAF50] bg-white text-[#1E5631] hover:bg-[#E6FADD]'
                     }`}
-                >
-                  {pageNum}
-                </button>
-              )
-            })}
+                  >
+                    {pageNum}
+                  </button>
+                )
+              }
+            )}
 
             <button
               disabled={currentPage === totalPages}
               onClick={() => goToPage(currentPage + 1)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#4CAF50] text-[#1E5631] transition hover:bg-[#E6FADD] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+              aria-label="Trang tiếp theo"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#4CAF50] text-sm text-[#1E5631] transition hover:bg-[#E6FADD] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer sm:h-10 sm:w-10"
             >
               →
             </button>
@@ -485,7 +569,7 @@ export default function JobsPage() {
       {/* Modal chi tiết công việc */}
       {selectedJob && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 p-2 backdrop-blur-sm sm:p-4"
           onClick={() => setSelectedJob(null)}
         >
           <div
@@ -493,56 +577,74 @@ export default function JobsPage() {
             aria-modal="true"
             aria-labelledby="job-modal-title"
             onClick={(event) => event.stopPropagation()}
-            className="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-[#FEFFFA] p-6 shadow-2xl md:p-8"
+            className="relative my-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-[#FEFFFA] p-4 shadow-2xl sm:rounded-3xl sm:p-6 md:p-8"
           >
             {/* Nút đóng */}
             <button
               onClick={() => setSelectedJob(null)}
               aria-label="Đóng chi tiết công việc"
-              className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-[#E6FADD] text-xl text-[#1E5631] transition hover:bg-[#D1EFC5] cursor-pointer"
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#E6FADD] text-xl text-[#1E5631] transition hover:bg-[#D1EFC5] cursor-pointer sm:right-5 sm:top-5"
             >
               ×
             </button>
 
             {/* Tiêu đề JD */}
             <div className="pr-10">
-              <span className="text-sm font-semibold text-[#43A047]">CHI TIẾT CÔNG VIỆC</span>
-              <h2 id="job-modal-title" className="mt-2 text-2xl font-extrabold text-[#1A241E]">
+              <span className="text-xs font-semibold text-[#43A047] sm:text-sm">
+                CHI TIẾT CÔNG VIỆC
+              </span>
+
+              <h2
+                id="job-modal-title"
+                className="mt-2 break-words text-xl font-extrabold leading-tight text-[#1A241E] sm:text-2xl"
+              >
                 {selectedJob.title}
               </h2>
-              <p className="mt-1 text-sm font-medium text-gray-600">{selectedJob.company}</p>
+
+              <p className="mt-1 break-words text-sm font-medium text-gray-600">
+                {selectedJob.company}
+              </p>
             </div>
 
             {/* Thông tin tổng quan */}
             <div className="mt-5 flex flex-wrap gap-2">
-              <span className="rounded-full bg-[#E6FADD] px-3.5 py-1.5 text-xs font-bold text-[#1E5631]">
+              <span className="rounded-full bg-[#E6FADD] px-3 py-1.5 text-xs font-bold text-[#1E5631]">
                 💰 {selectedJob.salaryText}
               </span>
-              <span className="rounded-full bg-gray-100 px-3.5 py-1.5 text-xs font-medium text-gray-700">
+
+              <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700">
                 📍 {selectedJob.city}
               </span>
-              <span className="rounded-full bg-gray-100 px-3.5 py-1.5 text-xs font-medium text-gray-700">
+
+              <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700">
                 💼 {selectedJob.employmentType}
               </span>
-              <span className="rounded-full bg-gray-100 px-3.5 py-1.5 text-xs font-medium text-gray-700">
+
+              <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700">
                 🏢 {selectedJob.workMode}
               </span>
             </div>
 
             {/* Nội dung chi tiết */}
-            <div className="mt-7 space-y-6">
+            <div className="mt-6 space-y-6 sm:mt-7">
               {/* Mô tả công việc */}
               <div>
-                <h3 className="font-bold text-[#1E5631]">Mô tả công việc</h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray-600 whitespace-pre-line">
+                <h3 className="font-bold text-[#1E5631]">
+                  Mô tả công việc
+                </h3>
+
+                <p className="mt-2 whitespace-pre-line break-words text-sm leading-relaxed text-gray-600">
                   {selectedJob.description || 'Thông tin đang được cập nhật.'}
                 </p>
               </div>
 
               {/* Yêu cầu ứng viên */}
               <div>
-                <h3 className="font-bold text-[#1E5631]">Yêu cầu ứng viên</h3>
-                <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-gray-600">
+                <h3 className="font-bold text-[#1E5631]">
+                  Yêu cầu ứng viên
+                </h3>
+
+                <ul className="mt-2 list-disc space-y-1.5 break-words pl-5 text-sm leading-relaxed text-gray-600">
                   {(selectedJob.requirements || []).map((item, index) => (
                     <li key={index}>{item}</li>
                   ))}
@@ -552,8 +654,11 @@ export default function JobsPage() {
               {/* Quyền lợi */}
               {selectedJob.benefits && selectedJob.benefits.length > 0 && (
                 <div>
-                  <h3 className="font-bold text-[#1E5631]">Quyền lợi</h3>
-                  <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-gray-600">
+                  <h3 className="font-bold text-[#1E5631]">
+                    Quyền lợi
+                  </h3>
+
+                  <ul className="mt-2 list-disc space-y-1.5 break-words pl-5 text-sm leading-relaxed text-gray-600">
                     {selectedJob.benefits.map((item, index) => (
                       <li key={index}>{item}</li>
                     ))}
@@ -564,12 +669,15 @@ export default function JobsPage() {
               {/* Kỹ năng */}
               {selectedJob.tags && selectedJob.tags.length > 0 && (
                 <div>
-                  <h3 className="font-bold text-[#1E5631]">Kỹ năng yêu cầu</h3>
+                  <h3 className="font-bold text-[#1E5631]">
+                    Kỹ năng yêu cầu
+                  </h3>
+
                   <div className="mt-2 flex flex-wrap gap-2">
                     {selectedJob.tags.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="rounded-full bg-[#F0F5EE] px-3 py-1 text-xs font-medium text-[#42634A]"
+                        className="break-words rounded-full bg-[#F0F5EE] px-3 py-1 text-xs font-medium text-[#42634A]"
                       >
                         {tag}
                       </span>
@@ -579,10 +687,15 @@ export default function JobsPage() {
               )}
 
               {/* Hạn ứng tuyển */}
-              <div className="rounded-xl bg-[#F0F5EE] p-4 flex items-center justify-between">
+              <div className="flex items-center justify-between rounded-xl bg-[#F0F5EE] p-4">
                 <div>
-                  <p className="text-xs text-gray-500">Hạn chót ứng tuyển</p>
-                  <p className="mt-0.5 font-bold text-sm text-[#1E5631]">{selectedJob.deadline}</p>
+                  <p className="text-xs text-gray-500">
+                    Hạn chót ứng tuyển
+                  </p>
+
+                  <p className="mt-0.5 text-sm font-bold text-[#1E5631]">
+                    {selectedJob.deadline}
+                  </p>
                 </div>
               </div>
             </div>
@@ -590,7 +703,7 @@ export default function JobsPage() {
             {/* Nút đóng Modal */}
             <button
               onClick={() => setSelectedJob(null)}
-              className="mt-8 w-full rounded-full bg-[#FF4B6E] py-3 font-bold text-white transition hover:bg-[#ed3d60] cursor-pointer"
+              className="mt-7 w-full rounded-full bg-[#FF4B6E] py-3 font-bold text-white transition hover:bg-[#ed3d60] cursor-pointer sm:mt-8"
             >
               Đóng chi tiết
             </button>

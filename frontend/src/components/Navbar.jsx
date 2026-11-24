@@ -27,14 +27,30 @@ export default function Navbar() {
   }
 
   return (
-    <header className="w-full bg-transparent">
-      <nav className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-5 lg:px-14">
+    <header className="relative z-50 w-full bg-transparent">
+      <nav
+        aria-label="Điều hướng chính"
+        className="
+          mx-auto flex w-full max-w-[1440px]
+          items-center justify-between gap-3
+          px-4 py-3 sm:px-6 sm:py-4
+          lg:px-8 lg:py-5 xl:px-14
+        "
+      >
         {/* Logo */}
-        <Link to="/" className="shrink-0">
+        <Link
+          to="/"
+          onClick={closeMenu}
+          aria-label="CView - Trang chủ"
+          className="shrink-0"
+        >
           <img
             src={logoCView}
             alt="CView"
-            className="w-[135px] h-auto object-contain"
+            className="
+              h-auto w-[105px] object-contain
+              sm:w-[120px] lg:w-[135px]
+            "
           />
         </Link>
 
@@ -95,32 +111,57 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <>
-              {/* Khi chưa đăng nhập */}
-              <Link
-                to="/login"
-                className="rounded-lg border border-[#1E5631] px-6 py-3 text-[16px] font-semibold text-[#1A241E] transition-colors hover:bg-[#E6FADD]"
-              >
-                Đăng nhập
-              </Link>
-
-              <Link
-                to="/register"
-                className="rounded-lg bg-[#FF4B6E] px-6 py-3 text-[16px] font-semibold text-white transition-colors hover:bg-[#ed3d60]"
-              >
-                Đăng ký
-              </Link>
-
-              <Link
-                to="/recruiter/login"
-                className="rounded-lg bg-[#1A241E] px-6 py-3 text-[16px] font-semibold !text-white transition-colors hover:bg-[#1E5631]"
-              >
-                Tuyển dụng
-              </Link>
-            </>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4 6h16" />
+              <path d="M4 12h16" />
+              <path d="M4 18h16" />
+            </svg>
           )}
-        </div>
+        </button>
       </nav>
+
+      {/* Mobile / Tablet Navigation */}
+      <div
+        id="mobile-navigation"
+        className={`
+          absolute left-0 right-0 top-full
+          border-t border-[#1E5631]/10
+          bg-[#FEFFFA] shadow-lg
+          transition-all duration-200 xl:hidden
+          ${
+            isMenuOpen
+              ? 'visible translate-y-0 opacity-100'
+              : 'invisible -translate-y-2 opacity-0 pointer-events-none'
+          }
+        `}
+      >
+        <div className="
+          mx-auto flex w-full max-w-[1440px]
+          flex-col gap-2 px-4 pb-5 pt-3
+          sm:px-6 lg:px-8
+        ">
+          {/* Navigation Links */}
+          <div className="flex flex-col gap-1">
+            {renderNavLinks(true)}
+          </div>
+
+          <div className="my-2 border-t border-[#1E5631]/10" />
+
+          {/* Account Actions */}
+          {renderAccountActions(true)}
+        </div>
+      </div>
     </header>
   )
 }

@@ -703,3 +703,62 @@ erDiagram
 ## 4. Chỉ mục (Index) & Hiệu năng
 
 ## 5. Migration & Sao lưu
+
+
+### 5.1. Danh mục các bản ghi Migration (`database/migrations/`)
+
+Hệ thống quản lý các thay đổi schema theo phiên bản thông qua các tệp script SQL migration tuần tự trong thư mục `database/migrations/`. Mỗi bản migration đều được đóng gói trong một Transaction block (`BEGIN ... COMMIT`) nhằm đảm bảo tính toàn vẹn (Atomic execution) khi áp dụng lên môi trường Database.
+
+#### 1. `001_add_service_reviews.sql` — Bổ sung bảng đánh giá dịch vụ khách hàng
+* **Mục đích:**
+  * Bổ sung bảng `service_reviews` nhằm thu thập, lưu trữ và kiểm duyệt đánh giá, nhận xét của người dùng (ứng viên, nhà tuyển dụng, khách truy cập) đối với chất lượng nền tảng và các tính năng cốt lõi của CView.
+* **Chi tiết thay đổi kỹ thuật:**
+  * **Cấu trúc bảng `service_reviews`:**
+    * `review_id` (UUID, PK): Định danh bản ghi đánh giá (mặc định sinh ngẫu nhiên qua `gen_random_uuid()`).
+    * `account_id` (UUID, FK, Nullable): Khóa ngoại liên kết tới bảng `accounts`. Cho phép `NULL` đối với trường hợp khách vãng lai/người dùng ẩn danh gửi feedback.
+    * `display_name` (VARCHAR(100), NOT NULL): Tên hiển thị người đánh giá.
+    * `rating` (SMALLINT, NOT NULL): Điểm số đánh giá từ 1 đến 5 sao.
+    * `title` (VARCHAR(150)), `content` (TEXT): Tiêu đề và nội dung chi tiết phản hồi.
+    * `service_aspect` (VARCHAR(30), DEFAULT 'OVERALL'): Phân loại khía cạnh dịch vụ được đánh giá (hỗ trợ phân tích chuyên sâu).
+    * `is_verified` (BOOLEAN, DEFAULT FALSE): Đánh dấu người dùng đã trải nghiệm dịch vụ thực tế.
+    * `is_published` (BOOLEAN, DEFAULT FALSE): Trạng thái kiểm duyệt; chỉ hiển thị ra ngoài website khi Admin phê duyệt.
+    * `helpful_count` (INTEGER, DEFAULT 0): Số lượt người dùng khác bình chọn đánh giá hữu ích.
+    * `admin_reply` (TEXT), `replied_at` (TIMESTAMPTZ): Nội dung và thời điểm phản hồi chính thức từ đội ngũ quản trị.
+    * `created_at`, `updated_at` (TIMESTAMPTZ): Dấu mốc thời gian ghi nhận và cập nhật.
+  * **Ràng buộc toàn vẹn (Constraints):**
+    * `fk_service_reviews_account`: Khóa ngoại trỏ về `accounts(account_id)` với hành vi `ON DELETE SET NULL`.
+    * `chk_reviews_rating`: Điểm đánh giá bắt buộc nằm trong khoảng `1..5`.
+    * `chk_reviews_aspect`: Giới hạn trong 8 khía cạnh chuẩn: `'OVERALL'`, `'CV_ANALYSIS'`, `'JOB_MATCHING'`, `'JOB_SEARCH'`, `'UI_UX'`, `'PERFORMANCE'`, `'SUPPORT'`, `'RECRUITER_TOOLS'`.
+    * `chk_reviews_helpful`: `helpful_count >= 0`.
+    * `chk_reviews_reply_consistency`: Đảm bảo tính nhất quán giữa nội dung phản hồi `admin_reply` và thời gian phản hồi `replied_at`.
+    * `chk_reviews_dates`: `updated_at >= created_at`.
+  * **Tối ưu hóa truy vấn (Indexes):**
+    * `idx_reviews_aspect_rating`: Partial Index trên `(service_aspect, rating)` với điều kiện `WHERE is_published = TRUE` phục vụ tính toán điểm trung bình và biểu đồ thống kê.
+    * `idx_reviews_created_at`: Partial Index trên `(created_at DESC)` với điều kiện `WHERE is_published = TRUE` tối ưu tải danh sách review mới nhất.
+    * `idx_reviews_account_id`: Index trên `account_id` để tra cứu lịch sử đánh giá của từng tài khoản.
+  * **Trigger tự động:**
+    * Kích hoạt `trg_service_reviews_updated_at` gọi hàm `fn_set_updated_at()` để tự động làm mới `updated_at` mỗi khi bản ghi phát sinh cập nhật dữ liệu.
+
+---
+
+#### 2. `002_sessions_acount_id.sql` — Hỗ trợ phiên truy cập ẩn danh (Anonymous Sessions)
+* **Mục đích:**
+  * Cho phép trường `account_id` trong bảng `sessions` nhận giá trị `NULL`.
+  * Xử lý trọn vẹn nghiệp vụ theo dõi hành vi người dùng (click, view bài đăng, tìm kiếm việc làm) khi họ truy cập và tương tác trên website nhưng chưa thực hiện đăng nhập hoặc dừng phiên duyệt web mà không có tài khoản.
+* **Chi tiết thay đổi kỹ thuật:**
+  * **Điều chỉnh cấu trúc cột:**
+    * Loại bỏ ràng buộc `NOT NULL` trên cột `account_id` của bảng `sessions` (`ALTER COLUMN account_id DROP NOT NULL`).
+    * Loại bỏ ràng buộc `NOT NULL` trên cột `refresh_token_hash` (`ALTER COLUMN refresh_token_hash DROP NOT NULL`) do phiên ẩn danh không được cấp phát Refresh Token bảo mật.
+  * **Điều chỉnh khóa ngoại (Foreign Key):**
+    * Xóa ràng buộc cũ `fk_sessions_account` (vốn sử dụng `ON DELETE CASCADE`).
+    * Tạo mới khóa ngoại `fk_sessions_account` với chính sách `ON DELETE SET NULL`: Khi một tài khoản bị xóa bỏ khỏi hệ thống, các phiên làm việc và lịch sử tương tác liên kết trước đó không bị xóa mất mà tự động chuyển thành phiên ẩn danh nhằm bảo tồn dữ liệu phân tích thống kê hành vi.
+  * **Ràng buộc toàn vẹn mới (CHECK Constraint):**
+    * Bổ sung `chk_sessions_anonymous`:
+      $$\text{CHECK } ((account\_id \text{ IS NOT NULL}) \lor (account\_id \text{ IS NULL AND } refresh\_token\_hash \text{ IS NULL}))$$
+      Ràng buộc này ngăn ngừa triệt để lỗi logic: không cho phép tạo phiên ẩn danh mà lại có Refresh Token, đồng thời yêu cầu phiên có Refresh Token thì bắt buộc phải gắn với tài khoản cụ thể.
+  * **Cập nhật tài liệu lược đồ (Comments):**
+    * Cập nhật chú thích chuẩn cho bảng `sessions` và các cột `account_id`, `refresh_token_hash` nhằm minh bạch hóa trạng thái phiên ẩn danh.
+
+---
+
+### 5.2. Chiến lược Sao lưu và Phục hồi (Backup & Recovery)

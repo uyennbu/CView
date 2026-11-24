@@ -417,6 +417,19 @@ def moderate_job_post(
         )
         notification_id = notif.notification_id
 
+    # Nếu tin được phê duyệt (APPROVED), tự động tạo job_notifications cho ứng viên có tìm kiếm phù hợp
+    if status_upper == "APPROVED":
+        try:
+            notification_service.auto_generate_job_notifications_for_post(
+                db=db, job_post_id=job_post.job_post_id
+            )
+        except Exception as exc:
+            logger.warning(
+                "Không thể tự động tạo job_notifications cho tin %s: %s",
+                job_post.job_post_id,
+                exc,
+            )
+
     db.commit()
     db.refresh(job_post)
 

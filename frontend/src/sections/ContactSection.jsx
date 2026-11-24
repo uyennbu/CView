@@ -76,14 +76,12 @@ const contactItems = [
   },
 ]
 
-
 function ContactSection() {
   return (
     <section
       id="lien-he"
-      className="relative isolate min-h-[680px] overflow-hidden bg-transparent px-6 pt-12 pb-12 md:min-h-[720px] md:px-10 md:pb-16 lg:min-h-[760px] lg:px-[6%] lg:pt-16 lg:pb-20"
+      className="relative isolate w-full overflow-hidden bg-transparent px-4 py-12 sm:px-6 sm:py-16 md:px-10 lg:px-[6%] lg:py-20"
     >
-
       {/* Decorative background */}
       <div
         aria-hidden="true"
@@ -106,21 +104,20 @@ function ContactSection() {
       />
 
       {/* Main content */}
-      <div className="relative mx-auto grid min-h-[480px] max-w-[1400px] translate-y-20 items-center gap-4 lg:grid-cols-[1.08fr_0.92fr]">
+      <div className="relative mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-8">
 
-       {/* Left: contact information */}
-<div className="relative z-20 flex translate-y-6 flex-col justify-center">
-
+        {/* Left: contact information */}
+        <div className="relative z-20 flex min-w-0 flex-col justify-center">
           {/* Heading */}
           <ScrollReveal direction="up">
-            <h2 className="mb-8 text-center text-[30px] font-extrabold leading-tight tracking-tight text-[#1A241E] sm:text-4xl lg:mb-9 lg:-translate-x-9 lg:text-[42px] xl:text-[48px]">
+            <h2 className="mb-7 text-center text-[clamp(1.7rem,4vw,3rem)] font-extrabold leading-tight tracking-tight text-[#1A241E] sm:mb-8 lg:mb-9 lg:text-left">
               LIÊN HỆ VỚI CHÚNG TÔI
             </h2>
           </ScrollReveal>
 
           {/* Contact information */}
           <ScrollReveal direction="left" delay={100}>
-            <div className="flex max-w-[650px] flex-col gap-5">
+            <div className="mx-auto flex w-full max-w-[650px] flex-col gap-4 lg:mx-0 lg:gap-5">
               {contactItems.map((item) => {
                 const Icon = item.icon
 
@@ -129,17 +126,17 @@ function ContactSection() {
                     key={item.label}
                     href={item.href}
                     aria-label={`${item.label}: ${item.value}`}
-                    className="group flex min-h-[54px] items-center gap-4 rounded-full border-[2.5px] border-[#4CAF50] bg-[#FEFFFA]/85 px-2 py-2 text-[#263322] shadow-sm transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-md md:min-h-[58px] md:gap-5"
+                    className="group flex min-h-[54px] w-full min-w-0 items-center gap-3 rounded-full border-2 border-[#4CAF50] bg-[#FEFFFA]/85 px-3 py-2 text-[#263322] shadow-sm transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-md sm:gap-4 sm:px-4 md:min-h-[58px] md:gap-5"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#075B3D] text-white transition group-hover:bg-[#1E5631] md:h-10 md:w-10">
                       <Icon />
                     </span>
 
-                    <span className="min-w-0 flex-1 text-center text-base font-medium md:text-lg lg:text-xl">
+                    <span className="min-w-0 flex-1 break-words text-center text-sm font-medium sm:text-base md:text-lg lg:text-xl">
                       {item.value}
                     </span>
 
-                    <span className="w-2 shrink-0" />
+                    <span className="w-1 shrink-0 sm:w-2" />
                   </a>
                 )
               })}
@@ -148,7 +145,7 @@ function ContactSection() {
 
           {/* Social media */}
           <ScrollReveal direction="up" delay={200}>
-            <div className="mt-9 flex items-center justify-center gap-7 lg:-translate-x-9 lg:gap-8">
+            <div className="mt-8 flex items-center justify-center gap-7 sm:mt-9 lg:justify-start">
               <a
                 href="#"
                 aria-label="Facebook CView"
@@ -182,13 +179,15 @@ function ContactSection() {
               </a>
             </div>
           </ScrollReveal>
-
         </div>
 
         {/* Right: mascot and decorations */}
-        <ScrollReveal direction="right" delay={150}>
-          <div className="relative mx-auto flex w-full max-w-[650px] items-center justify-center lg:min-h-[500px]">
-
+        <ScrollReveal
+          direction="right"
+          delay={150}
+          className="mx-auto w-full max-w-[420px] sm:max-w-[500px] lg:max-w-[650px]"
+        >
+          <div className="relative flex w-full items-center justify-center lg:min-h-[500px]">
             <img
               src={mascotContact}
               alt="Mascot CView đang làm việc bên laptop"
@@ -199,33 +198,31 @@ function ContactSection() {
               src={speechBubble}
               alt=""
               aria-hidden="true"
-              className="absolute -top-5 right-[18%] z-20 w-[42%] max-w-[240px] object-contain md:-top-8 md:right-[18%]"
+              className="absolute -top-2 right-[18%] z-20 w-[38%] max-w-[240px] object-contain sm:-top-5 sm:w-[42%] md:-top-8"
             />
 
             <img
               src={envelope}
               alt=""
               aria-hidden="true"
-              className="absolute right-[5%] top-[8%] z-20 w-10 object-contain md:w-12"
+              className="absolute right-[5%] top-[8%] z-20 w-8 object-contain sm:w-10 md:w-12"
             />
 
             <img
               src={contactCard}
               alt=""
               aria-hidden="true"
-              className="absolute left-[48%] top-[15%] z-20 w-14 object-contain md:w-16"
+              className="absolute left-[48%] top-[15%] z-20 w-10 object-contain sm:w-12 md:w-16"
             />
 
             <img
               src={lightbulb}
               alt=""
               aria-hidden="true"
-              className="absolute left-[13%] top-[23%] z-20 w-12 object-contain md:w-14"
+              className="absolute left-[13%] top-[23%] z-20 w-9 object-contain sm:w-11 md:w-14"
             />
-
           </div>
         </ScrollReveal>
-
       </div>
 
       {/* Bottom decorative curves */}
@@ -233,7 +230,7 @@ function ContactSection() {
         aria-hidden="true"
         viewBox="0 0 1440 120"
         preserveAspectRatio="none"
-        className="pointer-events-none absolute bottom-0 left-0 h-20 w-full opacity-70 md:h-28"
+        className="pointer-events-none absolute bottom-0 left-0 h-16 w-full opacity-70 sm:h-20 md:h-28"
       >
         <path
           d="M-20 65 C180 -15 280 120 470 70 S760 15 930 65 S1240 120 1460 45"

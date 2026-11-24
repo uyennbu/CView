@@ -40,75 +40,80 @@ function CVAnalysisSection() {
   return (
     <section
       id="phan-tich-cv"
-      className="relative isolate min-h-screen overflow-hidden bg-transparent px-6 py-16 md:px-10 lg:px-[5%] lg:py-20"
+      className="relative isolate w-full overflow-hidden bg-transparent px-4 py-12 sm:px-6 sm:py-16 md:px-10 lg:px-[5%] lg:py-20"
     >
       {/* Tiêu đề và mô tả */}
-      <div className="relative z-10 max-w-[650px] lg:translate-x-30">
-        <ScrollReveal direction="up">
-          <div className="flex items-center gap-4">
-            <h2 className="font-manrope text-4xl font-extrabold uppercase tracking-tight text-[#063B2C] md:text-[46px]">
-              PHÂN TÍCH CV
-            </h2>
+      <div className="relative z-10 mx-auto w-full max-w-[1200px]">
+        <div className="max-w-[650px]">
+          <ScrollReveal direction="up">
+            <div className="flex items-center justify-center gap-3 md:justify-start sm:gap-4">
+              <h2 className="text-3xl font-extrabold uppercase tracking-tight text-[#063B2C] sm:text-4xl md:text-[46px]">
+                PHÂN TÍCH CV
+              </h2>
+
+              <img
+                src={lightbulb}
+                alt=""
+                aria-hidden="true"
+                className="h-10 w-10 shrink-0 object-contain sm:h-12 sm:w-12 md:h-14 md:w-14"
+              />
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={100}>
+            <p className="mx-auto mt-4 max-w-[550px] text-center text-sm leading-relaxed text-[#26352B] sm:text-base md:mx-0 md:text-left md:text-[19px]">
+              Phân tích độ phù hợp của CV với các công việc đang có, gợi ý và
+              cách cải thiện CV, nâng cao cơ hội.
+            </p>
+          </ScrollReveal>
+
+          {/* Ba lợi ích */}
+          <ScrollReveal direction="up" delay={200}>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-xs font-semibold text-[#26352B] sm:gap-x-7 sm:text-sm md:justify-start md:text-base">
+              {['Nhanh chóng', 'Chính xác', 'Cá nhân hóa'].map((item) => (
+                <div key={item} className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#72C65C] text-xs text-white">
+                    ✓
+                  </span>
+                  {item}
+                </div>
+              ))}
+            </div>
+          </ScrollReveal>
+        </div>
+
+        {/* Mascot */}
+        <ScrollReveal
+          direction="right"
+          delay={150}
+          className="relative mx-auto mt-6 w-full max-w-[300px] sm:max-w-[360px] md:absolute md:right-0 md:top-0 md:mt-0 md:w-[38%] md:max-w-[400px] lg:right-[2%] lg:w-[40%] lg:max-w-[460px] xl:max-w-[500px]"
+        >
+          <div className="relative w-full">
+            <img
+              src={analysisLabel}
+              alt=""
+              aria-hidden="true"
+              className="absolute -left-2 top-0 z-20 w-24 -rotate-6 object-contain sm:-left-4 sm:w-32 lg:-left-8 lg:w-[155px]"
+            />
 
             <img
-              src={lightbulb}
+              src={documentIcon}
               alt=""
-              className="h-14 w-14 object-contain"
+              aria-hidden="true"
+              className="absolute -right-1 top-0 z-20 w-9 object-contain sm:w-12 lg:-right-2 lg:w-14"
             />
-          </div>
-        </ScrollReveal>
 
-        <ScrollReveal direction="up" delay={100}>
-          <p className="mt-4 max-w-[550px] text-[17px] leading-relaxed text-[#26352B] md:text-[19px]">
-            Phân tích độ phù hợp của CV với các công việc đang có, gợi ý và
-            cách cải thiện CV, nâng cao cơ hội.
-          </p>
-        </ScrollReveal>
-
-        {/* Ba lợi ích */}
-        <ScrollReveal direction="up" delay={200}>
-          <div className="mt-6 flex flex-wrap items-center gap-x-7 gap-y-3 text-sm font-semibold text-[#26352B] md:text-base">
-            {['Nhanh chóng', 'Chính xác', 'Cá nhân hóa'].map((item) => (
-              <div key={item} className="flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#72C65C] text-xs text-white">
-                  ✓
-                </span>
-                {item}
-              </div>
-            ))}
+            <img
+              src={mascotAnalysis}
+              alt="Mascot CView cầm kính lúp"
+              className="relative w-full object-contain"
+            />
           </div>
         </ScrollReveal>
       </div>
 
-      {/* Mascot bên phải */}
-      <ScrollReveal
-        direction="right"
-        delay={150}
-        className="pointer-events-none absolute right-[3%] top-[10px] z-10 hidden w-[400px] md:block lg:right-[6%] lg:w-[460px] xl:w-[500px]"
-      >
-        <div className="relative w-full">
-          <img
-            src={analysisLabel}
-            alt=""
-            className="absolute -left-8 top-0 z-20 w-[155px] -rotate-6 object-contain"
-          />
-
-          <img
-            src={documentIcon}
-            alt=""
-            className="absolute -right-2 top-0 z-20 w-14 object-contain"
-          />
-
-          <img
-            src={mascotAnalysis}
-            alt="Mascot CView cầm kính lúp"
-            className="relative w-full object-contain"
-          />
-        </div>
-      </ScrollReveal>
-
       {/* Ba bước phân tích CV */}
-      <div className="relative z-20 mt-20 grid grid-cols-1 justify-items-center gap-10 sm:grid-cols-3 sm:gap-6 lg:mt-[110px] lg:max-w-[1200px] lg:gap-10">
+      <div className="relative z-20 mx-auto mt-12 grid w-full max-w-[1200px] grid-cols-1 justify-items-center gap-8 sm:mt-14 sm:gap-10 md:grid-cols-2 lg:mt-[110px] lg:grid-cols-3 lg:gap-10">
         {steps.map((step, index) => (
           <ScrollReveal
             key={step.number}
@@ -116,31 +121,33 @@ function CVAnalysisSection() {
             delay={index * 150}
             className="group w-full max-w-[330px]"
           >
-            <div className="relative flex h-[270px] w-full items-center justify-center transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.03] hover:drop-shadow-[0_12px_18px_rgba(30,86,49,0.16)]">
+            <div className="relative flex h-[250px] w-full items-center justify-center transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.03] hover:drop-shadow-[0_12px_18px_rgba(30,86,49,0.16)] sm:h-[270px]">
               {/* Khung nền */}
               <img
                 src={stepFrame}
                 alt=""
+                aria-hidden="true"
                 className="absolute inset-0 h-full w-full object-fill"
               />
 
               {/* Nội dung trong khung */}
               <div className="relative z-10 flex h-full w-full flex-col items-center px-5 pt-2 text-center">
-                <span className="absolute -left-1 top-0 rounded-lg bg-[#FFEB91] px-3 py-1.5 text-xs font-extrabold text-[#253323]">
+                <span className="absolute -left-1 top-0 rounded-lg bg-[#FFEB91] px-3 py-1.5 text-[11px] font-extrabold text-[#253323] sm:text-xs">
                   {step.number}
                 </span>
 
                 <img
                   src={step.image}
                   alt=""
-                  className="mt-3 h-[85px] w-[95px] object-contain"
+                  aria-hidden="true"
+                  className="mt-3 h-[80px] w-[90px] object-contain sm:h-[85px] sm:w-[95px]"
                 />
 
-                <h3 className="mt-2 text-[15px] font-extrabold text-[#243322]">
+                <h3 className="mt-2 text-sm font-extrabold text-[#243322] sm:text-[15px]">
                   {step.title}
                 </h3>
 
-                <p className="mt-2 max-w-[190px] text-[12px] leading-[1.4] text-[#26352B]">
+                <p className="mt-2 max-w-[210px] text-xs leading-[1.5] text-[#26352B]">
                   {step.description}
                 </p>
               </div>
@@ -150,7 +157,8 @@ function CVAnalysisSection() {
                 <img
                   src={connector1}
                   alt=""
-                  className="pointer-events-none absolute -right-[105px] top-[75px] z-20 hidden w-[135px] lg:block"
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-[105px] top-[75px] z-20 hidden w-[135px] xl:block"
                 />
               )}
 
@@ -158,7 +166,8 @@ function CVAnalysisSection() {
                 <img
                   src={connector2}
                   alt=""
-                  className="pointer-events-none absolute -right-[105px] top-[75px] z-20 hidden w-[135px] lg:block"
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-[105px] top-[75px] z-20 hidden w-[135px] xl:block"
                 />
               )}
             </div>
@@ -167,11 +176,11 @@ function CVAnalysisSection() {
       </div>
 
       {/* Sparkle trang trí */}
-      <span className="pointer-events-none absolute left-[53%] top-[43%] z-10 text-3xl text-[#69C84E]">
+      <span className="pointer-events-none absolute right-[12%] top-[42%] z-10 hidden text-3xl text-[#69C84E] md:block">
         ✦
       </span>
 
-      <span className="pointer-events-none absolute left-[54%] top-[48%] z-10 text-xl text-[#69C84E]">
+      <span className="pointer-events-none absolute right-[14%] top-[48%] z-10 hidden text-xl text-[#69C84E] md:block">
         ✦
       </span>
     </section>

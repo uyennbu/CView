@@ -51,28 +51,32 @@ function JobConnectionSection() {
   return (
     <section
       id="tim-viec"
-      className="relative isolate min-h-screen overflow-hidden bg-transparent px-6 py-16 md:px-10 lg:px-[5%] lg:py-20"
+      className="relative isolate w-full overflow-hidden bg-transparent px-4 py-12 sm:px-6 sm:py-16 md:px-10 lg:px-[5%] lg:py-20"
     >
       {/* Background cloud */}
-      <div className="pointer-events-none absolute right-[5%] top-0 -z-10 w-[55%] max-w-[780px]">
+      <div className="pointer-events-none absolute right-0 top-0 -z-10 w-[75%] max-w-[780px] opacity-60 sm:right-[3%] sm:w-[60%] md:w-[55%]">
         <img
           src={cloudBackground}
           alt=""
+          aria-hidden="true"
           className="h-auto w-full object-contain"
         />
       </div>
 
-      <div className="mx-auto max-w-[1440px]">
+      <div className="mx-auto w-full max-w-[1440px]">
         {/* Heading and mascot */}
-        <div className="grid items-center gap-8 lg:grid-cols-2">
-          <ScrollReveal direction="left" className="relative z-10">
-            <h2 className="max-w-[650px] text-3xl font-extrabold leading-tight text-cview-dark md:text-4xl lg:text-[48px]">
+        <div className="grid grid-cols-1 items-center gap-5 sm:gap-8 lg:grid-cols-2 lg:gap-10">
+          <ScrollReveal
+            direction="left"
+            className="relative z-10 mx-auto w-full max-w-[650px] text-center lg:mx-0 lg:text-left"
+          >
+            <h2 className="text-[clamp(1.8rem,4.5vw,3rem)] font-extrabold leading-tight text-cview-dark">
               KẾT NỐI ĐÚNG NƠI MỞ LỐI
-              <br />
-              ĐÚNG <span className="text-cview-green">CƠ HỘI</span>
+              <br className="hidden sm:block" />
+              {' '}ĐÚNG <span className="text-cview-green">CƠ HỘI</span>
             </h2>
 
-            <p className="mt-4 text-base text-cview-dark md:text-lg">
+            <p className="mt-4 text-sm text-cview-dark sm:text-base md:text-lg">
               Nơi kết nối ứng viên và doanh nghiệp
             </p>
           </ScrollReveal>
@@ -80,7 +84,7 @@ function JobConnectionSection() {
           <ScrollReveal
             direction="right"
             delay={150}
-            className="flex justify-center lg:justify-end"
+            className="mx-auto flex w-full max-w-[330px] justify-center sm:max-w-[400px] lg:mx-0 lg:max-w-none lg:justify-end"
           >
             <img
               src={mascotJob}
@@ -91,23 +95,25 @@ function JobConnectionSection() {
         </div>
 
         {/* Feature cards */}
-        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+        <div className="mt-8 grid grid-cols-1 gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:gap-6">
           {features.map((feature, index) => (
             <ScrollReveal
               key={feature.title}
               direction="up"
               delay={index * 100}
+              className="h-full"
             >
-              <div className="flex h-full min-h-[100px] items-center gap-3 rounded-2xl border border-dashed border-cview-dark/70 bg-white/75 px-4 py-4 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F0FDE1] text-xl text-cview-green">
+              <div className="flex h-full min-h-[100px] items-center gap-3 rounded-2xl border border-dashed border-cview-dark/70 bg-white/75 px-4 py-4 shadow-sm backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:shadow-md sm:min-h-[115px]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F0FDE1] text-lg text-cview-green sm:h-11 sm:w-11 sm:text-xl">
                   {feature.icon}
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-bold text-cview-dark">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-cview-dark sm:text-base">
                     {feature.title}
                   </h3>
-                  <p className="mt-1 text-xs leading-relaxed text-gray-500">
+
+                  <p className="mt-1 text-xs leading-relaxed text-gray-500 sm:text-sm">
                     {feature.description}
                   </p>
                 </div>
@@ -117,36 +123,41 @@ function JobConnectionSection() {
         </div>
 
         {/* Statistics */}
-        <div className="mt-12 grid gap-8 lg:grid-cols-[1.2fr_3fr] lg:items-end">
-          <ScrollReveal direction="left">
-            <span className="inline-flex rounded-full bg-[#E6FADD] px-4 py-2 text-xs font-bold text-cview-green">
+        <div className="mt-10 grid gap-8 sm:mt-12 lg:grid-cols-[1.2fr_3fr] lg:items-end lg:gap-10">
+          <ScrollReveal
+            direction="left"
+            className="text-center lg:text-left"
+          >
+            <span className="inline-flex rounded-full bg-[#E6FADD] px-4 py-2 text-[11px] font-bold text-cview-green sm:text-xs">
               CƠ HỘI DÀNH CHO BẠN
             </span>
 
-            <h3 className="mt-4 max-w-[330px] text-xl font-extrabold leading-snug text-cview-dark">
+            <h3 className="mx-auto mt-4 max-w-[330px] text-lg font-extrabold leading-snug text-cview-dark sm:text-xl lg:mx-0">
               HÀNG NGHÌN VIỆC LÀM ĐANG CHỜ BẠN KHÁM PHÁ
             </h3>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-4 lg:gap-6">
             {statistics.map((stat, index) => (
               <ScrollReveal
                 key={stat.number}
                 direction="up"
                 delay={index * 120}
+                className="h-full"
               >
-                <div className="flex flex-col">
+                <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
                   <img
                     src={stat.icon}
                     alt=""
+                    aria-hidden="true"
                     className="mb-3 h-9 w-9 object-contain"
                   />
 
-                  <p className="text-2xl font-extrabold text-cview-dark md:text-3xl">
+                  <p className="text-2xl font-extrabold text-cview-dark sm:text-2xl md:text-3xl">
                     {stat.number}
                   </p>
 
-                  <p className="mt-1 text-sm leading-relaxed text-cview-dark md:text-base">
+                  <p className="mt-1 text-xs leading-relaxed text-cview-dark sm:text-sm md:text-base">
                     {stat.label}
                   </p>
                 </div>

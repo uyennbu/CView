@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiRequest } from '../services/api'
@@ -16,8 +17,12 @@ export default function RegisterPage() {
   // Tự động gợi ý username từ phần đầu email nếu người dùng chưa nhập
   const handleEmailChange = (val) => {
     setEmail(val)
+
     if (!username && val.includes('@')) {
-      const suggested = val.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '')
+      const suggested = val
+        .split('@')[0]
+        .replace(/[^a-zA-Z0-9_]/g, '')
+
       if (suggested.length >= 3) {
         setUsername(suggested)
       }
@@ -30,7 +35,9 @@ export default function RegisterPage() {
     setSuccess('')
     setLoading(true)
 
-    const finalUsername = username.trim() || email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '')
+    const finalUsername =
+      username.trim() ||
+      email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '')
 
     try {
       await apiRequest('/auth/candidate/register', {
@@ -46,116 +53,172 @@ export default function RegisterPage() {
       alert('Đăng ký thành công!')
       navigate('/login')
     } catch (err) {
-      setError(err.message || 'Đăng ký không thành công. Vui lòng kiểm tra lại thông tin.')
+      setError(
+        err.message ||
+          'Đăng ký không thành công. Vui lòng kiểm tra lại thông tin.'
+      )
     } finally {
       setLoading(false)
     }
   }
 
+  const inputClass =
+    'w-full min-w-0 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-gray-400 focus:border-[#4CAF50] focus:ring-2 focus:ring-[#4CAF50]/20'
+
+  const labelClass =
+    'mb-2 block text-sm font-semibold text-gray-700'
+
   return (
-    <div className="flex min-h-[calc(100vh-100px)] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-gray-100">
-        <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold text-[#1E5631]">Đăng ký Ứng viên</h2>
-          <p className="mt-2 text-sm text-gray-600">
+    <main className="flex min-h-[calc(100svh-100px)] w-full items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
+      <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-5 shadow-xl sm:p-8">
+
+        {/* Tiêu đề */}
+        <div className="mb-6 text-center sm:mb-8">
+          <h1 className="text-2xl font-extrabold leading-tight text-[#1E5631] sm:text-3xl">
+            Đăng ký Ứng viên
+          </h1>
+
+          <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-gray-600 sm:max-w-none">
             Tạo tài khoản để bắt đầu chấm điểm CV và nhận gợi ý việc làm
           </p>
         </div>
 
+        {/* Thông báo lỗi */}
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+          <div
+            role="alert"
+            className="mb-5 break-words rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-relaxed text-red-700"
+          >
             {error}
           </div>
         )}
 
+        {/* Thông báo thành công */}
         {success && (
-          <div className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700 border border-green-200">
+          <div
+            role="status"
+            className="mb-5 break-words rounded-xl border border-green-200 bg-green-50 p-3 text-sm leading-relaxed text-green-700"
+          >
             {success}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+        {/* Form đăng ký */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* Họ và tên */}
+          <div className="min-w-0">
+            <label htmlFor="fullName" className={labelClass}>
               Họ và tên
             </label>
+
             <input
+              id="fullName"
               type="text"
               required
+              autoComplete="name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="VD: Nguyễn Văn An"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#4CAF50] focus:outline-none focus:ring-2 focus:ring-[#4CAF50]/20"
+              className={inputClass}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          {/* Email */}
+          <div className="min-w-0">
+            <label htmlFor="email" className={labelClass}>
               Địa chỉ Email
             </label>
+
             <input
+              id="email"
               type="email"
               required
+              autoComplete="email"
               value={email}
               onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="VD: nguyenvana@gmail.com"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#4CAF50] focus:outline-none focus:ring-2 focus:ring-[#4CAF50]/20"
+              className={inputClass}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tên đăng nhập <span className="text-xs text-gray-400 font-normal">(từ 3 ký tự)</span>
+          {/* Tên đăng nhập */}
+          <div className="min-w-0">
+            <label htmlFor="username" className={labelClass}>
+              Tên đăng nhập{' '}
+              <span className="text-xs font-normal text-gray-400">
+                (từ 3 ký tự)
+              </span>
             </label>
+
             <input
+              id="username"
               type="text"
               required
+              minLength={3}
+              autoComplete="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="VD: nguyenvana"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#4CAF50] focus:outline-none focus:ring-2 focus:ring-[#4CAF50]/20"
+              className={inputClass}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mật khẩu <span className="text-xs text-gray-400 font-normal">(tối thiểu 6 ký tự)</span>
+          {/* Mật khẩu */}
+          <div className="min-w-0">
+            <label htmlFor="password" className={labelClass}>
+              Mật khẩu{' '}
+              <span className="text-xs font-normal text-gray-400">
+                (tối thiểu 6 ký tự)
+              </span>
             </label>
+
             <input
+              id="password"
               type="password"
               required
               minLength={6}
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#4CAF50] focus:outline-none focus:ring-2 focus:ring-[#4CAF50]/20"
+              className={inputClass}
             />
           </div>
 
+          {/* Nút đăng ký */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-[#FF4B6E] py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#ed3d60] disabled:opacity-50"
+            className="w-full rounded-xl bg-[#FF4B6E] px-4 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-[#ed3d60] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? 'Đang khởi tạo tài khoản...' : 'Đăng ký ngay'}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600 space-y-2">
+        {/* Điều hướng */}
+        <div className="mt-6 space-y-4 text-center text-sm text-gray-600">
           <p>
             Đã có tài khoản?{' '}
-            <Link to="/login" className="font-semibold text-[#1E5631] hover:underline">
+            <Link
+              to="/login"
+              className="font-bold text-[#1E5631] transition hover:underline"
+            >
               Đăng nhập
             </Link>
           </p>
-          <p>
-            <Link to="/" className="text-gray-500 hover:text-[#1E5631] text-xs">
+
+          <div className="border-t border-gray-100 pt-4">
+            <Link
+              to="/"
+              className="inline-block text-xs font-medium text-gray-500 transition hover:text-[#1E5631] sm:text-sm"
+            >
               ← Quay về Trang chủ
             </Link>
-          </p>
+          </div>
         </div>
+
       </div>
-    </div>
+    </main>
   )
 }
-
