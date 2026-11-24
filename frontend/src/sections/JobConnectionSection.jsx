@@ -131,6 +131,94 @@ const demandData = {
   ],
 }
 
+const cvAnalysisStats = [
+  {
+    id: 'today-analyses',
+    value: '1.284',
+    label: 'Lượt phân tích CV hôm nay',
+    badge: '+24% so với hôm qua',
+    badgeClass: 'bg-[#E6FADD] text-[#1E5631]',
+    subtext: 'Thời gian xử lý TB: 1.8 giây/CV',
+  },
+  {
+    id: 'month-analyses',
+    value: '34.620',
+    label: 'Lượt phân tích CV trong tháng',
+    badge: 'Tháng 11/2026',
+    badgeClass: 'bg-[#E2F2FF] text-[#1D73D8]',
+    subtext: 'Tỷ lệ CV đạt chuẩn ứng tuyển: 74%',
+  },
+  {
+    id: 'avg-ats-score',
+    value: '78.4 / 100',
+    label: 'Điểm ATS trung bình toàn hệ thống',
+    badge: 'Mức Khá - Tốt',
+    badgeClass: 'bg-[#FFF5BE] text-[#8F7C00]',
+    subtext: 'Chuẩn hóa theo 29 tiêu chí doanh nghiệp',
+  },
+]
+
+const topSkillsByDomain = {
+  it: {
+    name: 'CNTT / Phần mềm & AI',
+    skills: [
+      { name: 'Python & FastAPI', mentions: '4.820 JD', percent: 88, color: 'bg-[#43A948]' },
+      { name: 'ReactJS / TypeScript', mentions: '4.390 JD', percent: 82, color: 'bg-[#3B82F6]' },
+      { name: 'SQL & PostgreSQL', mentions: '3.950 JD', percent: 76, color: 'bg-[#06B6D4]' },
+      { name: 'Docker / CI-CD', mentions: '3.210 JD', percent: 65, color: 'bg-[#F59E0B]' },
+      { name: 'Git & Agile Scrum', mentions: '2.980 JD', percent: 60, color: 'bg-[#EAB308]' },
+    ],
+  },
+  marketing: {
+    name: 'Marketing & Truyền thông',
+    skills: [
+      { name: 'Content Marketing & Copywriting', mentions: '3.640 JD', percent: 86, color: 'bg-[#43A948]' },
+      { name: 'SEO / SEM & Google Analytics', mentions: '3.210 JD', percent: 79, color: 'bg-[#3B82F6]' },
+      { name: 'Facebook & TikTok Ads', mentions: '2.890 JD', percent: 72, color: 'bg-[#06B6D4]' },
+      { name: 'Canva / Thiết kế cơ bản', mentions: '2.450 JD', percent: 63, color: 'bg-[#F59E0B]' },
+      { name: 'Lập kế hoạch truyền thông', mentions: '2.120 JD', percent: 56, color: 'bg-[#EAB308]' },
+    ],
+  },
+  sales: {
+    name: 'Kinh doanh / Bán hàng',
+    skills: [
+      { name: 'Đàm phán & Thuyết phục', mentions: '5.410 JD', percent: 91, color: 'bg-[#43A948]' },
+      { name: 'Chăm sóc khách hàng & CRM', mentions: '4.680 JD', percent: 83, color: 'bg-[#3B82F6]' },
+      { name: 'Khai thác khách hàng B2B/B2C', mentions: '4.120 JD', percent: 75, color: 'bg-[#06B6D4]' },
+      { name: 'Telesales & Xử lý từ chối', mentions: '3.590 JD', percent: 67, color: 'bg-[#F59E0B]' },
+      { name: 'Báo cáo doanh số Excel', mentions: '2.870 JD', percent: 55, color: 'bg-[#EAB308]' },
+    ],
+  },
+  finance: {
+    name: 'Tài chính / Kế toán & Ngân hàng',
+    skills: [
+      { name: 'Excel nâng cao & Phân tích số liệu', mentions: '3.480 JD', percent: 89, color: 'bg-[#43A948]' },
+      { name: 'Hạch toán & Báo cáo tài chính', mentions: '3.150 JD', percent: 81, color: 'bg-[#3B82F6]' },
+      { name: 'Phần mềm MISA / SAP ERP', mentions: '2.740 JD', percent: 73, color: 'bg-[#06B6D4]' },
+      { name: 'Phân tích rủi ro tín dụng', mentions: '2.190 JD', percent: 61, color: 'bg-[#F59E0B]' },
+      { name: 'Chuẩn mực kế toán & Thuế', mentions: '1.950 JD', percent: 54, color: 'bg-[#EAB308]' },
+    ],
+  },
+  hr: {
+    name: 'Nhân sự & Hành chính (HR)',
+    skills: [
+      { name: 'Tạo nguồn & Phỏng vấn (Sourcing)', mentions: '2.640 JD', percent: 85, color: 'bg-[#43A948]' },
+      { name: 'Chính sách C&B & Bảo hiểm', mentions: '2.210 JD', percent: 76, color: 'bg-[#3B82F6]' },
+      { name: 'Luật Lao động & Hợp đồng', mentions: '1.980 JD', percent: 69, color: 'bg-[#06B6D4]' },
+      { name: 'Đào tạo & Đánh giá KPI/OKR', mentions: '1.650 JD', percent: 60, color: 'bg-[#F59E0B]' },
+      { name: 'Văn hóa doanh nghiệp', mentions: '1.420 JD', percent: 52, color: 'bg-[#EAB308]' },
+    ],
+  },
+}
+
+const atsScoresByDomain = [
+  { domain: 'CNTT / Phần mềm & AI', score: 82.5, benchmark: 'Chuẩn ngành: 75+', barClass: 'bg-[#43A948]' },
+  { domain: 'Tài chính / Kế toán', score: 79.8, benchmark: 'Chuẩn ngành: 74+', barClass: 'bg-[#3B82F6]' },
+  { domain: 'Marketing / Truyền thông', score: 77.2, benchmark: 'Chuẩn ngành: 72+', barClass: 'bg-[#06B6D4]' },
+  { domain: 'Kinh doanh / Bán hàng', score: 75.6, benchmark: 'Chuẩn ngành: 70+', barClass: 'bg-[#F59E0B]' },
+  { domain: 'Nhân sự / Hành chính', score: 76.9, benchmark: 'Chuẩn ngành: 72+', barClass: 'bg-[#EAB308]' },
+]
+
 const yAxisGrowth = ['45,000', '44,000', '43,000', '42,000', '41,000', '40,000', '39,000', '38,000']
 const xAxisDates = ['26/10', '01/11', '07/11', '13/11', '19/11', '25/11']
 const yAxisDemand = ['10,000', '8,000', '6,000', '4,000', '2,000', '0']
@@ -148,16 +236,21 @@ function TrendIcon() {
 
 function JobConnectionSection() {
   const [demandFilter, setDemandFilter] = useState('industry')
+  const [skillDomain, setSkillDomain] = useState('it')
+
   const currentDemand = demandData[demandFilter]
+  const currentDomainSkills = topSkillsByDomain[skillDomain]
 
   return (
     <section
       id="tim-viec"
       className="relative isolate mt-8 w-full overflow-hidden bg-transparent px-4 py-6 sm:mt-10 sm:px-6 sm:py-8 md:px-10 lg:mt-16 lg:px-[5%] lg:py-10"
     >
-      <div className="mx-auto w-full max-w-[1080px] px-2 sm:px-6">
+      <div className="mx-auto flex w-full max-w-[1080px] flex-col gap-10 px-2 sm:gap-12 sm:px-6 lg:gap-16">
+        {/* =================================================================
+            PHẦN 1: DASHBOARD THỊ TRƯỜNG VIỆC LÀM HÔM NAY
+        ================================================================== */}
         <ScrollReveal direction="up">
-          {/* Outer Mini Dashboard Card */}
           <div className="overflow-hidden rounded-[22px] border-2 border-[#B9E4A6] bg-gradient-to-br from-[#F4FCEB] via-[#FFFFFF] to-[#F9FDE8] shadow-[0_12px_32px_rgba(30,86,49,0.08)]">
 
             {/* Top Header Banner */}
@@ -431,6 +524,169 @@ function JobConnectionSection() {
                   </div>
 
                 </div>
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
+
+        {/* =================================================================
+            PHẦN 2: THỐNG KÊ KỸ NĂNG HOT & ĐIỂM CHUẨN ATS (CV ANALYTICS)
+        ================================================================== */}
+        <ScrollReveal direction="up" delay={120}>
+          <div className="overflow-hidden rounded-[22px] border-2 border-[#B9E4A6] bg-gradient-to-br from-[#F4FCEB] via-[#FFFFFF] to-[#F9FDE8] shadow-[0_12px_32px_rgba(30,86,49,0.08)]">
+
+            {/* Header Banner */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#D5EFC8] bg-gradient-to-r from-[#1A241E] via-[#1E5631] to-[#2E7D32] px-4 py-2.5 text-white sm:px-6 sm:py-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-[#FFEB91] shadow-[0_0_8px_#FFEB91]" />
+                <h2 className="text-sm font-extrabold tracking-tight sm:text-lg md:text-xl">
+                  Thống kê Kỹ năng &amp; Điểm chuẩn ATS{' '}
+                  <span className="text-[#B8F89E]">CView AI</span>
+                </h2>
+              </div>
+
+              <Link
+                to="/cv-analysis"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#FF4B5C] px-3.5 py-1 text-xs font-bold !text-white shadow-xs transition hover:bg-[#ed3d50]"
+              >
+                <span>Chấm điểm CV ngay</span>
+                <span>→</span>
+              </Link>
+            </div>
+
+            <div className="flex flex-col gap-3.5 p-3.5 sm:gap-4 sm:p-4">
+              {/* Hàng 1: 3 Thẻ số liệu Lượt phân tích CV (Ngày / Tháng) & Điểm ATS TB */}
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3.5">
+                {cvAnalysisStats.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col justify-between rounded-xl border border-[#CDEBBF] bg-white px-3.5 py-2.5 shadow-2xs transition hover:border-[#4CAF50] hover:shadow-sm"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-lg font-extrabold tracking-tight text-[#1E5631] sm:text-xl">
+                        {item.value}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[9.5px] font-bold ${item.badgeClass}`}
+                      >
+                        {item.badge}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11.5px] font-bold text-[#1A241E]">
+                      {item.label}
+                    </p>
+                    <p className="mt-0.5 text-[10px] font-medium text-gray-500">
+                      {item.subtext}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Hàng 2: 2 Biểu đồ (Kỹ năng theo lĩnh vực & Điểm ATS theo lĩnh vực) */}
+              <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
+
+                {/* CỘT TRÁI: Kỹ năng được nhắc đến nhiều nhất theo lĩnh vực */}
+                <div className="flex flex-col justify-between rounded-xl border border-[#CDEBBF] bg-white p-3.5 shadow-2xs">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <TrendIcon />
+                      <h3 className="truncate text-xs font-extrabold text-[#1A241E] sm:text-[13px]">
+                        Kỹ năng xuất hiện nhiều nhất
+                      </h3>
+                    </div>
+
+                    <select
+                      aria-label="Chọn lĩnh vực xem kỹ năng"
+                      value={skillDomain}
+                      onChange={(e) => setSkillDomain(e.target.value)}
+                      className="shrink-0 rounded-lg border border-[#4CAF50] bg-[#F7FDF2] px-2 py-0.5 text-[11px] font-bold text-[#1E5631] outline-none transition focus:ring-2 focus:ring-[#4CAF50]/30"
+                    >
+                      <option value="it">CNTT / Phần mềm &amp; AI</option>
+                      <option value="marketing">Marketing / Truyền thông</option>
+                      <option value="sales">Kinh doanh / Bán hàng</option>
+                      <option value="finance">Tài chính / Kế toán</option>
+                      <option value="hr">Nhân sự / Hành chính</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-2.5 rounded-lg bg-[#FAFDF7] p-3">
+                    {currentDomainSkills.skills.map((sk, idx) => (
+                      <div key={sk.name} className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between gap-2 text-[11px]">
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#E6FADD] text-[9px] font-extrabold text-[#1E5631]">
+                              {idx + 1}
+                            </span>
+                            <span className="truncate font-bold text-[#1A241E]">
+                              {sk.name}
+                            </span>
+                          </div>
+                          <span className="shrink-0 text-[10px] font-bold text-[#1E5631]">
+                            {sk.mentions} ({sk.percent}%)
+                          </span>
+                        </div>
+
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-[#E8F5E2]">
+                          <div
+                            style={{ width: `${sk.percent}%` }}
+                            className={`h-full rounded-full transition-all duration-500 ${sk.color}`}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="mt-2 text-[10px] font-medium text-gray-500">
+                    * Tỷ lệ % JD trong lĩnh vực <strong className="text-[#1E5631]">{currentDomainSkills.name}</strong> yêu cầu kỹ năng này.
+                  </p>
+                </div>
+
+                {/* CỘT PHẢI: Điểm ATS trung bình & theo từng lĩnh vực */}
+                <div className="flex flex-col justify-between rounded-xl border border-[#CDEBBF] bg-white p-3.5 shadow-2xs">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <TrendIcon />
+                      <h3 className="text-xs font-extrabold text-[#1A241E] sm:text-[13px]">
+                        Điểm ATS trung bình theo lĩnh vực
+                      </h3>
+                    </div>
+                    <span className="rounded-md bg-[#F0FDE1] px-2 py-0.5 text-[9.5px] font-bold text-[#1E5631]">
+                      TB Hệ thống: 78.4%
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-2.5 rounded-lg bg-[#FAFDF7] p-3">
+                    {atsScoresByDomain.map((item) => (
+                      <div key={item.domain} className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between gap-2 text-[11px]">
+                          <span className="truncate font-bold text-[#1A241E]">
+                            {item.domain}
+                          </span>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="text-[9.5px] font-medium text-gray-400">
+                              {item.benchmark}
+                            </span>
+                            <span className="rounded-md bg-[#E6FADD] px-1.5 py-0.5 text-[10px] font-extrabold text-[#1E5631]">
+                              {item.score} điểm
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="relative h-2 w-full overflow-hidden rounded-full bg-[#E8F5E2]">
+                          <div
+                            style={{ width: `${item.score}%` }}
+                            className={`h-full rounded-full transition-all duration-500 ${item.barClass}`}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="mt-2 text-[10px] font-medium text-gray-500">
+                    * CV đạt từ <strong className="text-[#1E5631]">75.0 điểm ATS</strong> trở lên có tỷ lệ vượt qua vòng lọc hồ sơ cao gấp 2.4 lần.
+                  </p>
+                </div>
+
               </div>
             </div>
           </div>
