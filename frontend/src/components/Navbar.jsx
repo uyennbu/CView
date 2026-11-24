@@ -49,8 +49,8 @@ export default function Navbar() {
           onClick={closeMenu}
           aria-current={isActive ? 'page' : undefined}
           className={`
-            relative py-2 font-semibold transition-colors
-            ${mobile ? 'block w-full rounded-lg px-4 text-base' : 'whitespace-nowrap text-[18px]'}
+            relative py-1.5 font-semibold transition-colors
+            ${mobile ? 'block w-full rounded-lg px-4 text-sm' : 'whitespace-nowrap text-[15px] lg:text-[16px]'}
             ${
               isActive
                 ? 'text-[#1E5631]'
@@ -67,7 +67,7 @@ export default function Navbar() {
                 ${
                   mobile
                     ? 'bottom-1 left-4 h-0.5 w-8'
-                    : 'bottom-0 left-0 h-1 w-full'
+                    : 'bottom-0 left-0 h-[3px] w-full'
                 }
               `}
             />
@@ -89,7 +89,7 @@ export default function Navbar() {
             ${
               mobile
                 ? 'w-full flex-col items-stretch gap-3'
-                : 'items-center gap-3'
+                : 'items-center gap-2.5'
             }
           `}
         >
@@ -97,16 +97,16 @@ export default function Navbar() {
           <Link
             to={accountPath}
             onClick={closeMenu}
-            className="flex items-center gap-2 rounded-full bg-[#E6FADD] px-4 py-2 border border-[#4CAF50]/30 shadow-sm transition hover:bg-[#d8f5cb]"
+            className="flex items-center gap-2 rounded-full bg-[#E6FADD] px-3.5 py-1.5 border border-[#4CAF50]/30 shadow-sm transition hover:bg-[#d8f5cb]"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1E5631] text-sm font-bold text-white uppercase">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#1E5631] text-xs font-bold text-white uppercase">
               {(user?.full_name || user?.username || 'U')[0]}
             </div>
             <div className="min-w-0 text-left">
-              <div className="truncate text-sm font-bold text-[#1E5631] leading-tight">
+              <div className="truncate text-xs font-bold text-[#1E5631] leading-tight">
                 {user?.full_name || user?.username}
               </div>
-              <div className="text-[11px] text-gray-500 font-medium">
+              <div className="text-[10px] text-gray-500 font-medium">
                 {user?.roles?.join(', ') || 'Ứng viên'}
               </div>
             </div>
@@ -116,7 +116,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100"
+            className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100"
           >
             Đăng xuất
           </button>
@@ -131,7 +131,7 @@ export default function Navbar() {
           ${
             mobile
               ? 'w-full flex-col items-stretch gap-2'
-              : 'items-center gap-3'
+              : 'items-center gap-2.5'
           }
         `}
       >
@@ -139,8 +139,8 @@ export default function Navbar() {
         <Link
           to="/login"
           onClick={closeMenu}
-          className={`rounded-lg border border-[#1E5631] font-semibold text-[#1A241E] transition-colors hover:bg-[#E6FADD] ${
-            mobile ? 'px-4 py-3 text-center text-sm' : 'px-6 py-3 text-[16px]'
+          className={`rounded-xl border border-[#1E5631] font-semibold text-[#1A241E] transition-colors hover:bg-[#E6FADD] ${
+            mobile ? 'px-4 py-2.5 text-center text-sm' : 'px-4 py-2 text-[14px]'
           }`}
         >
           Đăng nhập
@@ -149,8 +149,8 @@ export default function Navbar() {
         <Link
           to="/register"
           onClick={closeMenu}
-          className={`rounded-lg bg-[#FF4B6E] font-semibold text-white transition-colors hover:bg-[#ed3d60] ${
-            mobile ? 'px-4 py-3 text-center text-sm' : 'px-6 py-3 text-[16px]'
+          className={`rounded-xl bg-[#FF4B5C] font-semibold text-white transition-colors hover:bg-[#ed3d50] ${
+            mobile ? 'px-4 py-2.5 text-center text-sm' : 'px-4 py-2 text-[14px]'
           }`}
         >
           Đăng ký
@@ -159,8 +159,8 @@ export default function Navbar() {
         <Link
           to="/recruiter/login"
           onClick={closeMenu}
-          className={`rounded-lg bg-[#1A241E] font-semibold !text-white transition-colors hover:bg-[#1E5631] ${
-            mobile ? 'px-4 py-3 text-center text-sm' : 'px-6 py-3 text-[16px]'
+          className={`rounded-xl bg-[#1A241E] font-semibold !text-white transition-colors hover:bg-[#1E5631] ${
+            mobile ? 'px-4 py-2.5 text-center text-sm' : 'px-4 py-2 text-[14px]'
           }`}
         >
           Tuyển dụng
@@ -173,7 +173,7 @@ export default function Navbar() {
     <header className="relative z-50 w-full bg-transparent">
       <nav
         aria-label="Điều hướng chính"
-        className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-5 lg:px-14"
+        className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3 md:px-10 lg:px-12"
       >
         {/* Logo */}
         <Link
@@ -185,17 +185,17 @@ export default function Navbar() {
           <img
             src={logoCView}
             alt="CView"
-            className="w-[135px] h-auto object-contain"
+            className="w-[115px] h-auto object-contain"
           />
         </Link>
 
-        {/* Navigation Items (Ngăn ngang như cũ trên màn hình >= md) */}
-        <div className="hidden md:flex items-center gap-10">
+        {/* Navigation Items (Nằm ngang như cũ trên màn hình >= md) */}
+        <div className="hidden md:flex items-center gap-8 lg:gap-10">
           {renderNavLinks(false)}
         </div>
 
         {/* Account Actions (Nằm ngang như cũ trên màn hình >= md) */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2.5">
           {renderAccountActions(false)}
         </div>
 
@@ -207,7 +207,7 @@ export default function Navbar() {
           aria-expanded={isMenuOpen}
           aria-controls="mobile-navigation"
           className="
-            flex h-11 w-11 shrink-0 items-center justify-center
+            flex h-10 w-10 shrink-0 items-center justify-center
             rounded-xl border border-[#1E5631]/20
             bg-white text-[#1E5631] shadow-sm
             transition-colors hover:bg-[#E6FADD]
@@ -219,8 +219,8 @@ export default function Navbar() {
           {isMenuOpen ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -235,8 +235,8 @@ export default function Navbar() {
           ) : (
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -268,7 +268,7 @@ export default function Navbar() {
           }
         `}
       >
-        <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-2 px-6 pb-5 pt-3">
+        <div className="mx-auto flex w-full max-w-[1366px] flex-col gap-2 px-6 pb-5 pt-3">
           {/* Navigation Links */}
           <div className="flex flex-col gap-1">
             {renderNavLinks(true)}
