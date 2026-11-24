@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import CVUpload from '../components/CVUpload'
 import CVAnalysisOverview from '../components/analysis/CVAnalysisOverview'
@@ -15,14 +14,13 @@ export default function CVAnalysisPage() {
   }
 
   return (
-    <main className="relative min-h-[80vh] w-full overflow-x-clip">
+    <main className="relative w-full overflow-x-clip">
       <div
         className="
-          mx-auto w-full max-w-[1440px]
-          px-4 py-8
-          sm:px-6 sm:py-10
-          md:py-12
-          lg:px-14 lg:py-14
+          mx-auto w-full max-w-[1140px]
+          px-4 pb-6 pt-3
+          sm:px-6 sm:pb-8 sm:pt-4
+          lg:px-12 lg:pb-10 lg:pt-5
         "
       >
         {!showResults ? (
@@ -30,19 +28,18 @@ export default function CVAnalysisPage() {
             {/* Page Heading */}
             <section
               className="
-                mx-auto mb-8 w-full max-w-3xl
+                mx-auto mb-5 w-full max-w-2xl
                 text-center
-                sm:mb-10
-                lg:mb-12
+                sm:mb-6
               "
             >
               <h1
                 className="
-                  break-words text-3xl font-extrabold
+                  break-words text-2xl font-extrabold
                   uppercase leading-tight tracking-tight
                   text-cview-dark
-                  sm:text-4xl
-                  md:text-5xl
+                  sm:text-3xl
+                  md:text-4xl
                 "
               >
                 Phân tích CV
@@ -50,10 +47,10 @@ export default function CVAnalysisPage() {
 
               <p
                 className="
-                  mx-auto mt-3 max-w-2xl
-                  text-sm leading-relaxed text-cview-dark
-                  sm:mt-4 sm:text-base
-                  md:text-lg
+                  mx-auto mt-2 max-w-xl
+                  text-xs leading-relaxed text-cview-dark
+                  sm:mt-2.5 sm:text-sm
+                  md:text-base
                 "
               >
                 Phân tích độ phù hợp của CV với các công việc đang có,
@@ -62,7 +59,7 @@ export default function CVAnalysisPage() {
             </section>
 
             {/* CV Upload */}
-            <section className="mx-auto w-full max-w-5xl">
+            <section className="mx-auto w-full max-w-3xl">
               <CVUpload onAnalyze={handleAnalyze} />
             </section>
           </>

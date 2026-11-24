@@ -1,4 +1,3 @@
-
 import { useRef, useState } from 'react'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -100,7 +99,7 @@ export default function CVUpload({ onAnalyze }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[850px] min-w-0">
+    <div className="mx-auto w-full max-w-[740px] min-w-0">
       {/* Upload Area */}
       <div
         role="button"
@@ -112,15 +111,15 @@ export default function CVUpload({ onAnalyze }) {
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
         className={`
-          relative flex min-h-[220px] w-full min-w-0
+          relative flex min-h-[175px] w-full min-w-0
           flex-col items-center justify-center
-          gap-4 rounded-2xl border-2 border-dashed
-          px-4 py-7 text-center
+          gap-3 rounded-2xl border-2 border-dashed
+          px-4 py-5 text-center
           transition-all duration-200
           focus-visible:outline-none
           focus-visible:ring-2 focus-visible:ring-cview-green
           focus-visible:ring-offset-2
-          sm:min-h-[250px] sm:gap-5 sm:px-8 sm:py-9
+          sm:min-h-[195px] sm:gap-3.5 sm:px-7 sm:py-6
           ${
             isDragging
               ? 'scale-[1.01] border-cview-green bg-cview-mint/70'
@@ -141,16 +140,16 @@ export default function CVUpload({ onAnalyze }) {
           <>
             {/* Upload Icon */}
             <div className="
-              flex h-14 w-14 shrink-0 items-center justify-center
+              flex h-12 w-12 shrink-0 items-center justify-center
               rounded-full bg-cview-mint
-              sm:h-16 sm:w-16
+              sm:h-13 sm:w-13
             ">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
-                className="h-8 w-8 text-cview-primary sm:h-9 sm:w-9"
+                className="h-6 w-6 text-cview-primary sm:h-7 sm:w-7"
                 stroke="currentColor"
-                strokeWidth="1.7"
+                strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 aria-hidden="true"
@@ -164,9 +163,9 @@ export default function CVUpload({ onAnalyze }) {
             {/* Upload Instructions */}
             <div className="w-full min-w-0">
               <h2 className="
-                break-words text-lg font-bold leading-snug
+                break-words text-base font-bold leading-snug
                 text-cview-dark
-                sm:text-xl md:text-2xl
+                sm:text-lg md:text-xl
               ">
                 {isDragging
                   ? 'Thả CV của bạn vào đây'
@@ -174,9 +173,9 @@ export default function CVUpload({ onAnalyze }) {
               </h2>
 
               <p className="
-                mx-auto mt-2 max-w-md
+                mx-auto mt-1 max-w-md
                 text-xs leading-relaxed text-gray-500
-                sm:text-sm
+                sm:text-[13px]
               ">
                 Hoặc nhấn vào khu vực này để chọn file từ thiết bị
               </p>
@@ -212,16 +211,16 @@ export default function CVUpload({ onAnalyze }) {
           <>
             {/* Selected File Icon */}
             <div className="
-              flex h-14 w-14 shrink-0 items-center justify-center
+              flex h-12 w-12 shrink-0 items-center justify-center
               rounded-full bg-cview-mint
-              sm:h-16 sm:w-16
+              sm:h-13 sm:w-13
             ">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
-                className="h-8 w-8 text-cview-primary sm:h-9 sm:w-9"
+                className="h-6 w-6 text-cview-primary sm:h-7 sm:w-7"
                 stroke="currentColor"
-                strokeWidth="1.7"
+                strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 aria-hidden="true"
@@ -242,13 +241,13 @@ export default function CVUpload({ onAnalyze }) {
                 {file.name}
               </p>
 
-              <p className="mt-1 text-xs text-gray-500 sm:text-sm">
+              <p className="mt-0.5 text-xs text-gray-500">
                 {formatFileSize(file.size)}
               </p>
 
               <p className="
-                mt-2 text-sm font-semibold
-                text-cview-primary
+                mt-1 text-xs font-semibold
+                text-cview-primary sm:text-sm
               ">
                 Đã chọn CV thành công!
               </p>
@@ -263,10 +262,9 @@ export default function CVUpload({ onAnalyze }) {
               }}
               className="
                 rounded-full border border-red-200
-                px-4 py-2 text-xs font-semibold
+                px-3.5 py-1.5 text-xs font-semibold
                 text-red-500 transition
                 hover:bg-red-50
-                sm:text-sm
               "
             >
               Xóa file
@@ -280,9 +278,9 @@ export default function CVUpload({ onAnalyze }) {
         <p
           role="alert"
           className="
-            mt-3 px-2 text-center
+            mt-2.5 px-2 text-center
             text-xs font-medium leading-relaxed
-            text-red-500 sm:text-sm
+            text-red-500
           "
         >
           {error}
@@ -291,16 +289,16 @@ export default function CVUpload({ onAnalyze }) {
 
       {/* Action Buttons */}
       <div className="
-        mt-5 grid w-full grid-cols-1
+        mt-4 grid w-full grid-cols-1
         gap-3 sm:grid-cols-2 sm:gap-4
       ">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
           className="
-            flex min-h-12 w-full items-center
+            flex min-h-11 w-full items-center
             justify-center rounded-xl
-            bg-cview-accent px-5 py-3
+            bg-cview-accent px-5 py-2.5
             text-sm font-bold text-white
             shadow-sm transition
             hover:-translate-y-0.5 hover:brightness-105
@@ -317,9 +315,9 @@ export default function CVUpload({ onAnalyze }) {
           disabled={!file || !onAnalyze}
           onClick={() => file && onAnalyze?.(file)}
           className="
-            flex min-h-12 w-full items-center
+            flex min-h-11 w-full items-center
             justify-center rounded-xl
-            bg-cview-accent px-5 py-3
+            bg-cview-accent px-5 py-2.5
             text-sm font-bold text-white
             shadow-sm transition
             hover:-translate-y-0.5 hover:brightness-105
