@@ -70,7 +70,7 @@ const contactItems = [
   },
   {
     icon: LocationIcon,
-    value: '336 Nguyễn Trãi, Thanh Xuân, Hà Nội',
+    value: '336 Nguyen Trai, Thanh Xuan, Ha Noi',
     href: 'https://www.google.com/maps/search/?api=1&query=336+Nguyen+Trai+Thanh+Xuan+Ha+Noi',
     label: 'Địa chỉ',
   },
@@ -104,7 +104,7 @@ function ContactSection() {
       />
 
       {/* Main content */}
-      <div className="relative mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-8">
+      <div className="relative mx-auto grid w-full max-w-[1140px] grid-cols-1 items-center gap-8 px-2 sm:gap-10 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
 
         {/* Left: contact information */}
         <div className="relative z-20 flex min-w-0 flex-col justify-center">
