@@ -243,20 +243,20 @@ export default function JobsPage() {
     }`
 
   return (
-    <main className="mx-auto min-h-[70vh] w-full max-w-[1440px] px-4 py-7 sm:px-6 sm:py-9 lg:px-14 lg:py-10">
+    <main className="mx-auto min-h-[70vh] w-full max-w-[1140px] px-6 py-5 sm:px-8 sm:py-7 lg:px-12 lg:py-8">
       {/* Tiêu đề */}
-      <section className="mb-7">
-        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#E6FADD] px-3 py-1 text-sm font-semibold text-[#1E5631]">
+      <section className="mb-5">
+        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#E6FADD] px-3 py-1 text-xs font-semibold text-[#1E5631] sm:text-sm">
           <span>✦</span>
           Việc làm
         </div>
 
-        <h1 className="break-words text-[clamp(1.5rem,5vw,2.5rem)] font-extrabold leading-tight text-[#1A241E]">
+        <h1 className="break-words text-[clamp(1.4rem,3.6vw,2.2rem)] font-extrabold leading-tight text-[#1A241E]">
           TÌM CÔNG VIỆC{' '}
           <span className="text-[#43A047]">PHÙ HỢP VỚI BẠN</span>
         </h1>
 
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600 sm:text-base">
+        <p className="mt-1.5 max-w-2xl text-xs leading-relaxed text-gray-600 sm:text-sm md:text-base">
           Khám phá cơ hội việc làm từ hàng nghìn doanh nghiệp uy tín trên hệ thống CView.
         </p>
       </section>

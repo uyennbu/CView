@@ -507,10 +507,10 @@ export default function RecruiterDashboardPage() {
           HEADER DÀNH RIÊNG CHO NHÀ TUYỂN DỤNG 
       ========================================================================= */}
       <header className="border-b border-gray-200/50 bg-white/75 backdrop-blur-md sticky top-0 z-40">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-3.5 lg:px-14">
+        <div className="mx-auto flex max-w-[1160px] items-center justify-between px-6 py-3 md:px-10 lg:px-12">
           {/* Logo CView */}
           <Link to="/" className="flex items-center gap-2">
-            <img src={logoCView} alt="CView" className="w-[125px] h-auto object-contain" />
+            <img src={logoCView} alt="CView" className="w-[115px] h-auto object-contain" />
           </Link>
 
           {/* Navigation Links */}
@@ -602,7 +602,7 @@ export default function RecruiterDashboardPage() {
       {/* =========================================================================
           NỘI DUNG CHÍNH
       ========================================================================= */}
-      <main className="mx-auto max-w-[1440px] px-6 py-8 lg:px-14">
+      <main className="mx-auto max-w-[1120px] px-6 py-6 md:px-10 lg:px-12">
         {/* THANH TRẠNG THÁI KẾT NỐI DATABASE THỰC TẾ */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-100 bg-white/80 p-3.5 shadow-2xs backdrop-blur-xs">
           <div className="flex items-center gap-2.5 text-xs">
@@ -646,7 +646,7 @@ export default function RecruiterDashboardPage() {
         ======================================================================= */}
         <div>
             {/* Tiêu đề & Chọn thời gian */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div>
                 <h1 className="text-2xl lg:text-3xl font-extrabold text-[#1A241E] tracking-tight">
                   Tổng quan tuyển dụng
@@ -669,44 +669,44 @@ export default function RecruiterDashboardPage() {
             </div>
 
             {/* 3 Thẻ chỉ số KPI (Stat Cards - ĐỌC ĐỘNG TỪ CSDL) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
               {/* Card 1: Tổng tin đã đăng */}
-              <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                 <div>
                   <div className="text-xs font-semibold text-gray-500">Tổng tin đã đăng</div>
-                  <div className="mt-2 text-3xl font-extrabold text-[#1A241E]">{dynamicTotalJobs}</div>
+                  <div className="mt-1.5 text-2xl sm:text-3xl font-extrabold text-[#1A241E]">{dynamicTotalJobs}</div>
                   <div className="mt-1 text-xs text-gray-400">Tất cả tin tuyển dụng</div>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#E6FADD] text-[#1E5631]">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E6FADD] text-[#1E5631]">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
               </div>
 
               {/* Card 2: Tin đang chờ duyệt */}
-              <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                 <div>
                   <div className="text-xs font-semibold text-gray-500">Tin đang chờ duyệt</div>
-                  <div className="mt-2 text-3xl font-extrabold text-[#1A241E]">{dynamicPendingJobs}</div>
+                  <div className="mt-1.5 text-2xl sm:text-3xl font-extrabold text-[#1A241E]">{dynamicPendingJobs}</div>
                   <div className="mt-1 text-xs text-gray-400">Đang được CView xét duyệt</div>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
 
               {/* Card 3: Lượt xem trung bình */}
-              <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                 <div>
                   <div className="text-xs font-semibold text-gray-500">Lượt xem trung bình</div>
-                  <div className="mt-2 text-3xl font-extrabold text-[#1A241E]">{dynamicAvgViews}</div>
+                  <div className="mt-1.5 text-2xl sm:text-3xl font-extrabold text-[#1A241E]">{dynamicAvgViews}</div>
                   <div className="mt-1 text-xs text-gray-400">Trên mỗi tin tuyển dụng</div>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
@@ -715,7 +715,7 @@ export default function RecruiterDashboardPage() {
             </div>
 
             {/* Bảng Tin tuyển dụng của bạn (DỮ LIỆU TỪ POSTGRESQL) */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 lg:p-8 shadow-sm mb-12">
+            <div className="rounded-2xl border border-gray-100 bg-white p-5 lg:p-6 shadow-sm mb-10">
               {/* Header của Card Danh sách */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
                 <div>
